@@ -9,6 +9,7 @@ module.exports = {
   rules: {
     '@typescript-eslint/explicit-function-return-type': 'off',
     '@typescript-eslint/ban-ts-comment': 'off',
+    'react/prop-types': 'off',
     'prettier/prettier': [
       'error',
       {

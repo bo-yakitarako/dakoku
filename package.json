@@ -26,8 +26,14 @@
     "@electron-toolkit/utils": "^3.0.0",
     "@emotion/react": "^11.11.4",
     "@emotion/styled": "^11.11.0",
+    "@fontsource/roboto": "^5.0.12",
+    "@mui/icons-material": "^5.15.12",
     "@mui/material": "^5.15.12",
-    "electron-updater": "^6.1.7"
+    "@mui/styles": "^5.15.12",
+    "dayjs": "^1.11.10",
+    "electron-store": "^8.1.0",
+    "electron-updater": "^6.1.7",
+    "recoil": "^0.7.7"
   },
   "devDependencies": {
     "@electron-toolkit/eslint-config-prettier": "^2.0.0",
