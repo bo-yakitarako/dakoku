@@ -18,6 +18,7 @@ export const useTime = () => {
     if (playStatus === 'stopped') {
       const saved = await window.api.getTodayWorkTime();
       _startTimes = [...saved.startTimes];
+      localStorage.pauseTimes = JSON.stringify(saved.pauseTimes);
       setPauseTimes(saved.pauseTimes);
     }
     setPlayStatus('playing');
