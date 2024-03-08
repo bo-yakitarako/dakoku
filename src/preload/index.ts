@@ -6,6 +6,7 @@ const api = {
   registerWorkTime: (startTimes: number[], pauseTimes: number[]) =>
     ipcRenderer.invoke('registerWorkTime', startTimes, pauseTimes),
   getTodayWorkTime: () => ipcRenderer.invoke('getTodayWorkTime'),
+  openCalendar: () => ipcRenderer.invoke('openCalendar'),
 };
 
 // Use `contextBridge` APIs to expose Electron APIs to
@@ -15,6 +16,11 @@ if (process.contextIsolated) {
   try {
     contextBridge.exposeInMainWorld('electron', electronAPI);
     contextBridge.exposeInMainWorld('api', api);
+    contextBridge.exposeInMainWorld('ipcRenderer', {
+      ...ipcRenderer,
+      on: ipcRenderer.on,
+      removeAllListeners: ipcRenderer.removeAllListeners,
+    });
   } catch (error) {
     console.error(error);
   }

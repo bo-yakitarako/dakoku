@@ -3,6 +3,7 @@ import { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import icon from '../../resources/icon.png?asset';
 import { getTodayWorkTime, registerWorkTime } from './store';
+import { closeCalendarWindow, createCalendarWindow, setMainWindow } from './calendar';
 
 function createWindow(): void {
   // Create the browser window.
@@ -22,6 +23,10 @@ function createWindow(): void {
     mainWindow.show();
   });
 
+  mainWindow.on('close', () => {
+    closeCalendarWindow();
+  });
+
   mainWindow.webContents.setWindowOpenHandler((details) => {
     shell.openExternal(details.url);
     return { action: 'deny' };
@@ -30,10 +35,12 @@ function createWindow(): void {
   // HMR for renderer base on electron-vite cli.
   // Load the remote URL for development or the local html file for production.
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL']);
+    mainWindow.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/index.html`);
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'));
   }
+
+  setMainWindow(mainWindow);
 }
 
 // This method will be called when Electron has finished
@@ -81,4 +88,8 @@ ipcMain.handle('registerWorkTime', (e, startTimes: number[], pauseTimes: number[
 
 ipcMain.handle('getTodayWorkTime', () => {
   return getTodayWorkTime();
+});
+
+ipcMain.handle('openCalendar', () => {
+  createCalendarWindow();
 });

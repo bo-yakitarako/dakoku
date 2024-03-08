@@ -1,14 +1,19 @@
 import React from 'react';
 import styled from '@emotion/styled';
 import { Time } from './Time';
-import { Box, Button } from '@mui/material';
-import { Computer, Devices, Home, LocalCafe } from '@mui/icons-material';
+import { Box, Button, IconButton } from '@mui/material';
+import { CalendarMonth, Computer, Devices, Home, LocalCafe } from '@mui/icons-material';
 import { useTime } from './hooks/useTime';
+import { useOpenCalendar } from './hooks/useOpenCalendar';
 
 export const TimeForm: React.FC = () => {
   const { playStatus, workTime, pausedTime, start, pause, stop } = useTime();
+  const { canOpen, openCalendar } = useOpenCalendar();
   return (
     <Wrapper>
+      <CalendarButton color="info" onClick={openCalendar} disabled={!canOpen}>
+        <CalendarMonth />
+      </CalendarButton>
       {playStatus !== 'stopped' && (
         <Box
           sx={{
@@ -105,4 +110,10 @@ const Buttons = styled(Box)`
 
 const ActionButton = styled(Button)`
   width: 120px;
+`;
+
+const CalendarButton = styled(IconButton)`
+  position: absolute;
+  top: 8px;
+  left: 8px;
 `;
