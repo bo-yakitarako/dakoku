@@ -16,5 +16,13 @@ export default defineConfig({
       },
     },
     plugins: [react()],
+    build: {
+      rollupOptions: {
+        input: {
+          main: resolve(__dirname, 'src/renderer/index.html'),
+          calendar: resolve(__dirname, 'src/renderer/calendar.html'),
+        },
+      },
+    },
   },
 });
