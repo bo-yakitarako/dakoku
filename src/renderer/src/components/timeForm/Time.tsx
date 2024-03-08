@@ -1,4 +1,5 @@
 import { Box, Typography } from '@mui/material';
+import { convertTime } from '../../modules/timeConverter';
 
 type Props = {
   children: React.ReactNode;
@@ -7,13 +8,11 @@ type Props = {
 };
 
 export const Time: React.FC<Props> = ({ children, label = '', focused = false }) => {
-  const seconds = Math.floor(Number(children) / 1000);
-  if (Number.isNaN(seconds)) {
+  const milliSecondsTime = Number(children);
+  if (Number.isNaN(milliSecondsTime)) {
     return <Typography>00:00:00</Typography>;
   }
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const remainedSeconds = seconds % 60;
+  const timeText = convertTime(milliSecondsTime);
   return (
     <Box>
       <Typography
@@ -33,10 +32,8 @@ export const Time: React.FC<Props> = ({ children, label = '', focused = false })
           transition: 'font-size 0.3s ease-in-out',
         }}
       >
-        {zeroPad(hours)}:{zeroPad(minutes)}:{zeroPad(remainedSeconds)}
+        {timeText}
       </Typography>
     </Box>
   );
 };
-
-const zeroPad = (num: number) => num.toString().padStart(2, '0');
