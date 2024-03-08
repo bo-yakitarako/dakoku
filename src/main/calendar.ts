@@ -1,14 +1,15 @@
-import { BrowserWindow } from 'electron';
+import { BrowserWindow, ipcMain } from 'electron';
 import icon from '../../resources/icon.png?asset';
 import { join } from 'path';
 import { is } from '@electron-toolkit/utils';
+import { getMonthWorkTime } from './store';
 
 let mainWindow: BrowserWindow;
 let _calendarWindow: BrowserWindow | null = null;
 export const createCalendarWindow = () => {
   const calendarWindow = new BrowserWindow({
     width: 800,
-    height: 600,
+    height: 730,
     show: false,
     autoHideMenuBar: true,
     ...(process.platform === 'linux' ? { icon } : {}),
@@ -42,3 +43,8 @@ export const setMainWindow = (window: BrowserWindow) => {
 export const closeCalendarWindow = () => {
   _calendarWindow?.close();
 };
+
+// @ts-ignore
+ipcMain.handle('getMonthWorkTime', async (event, year: number, month: number) =>
+  getMonthWorkTime(year, month),
+);

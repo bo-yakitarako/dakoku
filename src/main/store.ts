@@ -1,5 +1,6 @@
 import Store from 'electron-store';
-import { DateWorkTimes, MonthWorkTimes } from '../preload/dataType';
+import { DateTimeDatas, DateWorkTimes, MonthWorkTimes } from '../preload/dataType';
+import dayjs from 'dayjs';
 
 const workTimeStore = new Store<Record<string, MonthWorkTimes>>({ name: 'workTimes' });
 
@@ -60,4 +61,40 @@ const parseWorkTime = (startTimes: number[], pauseTimes: number[], finishTime: n
     restTime += finishTime - prevPauseTime;
   }
   return { workTime, restTime };
+};
+
+export const getMonthWorkTime = (year: number, month: number) => {
+  const workTimes = workTimeStore.get(`${year}`)?.[`${month}`];
+  if (!workTimes) {
+    return { dates: {}, workTimeSum: 'なんかやったっけ？' };
+  }
+  const dates = Object.keys(workTimes).reduce((pre, cur) => {
+    const times = workTimes[cur];
+    return {
+      ...pre,
+      [cur]: {
+        workTime: convertToCalendarTime(year, month, cur, times.workTime),
+        restTime: convertToTimeText(times.restTime),
+      },
+    };
+  }, {} as DateTimeDatas);
+  const workTimeSumCalc = Object.values(workTimes).reduce((pre, cur) => pre + cur.workTime, 0);
+  const workTimeSum = convertToTimeText(workTimeSumCalc);
+  return { dates, workTimeSum };
+};
+
+const convertToCalendarTime = (year: number, month: number, date: string, time: number) => {
+  const milliseconds = time % 1000;
+  const seconds = Math.floor(time / 1000) % 60;
+  const minutes = Math.floor(time / 1000 / 60) % 60;
+  const hours = Math.floor(time / 1000 / 60 / 60);
+  const timeText = `${year}-${month}-${date} ${hours}:${minutes}:${seconds}.${milliseconds}`;
+  return dayjs(timeText, 'YYYY-M-D H:m:s.S').valueOf();
+};
+
+const convertToTimeText = (time: number) => {
+  const seconds = Math.floor(time / 1000) % 60;
+  const minutes = Math.floor(time / 1000 / 60) % 60;
+  const hours = Math.floor(time / 1000 / 60 / 60);
+  return hours > 0 ? `${hours}時間${minutes}分` : `${minutes}分${seconds}秒`;
 };

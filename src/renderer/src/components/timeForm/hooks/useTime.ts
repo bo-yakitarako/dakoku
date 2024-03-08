@@ -1,6 +1,7 @@
 import { useRecoilState } from 'recoil';
 import { pauseTimesAtom, playStatusAtom, startTimesAtom } from '../../../modules/store';
 import { useEffect, useState } from 'react';
+import { parseWorkTime } from '../../../modules/timeConverter';
 
 export const useTime = () => {
   const [playStatus, setPlayStatus] = useRecoilState(playStatusAtom);
@@ -82,30 +83,4 @@ export const useTime = () => {
     pausedTime,
     playStatus,
   };
-};
-
-const parseWorkTime = (startTimes: number[], pauseTimes: number[]) => {
-  const copiedStartTimes = [...startTimes];
-  const copiedPauseTimes = [...pauseTimes];
-  let prevPauseTime: number | null = null;
-  let workTime = 0;
-  let pausedTime = 0;
-  while (copiedStartTimes.length > 0 && copiedPauseTimes.length > 0) {
-    const startTime = copiedStartTimes.splice(0, 1)[0];
-    const pauseTime = copiedPauseTimes.splice(0, 1)[0];
-    workTime += pauseTime - startTime;
-    if (prevPauseTime !== null) {
-      pausedTime += startTime - prevPauseTime;
-    }
-    prevPauseTime = pauseTime;
-  }
-  if (copiedStartTimes.length > 0) {
-    workTime += Date.now() - copiedStartTimes[0];
-    if (prevPauseTime !== null) {
-      pausedTime += copiedStartTimes[0] - prevPauseTime;
-    }
-  } else if (prevPauseTime !== null) {
-    pausedTime += Date.now() - prevPauseTime;
-  }
-  return { workTime, pausedTime };
 };

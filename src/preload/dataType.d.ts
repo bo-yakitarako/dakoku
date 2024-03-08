@@ -8,3 +8,6 @@ export type WorkTime = {
 
 export type DateWorkTimes = { [date in string]: WorkTime };
 export type MonthWorkTimes = { [month in string]: DateWorkTimes };
+
+export type TimeData = { workTime: number; restTime: string };
+export type DateTimeDatas = { [date in string]: TimeData };
