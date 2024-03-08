@@ -6,7 +6,11 @@ declare global {
   interface Window {
     electron: ElectronAPI;
     api: {
-      registerWorkTime: (startTimes: number[], pauseTimes: number[]) => Promise<void>;
+      registerWorkTime: (
+        startTimes: number[],
+        pauseTimes: number[],
+        finishTime?: number,
+      ) => Promise<void>;
       getTodayWorkTime: () => Promise<{ startTimes: number[]; pauseTimes: number[] }>;
       openCalendar: () => Promise<void>;
       getMonthWorkTime: (

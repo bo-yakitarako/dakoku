@@ -2,6 +2,7 @@ import { useRecoilState } from 'recoil';
 import { pauseTimesAtom, playStatusAtom, startTimesAtom } from '../../../modules/store';
 import { useEffect, useState } from 'react';
 import { parseWorkTime } from '../../../modules/timeConverter';
+import dayjs from 'dayjs';
 
 export const useTime = () => {
   const [playStatus, setPlayStatus] = useRecoilState(playStatusAtom);
@@ -75,6 +76,35 @@ export const useTime = () => {
       window.clearInterval(interval);
     };
   }, [startTimes, pauseTimes, playStatus, preDate]);
+
+  useEffect(() => {
+    if (playStatus === 'stopped') {
+      return;
+    }
+    const lastSavedTime =
+      playStatus === 'playing'
+        ? startTimes[startTimes.length - 1]
+        : pauseTimes[pauseTimes.length - 1];
+    const now = dayjs();
+    if (now.isSame(lastSavedTime, 'day')) {
+      return;
+    }
+    const dayStartTime = now.startOf('day').valueOf();
+    window.api.registerWorkTime(startTimes, pauseTimes, dayStartTime - 1);
+    localStorage.removeItem('startTimes');
+    localStorage.removeItem('pauseTimes');
+    if (playStatus === 'paused') {
+      setWorkTime(0);
+      setPausedTime(0);
+      setStartTimes([]);
+      setPauseTimes([]);
+      setPlayStatus('stopped');
+      return;
+    }
+    setStartTimes([dayStartTime]);
+    localStorage.startTimes = JSON.stringify([dayStartTime]);
+    setPauseTimes([]);
+  }, []);
 
   return {
     start,

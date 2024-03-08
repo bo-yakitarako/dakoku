@@ -81,10 +81,13 @@ app.on('window-all-closed', () => {
 // In this file you can include the rest of your app"s specific main process
 // code. You can also put them in separate files and require them here.
 
-// @ts-ignore
-ipcMain.handle('registerWorkTime', (e, startTimes: number[], pauseTimes: number[]) => {
-  registerWorkTime(startTimes, pauseTimes);
-});
+ipcMain.handle(
+  'registerWorkTime',
+  // @ts-ignore
+  (e, startTimes: number[], pauseTimes: number[], finishTime?: number) => {
+    registerWorkTime(startTimes, pauseTimes, finishTime);
+  },
+);
 
 ipcMain.handle('getTodayWorkTime', () => {
   return getTodayWorkTime();

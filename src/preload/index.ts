@@ -3,8 +3,8 @@ import { electronAPI } from '@electron-toolkit/preload';
 
 // Custom APIs for renderer
 const api = {
-  registerWorkTime: (startTimes: number[], pauseTimes: number[]) =>
-    ipcRenderer.invoke('registerWorkTime', startTimes, pauseTimes),
+  registerWorkTime: (startTimes: number[], pauseTimes: number[], finishTime?: number) =>
+    ipcRenderer.invoke('registerWorkTime', startTimes, pauseTimes, finishTime),
   getTodayWorkTime: () => ipcRenderer.invoke('getTodayWorkTime'),
   openCalendar: () => ipcRenderer.invoke('openCalendar'),
   getMonthWorkTime: (year: number, month: number) =>

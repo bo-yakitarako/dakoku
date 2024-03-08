@@ -20,8 +20,12 @@ export const getTodayWorkTime = () => {
   return { startTimes, pauseTimes };
 };
 
-export const registerWorkTime = (startTimes: number[], pauseTimes: number[]) => {
-  const now = new Date();
+export const registerWorkTime = (
+  startTimes: number[],
+  pauseTimes: number[],
+  _finishTime?: number,
+) => {
+  const now = new Date(_finishTime ?? Date.now());
   const finishTime = now.getTime();
   const year = now.getFullYear();
   const month = now.getMonth() + 1;
