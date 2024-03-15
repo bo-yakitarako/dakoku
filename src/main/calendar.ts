@@ -2,14 +2,14 @@ import { BrowserWindow, ipcMain } from 'electron';
 import icon from '../../resources/icon.png?asset';
 import { join } from 'path';
 import { is } from '@electron-toolkit/utils';
-import { getMonthWorkTime } from './store';
+import { getMonthWorkTime, getWindowBounds, setWindowBounds } from './store';
 
 let mainWindow: BrowserWindow;
 let _calendarWindow: BrowserWindow | null = null;
 export const createCalendarWindow = () => {
+  const windowBounds = getWindowBounds('calendar');
   const calendarWindow = new BrowserWindow({
-    width: 800,
-    height: 730,
+    ...windowBounds,
     show: false,
     autoHideMenuBar: true,
     ...(process.platform === 'linux' ? { icon } : {}),
@@ -26,6 +26,7 @@ export const createCalendarWindow = () => {
 
   calendarWindow.on('close', () => {
     mainWindow.webContents.send('closedCalendar');
+    setWindowBounds(calendarWindow, 'calendar');
   });
 
   calendarWindow.on('closed', () => {

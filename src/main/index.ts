@@ -11,14 +11,16 @@ import {
   registerWorkTime,
   renameCurrentJob,
   changeCurrentJob,
+  getWindowBounds,
+  setWindowBounds,
 } from './store';
 import { closeCalendarWindow, createCalendarWindow, setMainWindow } from './calendar';
 
 function createWindow(): void {
   // Create the browser window.
+  const windowBounds = getWindowBounds('main');
   const mainWindow = new BrowserWindow({
-    width: 480,
-    height: 320,
+    ...windowBounds,
     show: false,
     autoHideMenuBar: true,
     ...(process.platform === 'linux' ? { icon } : {}),
@@ -34,6 +36,7 @@ function createWindow(): void {
 
   mainWindow.on('close', () => {
     closeCalendarWindow();
+    setWindowBounds(mainWindow, 'main');
     app.quit();
   });
 

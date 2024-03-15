@@ -9,11 +9,29 @@ import {
   YearWorkTimes,
 } from '../preload/dataType';
 import dayjs from 'dayjs';
+import { BrowserWindow, Rectangle } from 'electron';
+
+type Window = 'main' | 'calendar';
+
+const defaultWindowBounds = {
+  main: { width: 480, height: 320, x: undefined, y: undefined },
+  calendar: { width: 800, height: 730, x: undefined, y: undefined },
+};
 
 const workTimeStore = new Store<Record<string, YearWorkTimes>>({ name: 'workTimes' });
 const jobStore = new Store<JobStore>({ name: 'job' });
+const windowBoundsStore = new Store<Record<Window, Rectangle>>({ name: 'windowBounds' });
 
 let currentJob = jobStore.get('currentJob') ?? null;
+
+export const getWindowBounds = (window: Window) => {
+  return windowBoundsStore.get(window) ?? defaultWindowBounds[window];
+};
+
+export const setWindowBounds = (browserWindow: BrowserWindow, window: Window) => {
+  const bounds = browserWindow.getBounds();
+  windowBoundsStore.set(window, bounds);
+};
 
 export const registerJob = (jobName: string) => {
   const jobId = `${Date.now()}`;
