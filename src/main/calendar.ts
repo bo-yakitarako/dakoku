@@ -24,8 +24,11 @@ export const createCalendarWindow = () => {
     calendarWindow.show();
   });
 
-  calendarWindow.on('closed', () => {
+  calendarWindow.on('close', () => {
     mainWindow.webContents.send('closedCalendar');
+  });
+
+  calendarWindow.on('closed', () => {
     _calendarWindow = null;
   });
 
