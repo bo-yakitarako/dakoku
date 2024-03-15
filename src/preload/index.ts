@@ -3,6 +3,12 @@ import { electronAPI } from '@electron-toolkit/preload';
 
 // Custom APIs for renderer
 const api = {
+  initializeCurrentJob: () => ipcRenderer.invoke('initializeCurrentJob'),
+  getJobs: () => ipcRenderer.invoke('getJobs'),
+  registerJob: (jobName: string) => ipcRenderer.invoke('registerJob', jobName),
+  updateCurrentJob: (jobId: string) => ipcRenderer.invoke('updateCurrentJob', jobId),
+  renameCurrentJob: (jobName: string) => ipcRenderer.invoke('renameCurrentJob', jobName),
+  deleteCurrentJob: () => ipcRenderer.invoke('deleteCurrentJob'),
   registerWorkTime: (startTimes: number[], pauseTimes: number[], finishTime?: number) =>
     ipcRenderer.invoke('registerWorkTime', startTimes, pauseTimes, finishTime),
   getTodayWorkTime: () => ipcRenderer.invoke('getTodayWorkTime'),

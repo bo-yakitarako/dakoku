@@ -1,15 +1,89 @@
 import Store from 'electron-store';
-import { DateTimeDatas, DateWorkTimes, MonthWorkTimes } from '../preload/dataType';
+import {
+  DateTimeDatas,
+  DateWorkTimes,
+  Job,
+  JobStore,
+  MonthWorkTimes,
+  YearWorkTimes,
+} from '../preload/dataType';
 import dayjs from 'dayjs';
 
-const workTimeStore = new Store<Record<string, MonthWorkTimes>>({ name: 'workTimes' });
+const workTimeStore = new Store<Record<string, YearWorkTimes>>({ name: 'workTimes' });
+const jobStore = new Store<JobStore>({ name: 'job' });
+
+let currentJob: Job | null = jobStore.get('currentJob') ?? null;
+
+export const registerJob = (jobName: string) => {
+  const jobId = `${Date.now()}`;
+  currentJob = { jobId, name: jobName };
+  const jobs = { ...(jobStore.get('jobs') ?? {}), [jobId]: currentJob };
+  jobStore.set('currentJob', currentJob);
+  jobStore.set('jobs', jobs);
+  return { currentJob, jobs };
+};
+
+export const initializeCurrentJob = (): Job | null => {
+  currentJob = jobStore.get('currentJob') ?? null;
+  return currentJob;
+};
+
+export const getJobs = () => jobStore.get('jobs') ?? {};
+
+export const updateCurrentJob = (jobId: string) => {
+  const jobs = jobStore.get('jobs') ?? {};
+  if (!(jobId in jobs)) {
+    return currentJob;
+  }
+  currentJob = jobs[jobId];
+  jobStore.set('currentJob', currentJob);
+  return currentJob;
+};
+
+export const renameCurrentJob = (jobName: string) => {
+  const preJobs = jobStore.get('jobs') ?? {};
+  if (currentJob === null) {
+    return { currentJob, jobs: preJobs };
+  }
+  const jobId = currentJob.jobId;
+  const job: Job = { jobId, name: jobName };
+  const jobs = { ...preJobs, [jobId]: job };
+  jobStore.set('currentJob', job);
+  jobStore.set('jobs', jobs);
+  currentJob = job;
+  return { currentJob, jobs };
+};
+
+export const deleteCurrentJob = () => {
+  const jobs = jobStore.get('jobs') ?? {};
+  if (currentJob === null || !(currentJob.jobId in jobs)) {
+    return { currentJob, jobs };
+  }
+  delete jobs[currentJob.jobId];
+  workTimeStore.delete(currentJob.jobId);
+  const jobIds = Object.keys(jobs);
+  if (jobIds.length === 0) {
+    currentJob = null;
+    jobStore.clear();
+    workTimeStore.clear();
+    return { currentJob, jobs: {} };
+  }
+  currentJob = jobs[jobIds[0]];
+  jobStore.set('currentJob', currentJob);
+  jobStore.set('jobs', jobs);
+  return { currentJob, jobs };
+};
 
 export const getTodayWorkTime = () => {
+  if (currentJob === null) {
+    return { startTimes: [], pauseTimes: [] };
+  }
+  const jobWorkTime = workTimeStore.get(currentJob.jobId) ?? {};
   const now = new Date();
   const year = now.getFullYear();
   const month = now.getMonth() + 1;
   const date = now.getDate();
-  const workTime = workTimeStore.get(`${year}`)?.[`${month}`]?.[`${date}`];
+  const workTime = jobWorkTime[`${year}`]?.[`${month}`]?.[`${date}`];
   if (!workTime) {
     return { startTimes: [], pauseTimes: [] };
   }
@@ -25,12 +99,16 @@ export const registerWorkTime = (
   pauseTimes: number[],
   _finishTime?: number,
 ) => {
+  if (currentJob === null) {
+    return;
+  }
   const now = new Date(_finishTime ?? Date.now());
   const finishTime = now.getTime();
   const year = now.getFullYear();
   const month = now.getMonth() + 1;
   const date = now.getDate();
-  const preYear = workTimeStore.get(`${year}`) ?? {};
+  const preJobWorkTime = workTimeStore.get(currentJob.jobId) ?? {};
+  const preYear = preJobWorkTime[`${year}`] ?? {};
   const { workTime, restTime } = parseWorkTime(startTimes, pauseTimes, finishTime);
   const preMonth = preYear[`${month}`] ?? {};
   const currentMonth: DateWorkTimes = {
@@ -38,7 +116,8 @@ export const registerWorkTime = (
     [date]: { workTime, restTime, startTimes, pauseTimes, finishTime },
   };
   const currentYear: MonthWorkTimes = { ...preYear, [month]: currentMonth };
-  workTimeStore.set(`${year}`, currentYear);
+  const jobWorkTime = { ...preJobWorkTime, [`${year}`]: currentYear };
+  workTimeStore.set(currentJob.jobId, jobWorkTime);
 };
 
 const parseWorkTime = (startTimes: number[], pauseTimes: number[], finishTime: number) => {
@@ -68,7 +147,11 @@ const parseWorkTime = (startTimes: number[], pauseTimes: number[], finishTime: n
 };
 
 export const getMonthWorkTime = (year: number, month: number) => {
-  const workTimes = workTimeStore.get(`${year}`)?.[`${month}`];
+  if (currentJob === null) {
+    return { dates: {}, workTimeSum: 'なんかやったっけ？' };
+  }
+  const jobWorkTime = workTimeStore.get(currentJob.jobId) ?? {};
+  const workTimes = jobWorkTime[`${year}`]?.[`${month}`];
   if (!workTimes) {
     return { dates: {}, workTimeSum: 'なんかやったっけ？' };
   }
