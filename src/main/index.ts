@@ -34,6 +34,7 @@ function createWindow(): void {
 
   mainWindow.on('close', () => {
     closeCalendarWindow();
+    app.quit();
   });
 
   mainWindow.webContents.setWindowOpenHandler((details) => {

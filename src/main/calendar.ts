@@ -42,6 +42,7 @@ export const setMainWindow = (window: BrowserWindow) => {
 
 export const closeCalendarWindow = () => {
   _calendarWindow?.close();
+  _calendarWindow = null;
 };
 
 // @ts-ignore
