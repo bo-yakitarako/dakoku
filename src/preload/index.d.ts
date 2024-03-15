@@ -1,17 +1,19 @@
 import { ElectronAPI } from '@electron-toolkit/preload';
 import { IpcRenderer } from 'electron';
-import { DateWorkTimes, Job, JobStore, Jobs } from './dataType';
+import { DateWorkTimes, Job } from './dataType';
+
+type JobData = { currentJob: Job | null; jobs: Job[] };
 
 declare global {
   interface Window {
     electron: ElectronAPI;
     api: {
       initializeCurrentJob: () => Promise<Job | null>;
-      getJobs: () => Promise<Jobs>;
-      registerJob: (jobName: string) => Promise<JobStore>;
-      updateCurrentJob: (jobId: string) => Promise<JobStore>;
-      renameCurrentJob: (jobName: string) => Promise<JobStore>;
-      deleteCurrentJob: () => Promise<JobStore>;
+      getJobs: () => Promise<Job[]>;
+      registerJob: (jobName: string) => Promise<JobData>;
+      changeCurrentJob: (jobId: string) => Promise<Job | null>;
+      renameCurrentJob: (jobName: string) => Promise<JobData>;
+      deleteCurrentJob: () => Promise<JobData>;
       registerWorkTime: (
         startTimes: number[],
         pauseTimes: number[],

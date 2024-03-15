@@ -10,7 +10,7 @@ import {
   registerJob,
   registerWorkTime,
   renameCurrentJob,
-  updateCurrentJob,
+  changeCurrentJob,
 } from './store';
 import { closeCalendarWindow, createCalendarWindow, setMainWindow } from './calendar';
 
@@ -95,7 +95,7 @@ ipcMain.handle('getJobs', () => getJobs());
 // @ts-ignore
 ipcMain.handle('registerJob', (e, jobName: string) => registerJob(jobName));
 // @ts-ignore
-ipcMain.handle('updateCurrentJob', (e, jobId: string) => updateCurrentJob(jobId));
+ipcMain.handle('changeCurrentJob', (e, jobId: string) => changeCurrentJob(jobId));
 // @ts-ignore
 ipcMain.handle('renameCurrentJob', (e, jobName: string) => renameCurrentJob(jobName));
 ipcMain.handle('deleteCurrentJob', () => deleteCurrentJob());

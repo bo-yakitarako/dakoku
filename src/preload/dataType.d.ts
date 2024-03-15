@@ -14,5 +14,5 @@ export type TimeData = { workTime: number; restTime: string };
 export type DateTimeDatas = { [date in string]: TimeData };
 
 export type Job = { jobId: string; name: string };
-export type Jobs = { [jobId in string]: Job };
-export type JobStore = { currentJob: Job | null; jobs: Jobs };
+export type JobNameDict = { [jobId in string]: string };
+export type JobStore = { currentJob: Job | null; jobName: JobNameDict };

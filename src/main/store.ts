@@ -3,6 +3,7 @@ import {
   DateTimeDatas,
   DateWorkTimes,
   Job,
+  JobNameDict,
   JobStore,
   MonthWorkTimes,
   YearWorkTimes,
@@ -17,10 +18,10 @@ let currentJob = jobStore.get('currentJob') ?? null;
 export const registerJob = (jobName: string) => {
   const jobId = `${Date.now()}`;
   currentJob = { jobId, name: jobName };
-  const jobs = { ...(jobStore.get('jobs') ?? {}), [jobId]: currentJob };
+  const jobNameDict = { ...(jobStore.get('jobName') ?? {}), [jobId]: jobName };
   jobStore.set('currentJob', currentJob);
-  jobStore.set('jobs', jobs);
-  return { currentJob, jobs };
+  jobStore.set('jobName', jobNameDict);
+  return { currentJob, jobs: convertNameDictToJobs(jobNameDict) };
 };
 
 export const initializeCurrentJob = () => {
@@ -28,50 +29,63 @@ export const initializeCurrentJob = () => {
   return currentJob;
 };
 
-export const getJobs = () => jobStore.get('jobs') ?? {};
+export const getJobs = () => {
+  const jobNameDict = jobStore.get('jobName') ?? {};
+  return convertNameDictToJobs(jobNameDict);
+};
 
-export const updateCurrentJob = (jobId: string) => {
-  const jobs = jobStore.get('jobs') ?? {};
-  if (!(jobId in jobs)) {
+export const changeCurrentJob = (jobId: string) => {
+  const jobNameDict = jobStore.get('jobName') ?? {};
+  if (!(jobId in jobNameDict)) {
     return currentJob;
   }
-  currentJob = jobs[jobId];
+  currentJob = { jobId, name: jobNameDict[jobId] };
   jobStore.set('currentJob', currentJob);
   return currentJob;
 };
 
 export const renameCurrentJob = (jobName: string) => {
-  const preJobs = jobStore.get('jobs') ?? {};
+  const preJobNameDict = jobStore.get('jobName') ?? {};
   if (currentJob === null) {
-    return { currentJob, jobs: preJobs };
+    return { currentJob, jobs: convertNameDictToJobs(preJobNameDict) };
   }
   const jobId = currentJob.jobId;
   const job: Job = { jobId, name: jobName };
-  const jobs = { ...preJobs, [jobId]: job };
+  const jobNameDict = { ...preJobNameDict, [jobId]: jobName };
   jobStore.set('currentJob', job);
-  jobStore.set('jobs', jobs);
+  jobStore.set('jobName', jobNameDict);
   currentJob = job;
-  return { currentJob, jobs };
+  return { currentJob, jobs: convertNameDictToJobs(jobNameDict) };
 };
 
 export const deleteCurrentJob = () => {
-  const jobs = jobStore.get('jobs') ?? {};
-  if (currentJob === null || !(currentJob.jobId in jobs)) {
-    return { currentJob, jobs };
+  const jobNameDict = jobStore.get('jobName') ?? {};
+  if (currentJob === null || !(currentJob.jobId in jobNameDict)) {
+    return { currentJob, jobs: convertNameDictToJobs(jobNameDict) };
   }
-  delete jobs[currentJob.jobId];
+  delete jobNameDict[currentJob.jobId];
   workTimeStore.delete(currentJob.jobId);
-  const jobIds = Object.keys(jobs);
+  const jobIds = Object.keys(jobNameDict);
   if (jobIds.length === 0) {
     currentJob = null;
     jobStore.clear();
     workTimeStore.clear();
-    return { currentJob, jobs: {} };
+    return { currentJob, jobs: [] };
   }
-  currentJob = jobs[jobIds[0]];
+  const currentJobName = jobNameDict[jobIds[0]];
+  currentJob = { jobId: jobIds[0], name: currentJobName };
   jobStore.set('currentJob', currentJob);
-  jobStore.set('jobs', jobs);
-  return { currentJob, jobs };
+  jobStore.set('jobName', jobNameDict);
+  return { currentJob, jobs: convertNameDictToJobs(jobNameDict) };
+};
+
+const convertNameDictToJobs = (jobNameDict: JobNameDict): Job[] => {
+  return Object.keys(jobNameDict)
+    .map((jobId) => {
+      const name = jobNameDict[jobId];
+      return { jobId, name };
+    })
+    .sort((a, b) => Number(a.jobId) - Number(b.jobId));
 };
 
 export const getTodayWorkTime = () => {
