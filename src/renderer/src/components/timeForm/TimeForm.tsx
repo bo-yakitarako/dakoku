@@ -1,20 +1,37 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import styled from '@emotion/styled';
 import { Time } from './Time';
 import { Box, Button, IconButton } from '@mui/material';
 import { CalendarMonth, Computer, Devices, Home, LocalCafe } from '@mui/icons-material';
 import { useTime } from './hooks/useTime';
 import { useOpenCalendar } from './hooks/useOpenCalendar';
+import { JobSelectBox } from './JobSelectBox';
+import { JobControl } from './jobControl/JobControl';
+import { useRecoilValue } from 'recoil';
+import { currentJobAtom } from '../../modules/store';
 
 export const TimeForm: React.FC = () => {
   const { playStatus, workTime, pausedTime, start, pause, stop } = useTime();
   const { canOpen, openCalendar } = useOpenCalendar();
+  const currentJob = useRecoilValue(currentJobAtom);
+
+  useEffect(() => {
+    if (currentJob != null) {
+      document.title = `dakoku: ${currentJob.name}`;
+    }
+  }, [currentJob]);
+
   return (
     <Wrapper>
       <CalendarButton color="info" onClick={openCalendar} disabled={!canOpen}>
         <CalendarMonth />
       </CalendarButton>
-      {playStatus !== 'stopped' && (
+      {playStatus === 'stopped' ? (
+        <>
+          <JobSelectBox />
+          <JobControl />
+        </>
+      ) : (
         <Box
           sx={{
             display: 'flex',

@@ -1,8 +1,6 @@
 import { ElectronAPI } from '@electron-toolkit/preload';
 import { IpcRenderer } from 'electron';
-import { DateWorkTimes, Job } from './dataType';
-
-type JobData = { currentJob: Job | null; jobs: Job[] };
+import { DateWorkTimes, Job, JobData } from './dataType';
 
 declare global {
   interface Window {

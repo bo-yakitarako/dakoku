@@ -17,10 +17,12 @@ let currentJob = jobStore.get('currentJob') ?? null;
 
 export const registerJob = (jobName: string) => {
   const jobId = `${Date.now()}`;
-  currentJob = { jobId, name: jobName };
   const jobNameDict = { ...(jobStore.get('jobName') ?? {}), [jobId]: jobName };
-  jobStore.set('currentJob', currentJob);
   jobStore.set('jobName', jobNameDict);
+  if (currentJob === null) {
+    currentJob = { jobId, name: jobName };
+    jobStore.set('currentJob', currentJob);
+  }
   return { currentJob, jobs: convertNameDictToJobs(jobNameDict) };
 };
 

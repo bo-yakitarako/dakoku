@@ -30,13 +30,17 @@
     "@fullcalendar/core": "^6.1.11",
     "@fullcalendar/daygrid": "^6.1.11",
     "@fullcalendar/react": "^6.1.11",
+    "@hookform/resolvers": "^3.3.4",
     "@mui/icons-material": "^5.15.12",
+    "@mui/lab": "^5.0.0-alpha.168",
     "@mui/material": "^5.15.12",
     "@mui/styles": "^5.15.12",
     "dayjs": "^1.11.10",
     "electron-store": "^8.1.0",
     "electron-updater": "^6.1.7",
-    "recoil": "^0.7.7"
+    "react-hook-form": "^7.51.0",
+    "recoil": "^0.7.7",
+    "yup": "^1.4.0"
   },
   "devDependencies": {
     "@electron-toolkit/eslint-config-prettier": "^2.0.0",

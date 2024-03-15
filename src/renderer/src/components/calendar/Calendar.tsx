@@ -11,9 +11,20 @@ import {
   KeyboardDoubleArrowLeft,
   KeyboardDoubleArrowRight,
 } from '@mui/icons-material';
+import { useEffect } from 'react';
+import { useRecoilValue } from 'recoil';
+import { currentJobAtom } from '../../modules/store';
 
 export const Calendar: React.FC = () => {
   const { ref, currentMonth, calendarEvents, workTimeSum, move, loading } = useCalendarMove();
+  const currentJob = useRecoilValue(currentJobAtom);
+
+  useEffect(() => {
+    if (currentJob !== null) {
+      document.title = `dakoku - カレンダー: ${currentJob.name}`;
+    }
+  }, [currentJob]);
+
   return (
     <Wrapper>
       <MonthTitle variant="h2">{currentMonth}</MonthTitle>

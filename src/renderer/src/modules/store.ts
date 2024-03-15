@@ -31,6 +31,21 @@ export const pauseTimesAtom = atom({
   default: defaultPauseTimes,
 });
 
+export const currentJobAtom = atom({
+  key: 'currentJobAtom',
+  default: window.api.initializeCurrentJob(),
+});
+
+export const jobsAtom = atom({
+  key: 'jobsAtom',
+  default: window.api.getJobs(),
+});
+
+export const canJobControlAtom = atom({
+  key: 'canJobControlAtom',
+  default: true,
+});
+
 export const calendarDateAtom = atom({
   key: 'calendarDateAtom',
   default: new Date(),
