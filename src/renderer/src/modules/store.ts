@@ -55,3 +55,8 @@ export const monthWorkTimesAtom = atom({
   key: 'monthWorkTimesAtom',
   default: {} as DateWorkTimes,
 });
+
+export const canOpenCalendarAtom = atom({
+  key: 'canOpenCalendarAtom',
+  default: true,
+});

@@ -1,8 +1,11 @@
 import styled from '@emotion/styled';
 import { FormControl, InputLabel, MenuItem, Select } from '@mui/material';
 import { useJobSelect } from './hooks/useJobSelect';
+import { useRecoilValue } from 'recoil';
+import { canOpenCalendarAtom } from '../../modules/store';
 
 export const JobSelectBox: React.FC = () => {
+  const isOpenCalendar = !useRecoilValue(canOpenCalendarAtom);
   const { jobs, jobIdValue, onChange } = useJobSelect();
   return (
     <Wrapper>
@@ -13,6 +16,7 @@ export const JobSelectBox: React.FC = () => {
         label="おしごと選択"
         defaultValue={jobIdValue}
         onChange={onChange}
+        disabled={isOpenCalendar}
       >
         {jobs.map(({ jobId, name }) => (
           <MenuItem key={jobId} value={jobId}>
