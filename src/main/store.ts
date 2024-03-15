@@ -12,7 +12,7 @@ import dayjs from 'dayjs';
 const workTimeStore = new Store<Record<string, YearWorkTimes>>({ name: 'workTimes' });
 const jobStore = new Store<JobStore>({ name: 'job' });
 
-let currentJob: Job | null = jobStore.get('currentJob') ?? null;
+let currentJob = jobStore.get('currentJob') ?? null;
 
 export const registerJob = (jobName: string) => {
   const jobId = `${Date.now()}`;
@@ -23,7 +23,7 @@ export const registerJob = (jobName: string) => {
   return { currentJob, jobs };
 };
 
-export const initializeCurrentJob = (): Job | null => {
+export const initializeCurrentJob = () => {
   currentJob = jobStore.get('currentJob') ?? null;
   return currentJob;
 };

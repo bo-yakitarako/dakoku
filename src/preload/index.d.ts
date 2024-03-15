@@ -6,9 +6,9 @@ declare global {
   interface Window {
     electron: ElectronAPI;
     api: {
-      initializeCurrentJob: () => Promise<Job>;
+      initializeCurrentJob: () => Promise<Job | null>;
       getJobs: () => Promise<Jobs>;
-      registerJob: (jobName: string) => Promise<Job>;
+      registerJob: (jobName: string) => Promise<JobStore>;
       updateCurrentJob: (jobId: string) => Promise<JobStore>;
       renameCurrentJob: (jobName: string) => Promise<JobStore>;
       deleteCurrentJob: () => Promise<JobStore>;
