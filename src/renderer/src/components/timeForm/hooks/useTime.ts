@@ -50,7 +50,8 @@ export const useTime = () => {
     const interval = window.setInterval(async () => {
       const currentDate = new Date().getDate();
       if (preDate !== currentDate && playStatus !== 'stopped') {
-        window.api.registerWorkTime(startTimes, pauseTimes);
+        const dayStartTime = dayjs().startOf('day').valueOf();
+        window.api.registerWorkTime(startTimes, pauseTimes, dayStartTime - 1);
         localStorage.removeItem('startTimes');
         localStorage.removeItem('pauseTimes');
         setWorkTime(0);
