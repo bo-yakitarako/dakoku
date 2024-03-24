@@ -12,7 +12,7 @@ export const useTime = () => {
   const firstTimes = parseWorkTime(startTimes, pauseTimes);
   const [workTime, setWorkTime] = useState(firstTimes.workTime);
   const [pausedTime, setPausedTime] = useState(firstTimes.pausedTime);
-  const [preDate, setPreDate] = useState(new Date().getDate());
+  const [preDate, setPreDate] = useState(dayjs());
 
   const start = async () => {
     let _startTimes = [...startTimes];
@@ -48,23 +48,23 @@ export const useTime = () => {
 
   useEffect(() => {
     const interval = window.setInterval(async () => {
-      const currentDate = new Date().getDate();
-      if (preDate !== currentDate && playStatus !== 'stopped') {
-        const dayStartTime = dayjs().startOf('day').valueOf();
-        window.api.registerWorkTime(startTimes, pauseTimes, dayStartTime - 1);
+      const currentDate = dayjs();
+      if (preDate.date() !== currentDate.date() && playStatus !== 'stopped') {
+        const dayEndTime = preDate.endOf('day').valueOf();
+        window.api.registerWorkTime(startTimes, pauseTimes, dayEndTime);
         localStorage.removeItem('startTimes');
         localStorage.removeItem('pauseTimes');
         setWorkTime(0);
         setPausedTime(0);
-        const now = Date.now();
-        setStartTimes([now]);
-        localStorage.startTimes = JSON.stringify([now]);
         if (playStatus === 'paused') {
-          setPauseTimes([now]);
-          localStorage.pauseTimes = JSON.stringify([now]);
+          setStartTimes([]);
+          setPlayStatus('stopped');
         } else {
-          setPauseTimes([]);
+          const now = currentDate.valueOf();
+          setStartTimes([now]);
+          localStorage.startTimes = JSON.stringify([now]);
         }
+        setPauseTimes([]);
         setPreDate(currentDate);
         return;
       }

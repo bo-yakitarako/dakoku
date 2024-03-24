@@ -30,6 +30,7 @@ export const useCalendarMove = () => {
 
   const move = {
     next: async () => {
+      if (loading) return;
       const api = ref.current?.getApi();
       if (!api) return;
       setLoading(true);
@@ -38,6 +39,7 @@ export const useCalendarMove = () => {
       setLoading(false);
     },
     nextYear: async () => {
+      if (loading) return;
       const api = ref.current?.getApi();
       if (!api) return;
       setLoading(true);
@@ -48,6 +50,7 @@ export const useCalendarMove = () => {
       setLoading(false);
     },
     prev: async () => {
+      if (loading) return;
       const api = ref.current?.getApi();
       if (!api) return;
       setLoading(true);
@@ -56,6 +59,7 @@ export const useCalendarMove = () => {
       setLoading(false);
     },
     prevYear: async () => {
+      if (loading) return;
       const api = ref.current?.getApi();
       if (!api) return;
       setLoading(true);
@@ -74,5 +78,5 @@ export const useCalendarMove = () => {
     });
   }, []);
 
-  return { ref, currentMonth, calendarEvents, workTimeSum, move, loading };
+  return { ref, currentMonth, calendarEvents, workTimeSum, move };
 };

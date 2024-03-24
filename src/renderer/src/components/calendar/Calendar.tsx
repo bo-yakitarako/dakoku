@@ -16,7 +16,7 @@ import { useRecoilValue } from 'recoil';
 import { currentJobAtom } from '../../modules/store';
 
 export const Calendar: React.FC = () => {
-  const { ref, currentMonth, calendarEvents, workTimeSum, move, loading } = useCalendarMove();
+  const { ref, currentMonth, calendarEvents, workTimeSum, move } = useCalendarMove();
   const currentJob = useRecoilValue(currentJobAtom);
 
   useEffect(() => {
@@ -29,7 +29,7 @@ export const Calendar: React.FC = () => {
     <Wrapper>
       <MonthTitle variant="h2">{currentMonth}</MonthTitle>
       <Options>
-        <ButtonGroup variant="outlined" disabled={loading}>
+        <ButtonGroup variant="outlined">
           <Button onClick={move.prevYear}>
             <KeyboardDoubleArrowLeft />
           </Button>
@@ -38,7 +38,7 @@ export const Calendar: React.FC = () => {
           </Button>
         </ButtonGroup>
         <Typography>{workTimeSum}</Typography>
-        <ButtonGroup variant="outlined" disabled={loading}>
+        <ButtonGroup variant="outlined">
           <Button onClick={move.next}>
             <KeyboardArrowRight />
           </Button>
