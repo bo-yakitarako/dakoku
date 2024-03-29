@@ -17,3 +17,5 @@ export type Job = { jobId: string; name: string };
 export type JobNameDict = { [jobId in string]: string };
 export type JobData = { currentJob: Job | null; jobs: Job[] };
 export type JobStore = { currentJob: Job | null; jobName: JobNameDict };
+
+export type Holiday = { day: number; name: string };

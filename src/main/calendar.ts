@@ -3,6 +3,7 @@ import icon from '../../resources/icon.png?asset';
 import { join } from 'path';
 import { is } from '@electron-toolkit/utils';
 import { getMonthWorkTime, getWindowBounds, setWindowBounds } from './store';
+import dayjs from 'dayjs';
 
 let mainWindow: BrowserWindow;
 let _calendarWindow: BrowserWindow | null = null;
@@ -53,3 +54,17 @@ export const closeCalendarWindow = () => {
 ipcMain.handle('getMonthWorkTime', async (event, year: number, month: number) =>
   getMonthWorkTime(year, month),
 );
+
+type Res = { error: string } | { date: string; name: string; type: string }[];
+// @ts-ignore
+ipcMain.handle('getHolidays', async (e, year: number, month: number) => {
+  const url = `https://api.national-holidays.jp/${year}/${`${month}`.padStart(2, '0')}`;
+  const res: Res = await (await fetch(url)).json();
+  if ('error' in res) {
+    return [];
+  }
+  return res.map(({ date, name }) => ({
+    day: dayjs(date).date(),
+    name,
+  }));
+});

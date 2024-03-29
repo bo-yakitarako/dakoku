@@ -1,5 +1,5 @@
 import { atom } from 'recoil';
-import { DateWorkTimes } from '../../../preload/dataType';
+import { DateWorkTimes, Holiday } from '../../../preload/dataType';
 
 type PlayStatus = 'playing' | 'paused' | 'stopped';
 
@@ -59,4 +59,9 @@ export const monthWorkTimesAtom = atom({
 export const canOpenCalendarAtom = atom({
   key: 'canOpenCalendarAtom',
   default: true,
+});
+
+export const holidaysAtom = atom({
+  key: 'holidaysAtom',
+  default: [] as Holiday[],
 });

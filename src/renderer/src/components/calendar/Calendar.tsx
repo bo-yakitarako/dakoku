@@ -13,10 +13,13 @@ import {
 } from '@mui/icons-material';
 import { useEffect } from 'react';
 import { useRecoilValue } from 'recoil';
+import dayjs from 'dayjs';
 import { currentJobAtom } from '../../modules/store';
+import { DayCellContent } from './DayCellContent';
 
 export const Calendar: React.FC = () => {
-  const { ref, currentMonth, calendarEvents, workTimeSum, move } = useCalendarMove();
+  const { ref, currentMonth, calendarEvents, workTimeSum, move, holidays, holidayGrids } =
+    useCalendarMove();
   const currentJob = useRecoilValue(currentJobAtom);
 
   useEffect(() => {
@@ -47,21 +50,19 @@ export const Calendar: React.FC = () => {
           </Button>
         </ButtonGroup>
       </Options>
-      <FullCalendar
-        ref={ref}
-        plugins={[dayGridPlugin]}
-        initialView="dayGridMonth"
-        locale={localeJa}
-        headerToolbar={false}
-        dayHeaders
-        events={calendarEvents}
-        eventTimeFormat={{
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit',
-        }}
-        eventContent={(arg) => <DateTooltip arg={arg} />}
-      />
+      <CustomFullCalendar holidays={holidays.map(({ day }) => day)} holidayGrids={holidayGrids}>
+        <FullCalendar
+          ref={ref}
+          plugins={[dayGridPlugin]}
+          initialView="dayGridMonth"
+          locale={localeJa}
+          headerToolbar={false}
+          dayHeaders
+          events={calendarEvents}
+          eventContent={(arg) => <DateTooltip {...arg} />}
+          dayCellContent={(arg) => <DayCellContent {...arg} />}
+        />
+      </CustomFullCalendar>
     </Wrapper>
   );
 };
@@ -84,5 +85,91 @@ const Options = styled(Box)`
   margin-bottom: 8px;
   > p {
     font-size: 16px;
+  }
+`;
+
+type CalendarProps = {
+  holidays: number[];
+  holidayGrids: { row: number; column: number }[];
+};
+
+const CustomFullCalendar = styled.div<CalendarProps>`
+  .fc-day-sat {
+    background-color: rgba(0, 0, 255, 0.1);
+    .fc-col-header-cell-cushion,
+    .fc-daygrid-day-number {
+      color: #ddf;
+    }
+  }
+
+  .fc-day-sun {
+    background-color: rgba(255, 0, 0, 0.1);
+    .fc-col-header-cell-cushion,
+    .fc-daygrid-day-number {
+      color: #fdd;
+    }
+  }
+
+  .fc-scrollgrid-sync-table {
+    ${({ holidayGrids }) =>
+      holidayGrids
+        .map(
+          ({ row, column }) => `
+      tr:nth-of-type(${row}) td:nth-of-type(${column}) {
+        background-color: rgba(255, 0, 0, 0.1);
+        .fc-col-header-cell-cushion,
+        .fc-daygrid-day-number {
+          color: #fdd;
+        }
+      }
+    `,
+        )
+        .join('')}
+
+    .fc-daygrid-day-frame {
+      min-height: 100%;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      .fc-daygrid-day-top {
+        position: absolute;
+        top: 0;
+        width: 100%;
+      }
+    }
+
+    .fc-daygrid-day-number {
+      width: 100%;
+    }
+  }
+
+  ${({ holidays }) => {
+    const today = dayjs();
+    const day = today.day();
+    let color = '';
+    if (day === 0 || holidays.includes(today.date())) {
+      color = '#fcc';
+    }
+    if (day === 6) {
+      color = '#ccf';
+    }
+    if (color === '') {
+      return '';
+    }
+    return `
+      .fc-day-today {
+        background-color: var(--fc-today-bg-color) !important;
+        .fc-daygrid-day-number {
+          color: ${color};
+        }
+      }
+    `;
+  }}
+  .fc-day-other {
+    * {
+      display: none;
+    }
   }
 `;

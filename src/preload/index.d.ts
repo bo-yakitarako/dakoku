@@ -1,6 +1,6 @@
 import { ElectronAPI } from '@electron-toolkit/preload';
 import { IpcRenderer } from 'electron';
-import { DateWorkTimes, Job, JobData } from './dataType';
+import { DateWorkTimes, Holiday, Job, JobData } from './dataType';
 
 declare global {
   interface Window {
@@ -23,6 +23,7 @@ declare global {
         year: number,
         month: number,
       ) => Promise<{ workTimeSum: string; dates: DateWorkTimes }>;
+      getHolidays: (year: number, month: number) => Promise<Holiday[]>;
     };
     ipcRenderer: IpcRenderer;
   }

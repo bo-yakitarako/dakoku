@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import { useRecoilState, useSetRecoilState } from 'recoil';
-import { calendarDateAtom, monthWorkTimesAtom } from '../../../modules/store';
+import { calendarDateAtom, holidaysAtom, monthWorkTimesAtom } from '../../../modules/store';
 import dayjs from 'dayjs';
 import { EventSourceInput } from '@fullcalendar/core';
 
@@ -9,8 +9,10 @@ export const useCalendarMove = () => {
   const ref = useRef<FullCalendar>(null);
   const [currentDate, setCurrentDate] = useRecoilState(calendarDateAtom);
   const setMonthWorkTimes = useSetRecoilState(monthWorkTimesAtom);
+  const [holidays, setHolidays] = useRecoilState(holidaysAtom);
   const [calendarEvents, setCalendarEvents] = useState<EventSourceInput>([]);
   const [workTimeSum, setWorkTimeSum] = useState('');
+  const [holidayGrids, setHolidayGrids] = useState<{ row: number; column: number }[]>([]);
   const [loading, setLoading] = useState(false);
 
   const setMonthData = async (monthMove: number) => {
@@ -18,6 +20,11 @@ export const useCalendarMove = () => {
     const { workTimeSum, dates } = await window.api.getMonthWorkTime(
       nextMonth.year(),
       nextMonth.month() + 1,
+    );
+    const holidays = await window.api.getHolidays(nextMonth.year(), nextMonth.month() + 1);
+    setHolidays(holidays);
+    setHolidayGrids(
+      holidays.map(({ day }) => convertToGrid(nextMonth.year(), nextMonth.month(), day)),
     );
     setMonthWorkTimes(dates);
     setWorkTimeSum(workTimeSum);
@@ -78,5 +85,13 @@ export const useCalendarMove = () => {
     });
   }, []);
 
-  return { ref, currentMonth, calendarEvents, workTimeSum, move };
+  return { ref, currentMonth, calendarEvents, workTimeSum, move, holidays, holidayGrids };
+};
+
+const convertToGrid = (year: number, monthIndex: number, date: number) => {
+  const target = dayjs(`${year}-${monthIndex + 1}-${date}`);
+  const firstDay = target.startOf('month').day();
+  const row = Math.floor((firstDay + date - 1) / 7) + 1;
+  const column = target.day() + 1;
+  return { row, column };
 };

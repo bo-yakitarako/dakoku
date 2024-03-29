@@ -15,6 +15,7 @@ const api = {
   openCalendar: () => ipcRenderer.invoke('openCalendar'),
   getMonthWorkTime: (year: number, month: number) =>
     ipcRenderer.invoke('getMonthWorkTime', year, month),
+  getHolidays: (year: number, month: number) => ipcRenderer.invoke('getHolidays', year, month),
 };
 
 // Use `contextBridge` APIs to expose Electron APIs to

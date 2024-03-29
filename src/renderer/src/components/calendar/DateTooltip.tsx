@@ -7,11 +7,7 @@ import dayjs from 'dayjs';
 import { useRecoilValue } from 'recoil';
 import { monthWorkTimesAtom } from '../../modules/store';
 
-type Props = {
-  arg: EventContentArg;
-};
-
-export const DateTooltip: React.FC<Props> = ({ arg }) => {
+export const DateTooltip: React.FC<EventContentArg> = (arg) => {
   const { start } = arg.event;
   const workTimes = useRecoilValue(monthWorkTimesAtom);
   const restTimeText = workTimes[start!.getDate()]?.restTime ?? '';
