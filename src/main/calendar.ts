@@ -4,12 +4,11 @@ import { join } from 'path';
 import { is } from '@electron-toolkit/utils';
 import { getMonthWorkTime, getWindowBounds, setWindowBounds } from './store';
 import dayjs from 'dayjs';
+import { createDayDetailWindow } from './dayDetail';
 
-let mainWindow: BrowserWindow;
-let _calendarWindow: BrowserWindow | null = null;
-export const createCalendarWindow = () => {
+export const createCalendarWindow = (mainWindow: BrowserWindow) => {
   const windowBounds = getWindowBounds('calendar');
-  const calendarWindow = new BrowserWindow({
+  let calendarWindow: BrowserWindow | null = new BrowserWindow({
     ...windowBounds,
     show: false,
     autoHideMenuBar: true,
@@ -19,19 +18,24 @@ export const createCalendarWindow = () => {
       sandbox: false,
     },
   });
-  _calendarWindow = calendarWindow;
 
   calendarWindow.on('ready-to-show', () => {
-    calendarWindow.show();
+    calendarWindow?.show();
   });
 
   calendarWindow.on('close', () => {
     mainWindow.webContents.send('closedCalendar');
-    setWindowBounds(calendarWindow, 'calendar');
+    setWindowBounds(calendarWindow!, 'calendar');
+    ipcMain.removeHandler('openDayDetail');
   });
 
   calendarWindow.on('closed', () => {
-    _calendarWindow = null;
+    calendarWindow = null;
+  });
+
+  // @ts-ignore
+  ipcMain.handle('openDayDetail', async () => {
+    await createDayDetailWindow(calendarWindow!);
   });
 
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
@@ -39,15 +43,6 @@ export const createCalendarWindow = () => {
   } else {
     calendarWindow.loadFile(join(__dirname, '../renderer/calendar.html'));
   }
-};
-
-export const setMainWindow = (window: BrowserWindow) => {
-  mainWindow = window;
-};
-
-export const closeCalendarWindow = () => {
-  _calendarWindow?.close();
-  _calendarWindow = null;
 };
 
 // @ts-ignore

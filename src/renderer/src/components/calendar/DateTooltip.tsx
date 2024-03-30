@@ -4,18 +4,25 @@ import { Circle } from '@mui/icons-material';
 import { Box, Typography } from '@mui/material';
 import Tooltip, { tooltipClasses, TooltipProps } from '@mui/material/Tooltip';
 import dayjs from 'dayjs';
-import { useRecoilValue } from 'recoil';
-import { monthWorkTimesAtom } from '../../modules/store';
+import { useRecoilValue, useSetRecoilState } from 'recoil';
+import { calendarLoadingAtom, monthWorkTimesAtom } from '../../modules/store';
 
 export const DateTooltip: React.FC<EventContentArg> = (arg) => {
   const { start } = arg.event;
   const workTimes = useRecoilValue(monthWorkTimesAtom);
+  const setLoading = useSetRecoilState(calendarLoadingAtom);
   const restTimeText = workTimes[start!.getDate()]?.restTime ?? '';
   const d = dayjs(start);
   const timeText = d.hour() === 0 ? d.format('m分s秒') : d.format('H時間m分');
+
+  const onClick = () => {
+    setLoading(true);
+    window.api.openDayDetail();
+  };
+
   return (
     <ColoredTooltip title={`休憩時間: ${restTimeText}`} arrow>
-      <Container>
+      <Container onClick={onClick}>
         <Circle color="primary" />
         <Typography>{timeText}</Typography>
       </Container>
@@ -34,6 +41,9 @@ const Container = styled(Box)`
   }
   > p {
     font-size: 14px;
+  }
+  &:hover {
+    cursor: pointer;
   }
 `;
 

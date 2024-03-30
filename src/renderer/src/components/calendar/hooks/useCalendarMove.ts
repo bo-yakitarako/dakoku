@@ -1,7 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import { useRecoilState, useSetRecoilState } from 'recoil';
-import { calendarDateAtom, holidaysAtom, monthWorkTimesAtom } from '../../../modules/store';
+import {
+  calendarDateAtom,
+  calendarLoadingAtom,
+  holidaysAtom,
+  monthWorkTimesAtom,
+} from '../../../modules/store';
 import dayjs from 'dayjs';
 import { EventSourceInput } from '@fullcalendar/core';
 
@@ -10,10 +15,10 @@ export const useCalendarMove = () => {
   const [currentDate, setCurrentDate] = useRecoilState(calendarDateAtom);
   const setMonthWorkTimes = useSetRecoilState(monthWorkTimesAtom);
   const [holidays, setHolidays] = useRecoilState(holidaysAtom);
+  const [loading, setLoading] = useRecoilState(calendarLoadingAtom);
   const [calendarEvents, setCalendarEvents] = useState<EventSourceInput>([]);
   const [workTimeSum, setWorkTimeSum] = useState('');
   const [holidayGrids, setHolidayGrids] = useState<{ row: number; column: number }[]>([]);
-  const [loading, setLoading] = useState(false);
 
   const setMonthData = async (monthMove: number) => {
     const nextMonth = dayjs(currentDate).add(monthMove, 'month');
@@ -83,6 +88,10 @@ export const useCalendarMove = () => {
     setMonthData(0).then(() => {
       setLoading(false);
     });
+    const openDetail = window.ipcRenderer.on('finishLoadDetail', () => setLoading(false));
+    return () => {
+      openDetail.removeAllListeners('finishLoadDetail');
+    };
   }, []);
 
   return { ref, currentMonth, calendarEvents, workTimeSum, move, loading, holidays, holidayGrids };

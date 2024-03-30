@@ -24,6 +24,7 @@ declare global {
         month: number,
       ) => Promise<{ workTimeSum: string; dates: DateWorkTimes }>;
       getHolidays: (year: number, month: number) => Promise<Holiday[]>;
+      openDayDetail: () => Promise<void>;
     };
     ipcRenderer: IpcRenderer;
   }

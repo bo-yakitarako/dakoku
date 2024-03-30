@@ -14,7 +14,7 @@ import {
   getWindowBounds,
   setWindowBounds,
 } from './store';
-import { closeCalendarWindow, createCalendarWindow, setMainWindow } from './calendar';
+import { createCalendarWindow } from './calendar';
 
 function createWindow(): void {
   // Create the browser window.
@@ -35,9 +35,13 @@ function createWindow(): void {
   });
 
   mainWindow.on('close', () => {
-    closeCalendarWindow();
     setWindowBounds(mainWindow, 'main');
+    ipcMain.removeHandler('openCalendar');
     app.quit();
+  });
+
+  ipcMain.handle('openCalendar', () => {
+    createCalendarWindow(mainWindow);
   });
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
@@ -52,8 +56,6 @@ function createWindow(): void {
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'));
   }
-
-  setMainWindow(mainWindow);
 }
 
 // This method will be called when Electron has finished
@@ -114,8 +116,4 @@ ipcMain.handle(
 
 ipcMain.handle('getTodayWorkTime', () => {
   return getTodayWorkTime();
-});
-
-ipcMain.handle('openCalendar', () => {
-  createCalendarWindow();
 });
