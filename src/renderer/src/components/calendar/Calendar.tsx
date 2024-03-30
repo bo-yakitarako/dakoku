@@ -214,6 +214,15 @@ const CustomFullCalendar = styled.div<CalendarProps>`
       }
     `;
   }}
+  .fc-day-other.fc-day-today {
+    background-color: transparent;
+  }
+  .fc-day-otther.fc-day-today.fc-day-sat {
+    background-color: rgba(0, 0, 255, 0.1);
+  }
+  .fc-day-other.fc-day-today.fc-day-sun {
+    background-color: rgba(255, 0, 0, 0.1);
+  }
   .fc-day-other {
     * {
       display: none;
