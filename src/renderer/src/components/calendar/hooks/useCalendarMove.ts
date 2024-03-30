@@ -17,10 +17,6 @@ export const useCalendarMove = () => {
 
   const setMonthData = async (monthMove: number) => {
     const nextMonth = dayjs(currentDate).add(monthMove, 'month');
-    setCurrentDate(nextMonth.toDate());
-    setWorkTimeSum('└(՞ةڼ◔)」ﾇﾍﾞﾁﾞｮﾝﾇｿﾞｼﾞｮﾝﾍﾞﾙﾐｯﾃｨｽﾓｹﾞﾛﾝﾎﾞｮwww');
-    setHolidays([]);
-    setHolidayGrids([]);
     const { workTimeSum, dates } = await window.api.getMonthWorkTime(
       nextMonth.year(),
       nextMonth.month() + 1,
@@ -34,6 +30,7 @@ export const useCalendarMove = () => {
     setWorkTimeSum(workTimeSum);
     const events = Object.values(dates).map(({ workTime }) => ({ date: new Date(workTime) }));
     setCalendarEvents(events);
+    setCurrentDate(nextMonth.toDate());
   };
 
   const currentMonth = dayjs(currentDate).format('YYYY年M月');
@@ -44,8 +41,8 @@ export const useCalendarMove = () => {
       const api = ref.current?.getApi();
       if (!api) return;
       setLoading(true);
-      api.next();
       await setMonthData(1);
+      api.next();
       setLoading(false);
     },
     nextYear: async () => {
@@ -53,10 +50,10 @@ export const useCalendarMove = () => {
       const api = ref.current?.getApi();
       if (!api) return;
       setLoading(true);
+      await setMonthData(12);
       const targetDate = api.getDate();
       targetDate.setFullYear(targetDate.getFullYear() + 1);
       api.gotoDate(targetDate);
-      await setMonthData(12);
       setLoading(false);
     },
     prev: async () => {
@@ -64,8 +61,8 @@ export const useCalendarMove = () => {
       const api = ref.current?.getApi();
       if (!api) return;
       setLoading(true);
-      api.prev();
       await setMonthData(-1);
+      api.prev();
       setLoading(false);
     },
     prevYear: async () => {
@@ -73,10 +70,10 @@ export const useCalendarMove = () => {
       const api = ref.current?.getApi();
       if (!api) return;
       setLoading(true);
+      await setMonthData(-12);
       const targetDate = api.getDate();
       targetDate.setFullYear(targetDate.getFullYear() - 1);
       api.gotoDate(targetDate);
-      await setMonthData(-12);
       setLoading(false);
     },
   };
