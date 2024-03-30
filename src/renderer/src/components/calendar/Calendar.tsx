@@ -2,7 +2,7 @@ import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import localeJa from '@fullcalendar/core/locales/ja';
 import styled from '@emotion/styled';
-import { Box, Button, ButtonGroup, Typography } from '@mui/material';
+import { Box, Button, ButtonGroup, CircularProgress, Typography } from '@mui/material';
 import { DateTooltip } from './DateTooltip';
 import { useCalendarMove } from './hooks/useCalendarMove';
 import {
@@ -18,7 +18,7 @@ import { currentJobAtom } from '../../modules/store';
 import { DayCellContent } from './DayCellContent';
 
 export const Calendar: React.FC = () => {
-  const { ref, currentMonth, calendarEvents, workTimeSum, move, holidays, holidayGrids } =
+  const { ref, currentMonth, calendarEvents, workTimeSum, move, loading, holidays, holidayGrids } =
     useCalendarMove();
   const currentJob = useRecoilValue(currentJobAtom);
 
@@ -50,7 +50,11 @@ export const Calendar: React.FC = () => {
           </Button>
         </ButtonGroup>
       </Options>
-      <CustomFullCalendar holidays={holidays.map(({ day }) => day)} holidayGrids={holidayGrids}>
+      <CustomFullCalendar
+        holidays={holidays.map(({ day }) => day)}
+        holidayGrids={holidayGrids}
+        loading={String(loading) as 'true' | 'false'}
+      >
         <FullCalendar
           ref={ref}
           plugins={[dayGridPlugin]}
@@ -62,6 +66,11 @@ export const Calendar: React.FC = () => {
           eventContent={(arg) => <DateTooltip {...arg} />}
           dayCellContent={(arg) => <DayCellContent {...arg} />}
         />
+        {loading && (
+          <LoadingWrapper>
+            <CircularProgress size={80} />
+          </LoadingWrapper>
+        )}
       </CustomFullCalendar>
     </Wrapper>
   );
@@ -91,24 +100,59 @@ const Options = styled(Box)`
 type CalendarProps = {
   holidays: number[];
   holidayGrids: { row: number; column: number }[];
+  loading: 'true' | 'false';
 };
 
 const CustomFullCalendar = styled.div<CalendarProps>`
-  .fc-day-sat {
-    background-color: rgba(0, 0, 255, 0.1);
-    .fc-col-header-cell-cushion,
-    .fc-daygrid-day-number {
-      color: #ddf;
-    }
-  }
+  position: relative;
+  width: 100%;
+  height: fit-content;
 
-  .fc-day-sun {
-    background-color: rgba(255, 0, 0, 0.1);
-    .fc-col-header-cell-cushion,
-    .fc-daygrid-day-number {
-      color: #fdd;
+  ${({ loading, holidays }) =>
+    loading === 'true'
+      ? `
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.4);
+      z-index: 1;
     }
-  }
+    ${
+      holidays.length === 0
+        ? `
+      .fc-day-today {
+        background-color: transparent !important;
+      }
+    `
+        : ''
+    }
+  `
+      : ''}
+
+  ${({ loading, holidays }) =>
+    loading === 'false' || holidays.length > 0
+      ? `
+    .fc-day-sat {
+      background-color: rgba(0, 0, 255, 0.1);
+      .fc-col-header-cell-cushion,
+      .fc-daygrid-day-number {
+        color: #ddf;
+      }
+    }
+
+    .fc-day-sun {
+      background-color: rgba(255, 0, 0, 0.1);
+      .fc-col-header-cell-cushion,
+      .fc-daygrid-day-number {
+        color: #fdd;
+      }
+    }
+  `
+      : ''}
 
   .fc-scrollgrid-sync-table {
     ${({ holidayGrids }) =>
@@ -145,7 +189,10 @@ const CustomFullCalendar = styled.div<CalendarProps>`
     }
   }
 
-  ${({ holidays }) => {
+  ${({ holidays, loading }) => {
+    if (loading === 'true' && holidays.length === 0) {
+      return '';
+    }
     const today = dayjs();
     const day = today.day();
     let color = '';
@@ -160,7 +207,7 @@ const CustomFullCalendar = styled.div<CalendarProps>`
     }
     return `
       .fc-day-today {
-        background-color: var(--fc-today-bg-color) !important;
+        background-color: var(--fc-today-bg-color);
         .fc-daygrid-day-number {
           color: ${color};
         }
@@ -172,4 +219,12 @@ const CustomFullCalendar = styled.div<CalendarProps>`
       display: none;
     }
   }
+`;
+
+const LoadingWrapper = styled(Box)`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
 `;

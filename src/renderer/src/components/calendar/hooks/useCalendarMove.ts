@@ -17,6 +17,10 @@ export const useCalendarMove = () => {
 
   const setMonthData = async (monthMove: number) => {
     const nextMonth = dayjs(currentDate).add(monthMove, 'month');
+    setCurrentDate(nextMonth.toDate());
+    setWorkTimeSum('└(՞ةڼ◔)」ﾇﾍﾞﾁﾞｮﾝﾇｿﾞｼﾞｮﾝﾍﾞﾙﾐｯﾃｨｽﾓｹﾞﾛﾝﾎﾞｮwww');
+    setHolidays([]);
+    setHolidayGrids([]);
     const { workTimeSum, dates } = await window.api.getMonthWorkTime(
       nextMonth.year(),
       nextMonth.month() + 1,
@@ -28,7 +32,6 @@ export const useCalendarMove = () => {
     );
     setMonthWorkTimes(dates);
     setWorkTimeSum(workTimeSum);
-    setCurrentDate(nextMonth.toDate());
     const events = Object.values(dates).map(({ workTime }) => ({ date: new Date(workTime) }));
     setCalendarEvents(events);
   };
@@ -41,8 +44,8 @@ export const useCalendarMove = () => {
       const api = ref.current?.getApi();
       if (!api) return;
       setLoading(true);
-      await setMonthData(1);
       api.next();
+      await setMonthData(1);
       setLoading(false);
     },
     nextYear: async () => {
@@ -50,10 +53,10 @@ export const useCalendarMove = () => {
       const api = ref.current?.getApi();
       if (!api) return;
       setLoading(true);
-      await setMonthData(12);
       const targetDate = api.getDate();
       targetDate.setFullYear(targetDate.getFullYear() + 1);
       api.gotoDate(targetDate);
+      await setMonthData(12);
       setLoading(false);
     },
     prev: async () => {
@@ -61,8 +64,8 @@ export const useCalendarMove = () => {
       const api = ref.current?.getApi();
       if (!api) return;
       setLoading(true);
-      await setMonthData(-1);
       api.prev();
+      await setMonthData(-1);
       setLoading(false);
     },
     prevYear: async () => {
@@ -70,10 +73,10 @@ export const useCalendarMove = () => {
       const api = ref.current?.getApi();
       if (!api) return;
       setLoading(true);
-      await setMonthData(-12);
       const targetDate = api.getDate();
       targetDate.setFullYear(targetDate.getFullYear() - 1);
       api.gotoDate(targetDate);
+      await setMonthData(-12);
       setLoading(false);
     },
   };
@@ -85,7 +88,7 @@ export const useCalendarMove = () => {
     });
   }, []);
 
-  return { ref, currentMonth, calendarEvents, workTimeSum, move, holidays, holidayGrids };
+  return { ref, currentMonth, calendarEvents, workTimeSum, move, loading, holidays, holidayGrids };
 };
 
 const convertToGrid = (year: number, monthIndex: number, date: number) => {
