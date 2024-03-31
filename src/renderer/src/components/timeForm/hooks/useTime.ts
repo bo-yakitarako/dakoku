@@ -13,14 +13,29 @@ export const useTime = () => {
   const [workTime, setWorkTime] = useState(firstTimes.workTime);
   const [pausedTime, setPausedTime] = useState(firstTimes.pausedTime);
   const [preDate, setPreDate] = useState(dayjs());
+  const [showRequiredAlert, setShowRequiredAlert] = useState(false);
+  const [requiredTimeText, setRequiredTimeText] = useState('');
 
   const start = async () => {
     let _startTimes = [...startTimes];
+    let _pauseTimes = [...pauseTimes];
     if (playStatus === 'stopped') {
       const saved = await window.api.getTodayWorkTime();
       _startTimes = [...saved.startTimes];
-      localStorage.pauseTimes = JSON.stringify(saved.pauseTimes);
-      setPauseTimes(saved.pauseTimes);
+      _pauseTimes = [...saved.pauseTimes];
+    }
+    const requiredTimeText = createRequiredTimeText(_startTimes, _pauseTimes);
+    if (requiredTimeText !== '') {
+      if (playStatus === 'stopped') {
+        setRequiredTimeText(`せっかく退勤したんだし、あと${requiredTimeText}くらいはやめとこうぜ`);
+      } else {
+        setRequiredTimeText(`あと${requiredTimeText}は休んでもらわんとな...`);
+      }
+      setShowRequiredAlert(true);
+      return;
+    } else if (playStatus === 'stopped') {
+      localStorage.pauseTimes = JSON.stringify(_pauseTimes);
+      setPauseTimes(_pauseTimes);
     }
     setPlayStatus('playing');
     const updatedStartTimes = [..._startTimes, Date.now()];
@@ -29,6 +44,12 @@ export const useTime = () => {
   };
 
   const pause = () => {
+    const requiredTimeText = createRequiredTimeText(startTimes, pauseTimes);
+    if (requiredTimeText !== '') {
+      setRequiredTimeText(`あと${requiredTimeText}くらいは頑張ろうぜ`);
+      setShowRequiredAlert(true);
+      return;
+    }
     setPlayStatus('paused');
     const updatedPauseTimes = [...pauseTimes, Date.now()];
     setPauseTimes(updatedPauseTimes);
@@ -36,6 +57,14 @@ export const useTime = () => {
   };
 
   const stop = () => {
+    if (playStatus === 'playing') {
+      const requiredTimeText = createRequiredTimeText(startTimes, pauseTimes);
+      if (requiredTimeText !== '') {
+        setRequiredTimeText(`${requiredTimeText}だけはやってみよ？`);
+        setShowRequiredAlert(true);
+        return;
+      }
+    }
     setPlayStatus('stopped');
     localStorage.removeItem('startTimes');
     localStorage.removeItem('pauseTimes');
@@ -107,6 +136,8 @@ export const useTime = () => {
     setPauseTimes([]);
   }, []);
 
+  const handleAlertClose = () => setShowRequiredAlert(false);
+
   return {
     start,
     pause,
@@ -114,5 +145,30 @@ export const useTime = () => {
     workTime,
     pausedTime,
     playStatus,
+    showRequiredAlert,
+    requiredTimeText,
+    handleAlertClose,
   };
+};
+
+const REQUIRED_TIME = 5 * 60 * 1000; // 5分
+
+const createRequiredTimeText = (startTimes: number[], pauseTimes: number[]) => {
+  if (startTimes.length === 0) {
+    return '';
+  }
+  const targetTIme =
+    startTimes.length > pauseTimes.length
+      ? startTimes[startTimes.length - 1]
+      : pauseTimes[pauseTimes.length - 1];
+  const remainedRequiredTime = REQUIRED_TIME - (Date.now() - targetTIme);
+  if (remainedRequiredTime < 0) {
+    return '';
+  }
+  const minutes = Math.floor(remainedRequiredTime / 60000);
+  const seconds = Math.floor((remainedRequiredTime % 60000) / 1000);
+  if (minutes === 0) {
+    return `${seconds}秒`;
+  }
+  return `${minutes}分${seconds}秒`;
 };
