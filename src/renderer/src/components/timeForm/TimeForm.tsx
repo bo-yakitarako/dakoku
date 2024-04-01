@@ -12,9 +12,8 @@ import { currentJobAtom } from '../../modules/store';
 
 export const TimeForm: React.FC = () => {
   const {
-    playStatus,
-    workTime,
-    pausedTime,
+    workStatus,
+    count,
     start,
     pause,
     stop,
@@ -36,7 +35,7 @@ export const TimeForm: React.FC = () => {
       <CalendarButton color="info" onClick={openCalendar} disabled={!canOpen}>
         <CalendarMonth />
       </CalendarButton>
-      {playStatus === 'stopped' ? (
+      {workStatus === 'workOff' ? (
         <>
           <JobSelectBox />
           <JobControl />
@@ -45,22 +44,22 @@ export const TimeForm: React.FC = () => {
         <Box
           sx={{
             display: 'flex',
-            flexDirection: playStatus === 'playing' ? 'column-reverse' : 'column',
+            flexDirection: workStatus === 'working' ? 'column-reverse' : 'column',
             justifyContent: 'center',
             alignItems: 'center',
             gap: '8px',
           }}
         >
-          <Time label="勤務時間" focused={playStatus === 'playing'}>
-            {workTime}
+          <Time label="勤務時間" focused={workStatus === 'working'}>
+            {count.workTime}
           </Time>
-          <Time label="休憩時間" focused={playStatus === 'paused'}>
-            {pausedTime}
+          <Time label="休憩時間" focused={workStatus === 'resting'}>
+            {count.restTime}
           </Time>
         </Box>
       )}
       <Buttons>
-        {playStatus === 'stopped' && (
+        {workStatus === 'workOff' && (
           <ActionButton
             variant="outlined"
             color="primary"
@@ -71,7 +70,7 @@ export const TimeForm: React.FC = () => {
             出勤
           </ActionButton>
         )}
-        {playStatus === 'playing' && (
+        {workStatus === 'working' && (
           <>
             <ActionButton
               variant="outlined"
@@ -93,7 +92,7 @@ export const TimeForm: React.FC = () => {
             </ActionButton>
           </>
         )}
-        {playStatus === 'paused' && (
+        {workStatus === 'resting' && (
           <>
             <ActionButton
               variant="outlined"

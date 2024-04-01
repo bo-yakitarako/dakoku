@@ -1,13 +1,11 @@
 import Store from 'electron-store';
 import {
   DateTimeDatas,
-  DateWorkTimes,
   DayDetailData,
   DayDetailGraphItem,
   Job,
   JobNameDict,
   JobStore,
-  MonthWorkTimes,
   YearWorkTimes,
 } from '../preload/dataType';
 import dayjs from 'dayjs';
@@ -112,69 +110,52 @@ const convertNameDictToJobs = (jobNameDict: JobNameDict): Job[] => {
 
 export const getTodayWorkTime = () => {
   if (currentJob === null) {
-    return { startTimes: [], pauseTimes: [] };
+    return { workTime: 0, restTime: 0 };
   }
   const jobWorkTime = workTimeStore.get(currentJob.jobId) ?? {};
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth() + 1;
-  const date = now.getDate();
-  const workTime = jobWorkTime[`${year}`]?.[`${month}`]?.[`${date}`];
-  if (!workTime) {
-    return { startTimes: [], pauseTimes: [] };
+  const now = dayjs();
+  const [year, month, date] = [now.year(), now.month() + 1, now.date()];
+  const work = jobWorkTime[year]?.[month]?.[date];
+  if (!work) {
+    return { workTime: 0, restTime: 0 };
   }
-  const { startTimes, pauseTimes, finishTime } = workTime;
-  if (startTimes.length > pauseTimes.length) {
-    pauseTimes.push(finishTime);
-  }
-  return { startTimes, pauseTimes };
+  const { workTime, restTime } = work;
+  return { workTime, restTime };
 };
 
-export const registerWorkTime = (
-  startTimes: number[],
-  pauseTimes: number[],
-  _finishTime?: number,
-) => {
-  if (currentJob === null) {
+export const registerWorkTime = (times: number[]) => {
+  if (currentJob === null || times.length === 0) {
     return;
   }
-  const now = new Date(_finishTime ?? Date.now());
-  const finishTime = now.getTime();
-  const year = now.getFullYear();
-  const month = now.getMonth() + 1;
-  const date = now.getDate();
-  const preJobWorkTime = workTimeStore.get(currentJob.jobId) ?? {};
-  const preYear = preJobWorkTime[`${year}`] ?? {};
-  const { workTime, restTime } = parseWorkTime(startTimes, pauseTimes, finishTime);
-  const preMonth = preYear[`${month}`] ?? {};
-  const currentMonth: DateWorkTimes = {
-    ...preMonth,
-    [date]: { workTime, restTime, startTimes, pauseTimes, finishTime },
-  };
-  const currentYear: MonthWorkTimes = { ...preYear, [month]: currentMonth };
-  const jobWorkTime = { ...preJobWorkTime, [`${year}`]: currentYear };
-  workTimeStore.set(currentJob.jobId, jobWorkTime);
+  const now = dayjs(times.slice(-1)[0]);
+  const [year, month, date] = [now.year(), now.month() + 1, now.date()];
+  const jobWorks = workTimeStore.get(currentJob.jobId) ?? {};
+  const todayWork = jobWorks[year]?.[month]?.[date];
+  const { workTime, restTime } = parseWorkTime(times);
+  if (todayWork) {
+    todayWork.workTime += workTime;
+    todayWork.restTime += restTime;
+    todayWork.works = [...todayWork.works, times];
+    jobWorks[year][month][date] = todayWork; // 参照一緒かもしれないけど再代入を明示して確実さとわかりやすさ重視
+    workTimeStore.set(currentJob.jobId, jobWorks);
+    return;
+  }
+  const jobWorksYear = jobWorks[year] ?? {};
+  const jobWorksMonth = jobWorksYear[month] ?? {};
+  const registeringMonth = { ...jobWorksMonth, [date]: { workTime, restTime, works: [times] } };
+  const registeringYear = { ...jobWorksYear, [month]: registeringMonth };
+  const registeringItem = { ...jobWorks, [year]: registeringYear };
+  workTimeStore.set(currentJob.jobId, registeringItem);
 };
 
-const parseWorkTime = (startTimes: number[], pauseTimes: number[], finishTime: number) => {
-  const copiedStartTimes = [...startTimes];
-  const copiedPauseTimes = [...pauseTimes];
-  let prevPauseTime: number | null = null;
-  let workTime = 0;
-  let restTime = 0;
-  while (copiedStartTimes.length > 0 && copiedPauseTimes.length > 0) {
-    const startTime = copiedStartTimes.splice(0, 1)[0];
-    const pauseTime = copiedPauseTimes.splice(0, 1)[0];
-    workTime += pauseTime - startTime;
-    if (prevPauseTime !== null) {
-      restTime += startTime - prevPauseTime;
-    }
-    prevPauseTime = pauseTime;
-  }
-  if (copiedStartTimes.length > 0) {
-    workTime += finishTime - copiedStartTimes[0];
-    if (prevPauseTime !== null) {
-      restTime += copiedStartTimes[0] - prevPauseTime;
+const parseWorkTime = (times: number[]) => {
+  let [workTime, restTime] = [0, 0];
+  for (let i = 0; i < times.length - 1; i += 1) {
+    const interval = times[i + 1] - times[i];
+    if (i % 2 === 0) {
+      workTime += interval;
+    } else {
+      restTime += interval;
     }
   }
   return { workTime, restTime };
@@ -185,7 +166,7 @@ export const getMonthWorkTime = (year: number, month: number) => {
     return { dates: {}, workTimeSum: 'なんかやったっけ？' };
   }
   const jobWorkTime = workTimeStore.get(currentJob.jobId) ?? {};
-  const workTimes = jobWorkTime[`${year}`]?.[`${month}`];
+  const workTimes = jobWorkTime[year]?.[month];
   if (!workTimes) {
     return { dates: {}, workTimeSum: 'なんかやったっけ？' };
   }
@@ -243,13 +224,10 @@ export const getDayDetailData = (year: number, month: number, day: number, isAll
       return { jobId, jobName, ...workTimeData };
     });
   const edgeUnixValue = jobs.reduce<{ start: number; end: number }>(
-    (pre, cur) => {
+    (pre, { works }) => {
       const curEdge = {
-        start: cur.startTimes[0],
-        end:
-          cur.startTimes.length === cur.pauseTimes.length
-            ? cur.pauseTimes.slice(-1)[0]
-            : cur.finishTime,
+        start: works[0][0],
+        end: works.slice(-1)[0].slice(-1)[0],
       };
       if (pre.end === 0) {
         return { ...curEdge };
@@ -276,10 +254,10 @@ export const getDayDetailData = (year: number, month: number, day: number, isAll
     endHour: `${dayjs(edge.end).hour() + 1}時`,
   };
   const jobItems = jobs.map((job) => {
-    const { jobId, jobName, startTimes, pauseTimes, finishTime } = job;
+    const { jobId, jobName, works } = job;
     const graph = {
       ...edgeText,
-      items: generateGraphItems(startTimes, pauseTimes, finishTime, edge, width),
+      items: generateGraphItems(works, edge, width),
     };
     const workTimeSum = convertToTimeText(job.workTime);
     const restTimeSum = convertToTimeText(job.restTime);
@@ -287,21 +265,12 @@ export const getDayDetailData = (year: number, month: number, day: number, isAll
   });
   let jobSum: { workTimeSum: string; restTimeSum: string } | undefined = undefined;
   if (jobs.length > 1) {
-    const concatStartTimes = jobs.reduce((pre, cur) => [...pre, ...cur.startTimes], [] as number[]);
-    const pauseTimeWithFinish = jobs.map(({ startTimes, pauseTimes, finishTime }) => {
-      if (startTimes.length === pauseTimes.length) {
-        return [...pauseTimes];
-      }
-      return [...pauseTimes, finishTime];
-    });
-    const concatPauseTimes = pauseTimeWithFinish.reduce(
-      (pre, cur) => [...pre, ...cur],
-      [] as number[],
-    );
-    const allStartTimes = concatStartTimes.sort((a, b) => a - b);
-    const allPauseTimes = concatPauseTimes.sort((a, b) => a - b);
-    const { workTime, restTime } = parseWorkTime(allStartTimes, allPauseTimes, edge.end);
-    jobSum = { workTimeSum: convertToTimeText(workTime), restTimeSum: convertToTimeText(restTime) };
+    const workTimeSumNumber = jobs.reduce((pre, cur) => pre + cur.workTime, 0);
+    const restTimeSumNumber = jobs.reduce((pre, cur) => pre + cur.restTime, 0);
+    jobSum = {
+      workTimeSum: convertToTimeText(workTimeSumNumber),
+      restTimeSum: convertToTimeText(restTimeSumNumber),
+    };
   }
   const date = { year, month, day };
   const data: DayDetailData = { date, jobItems, jobSum };
@@ -310,41 +279,49 @@ export const getDayDetailData = (year: number, month: number, day: number, isAll
 };
 
 const generateGraphItems = (
-  startTimes: number[],
-  pauseTimes: number[],
-  finishTime: number,
+  works: number[][],
   edge: { start: number; end: number },
   width: number,
 ) => {
-  let times = [...startTimes, ...pauseTimes].sort((a, b) => a - b);
-  if (times.length % 2 === 1) {
-    times = [...times, finishTime];
-  }
   const duration = edge.end - edge.start;
   let items: DayDetailGraphItem[] = [];
-  for (let i = 0; i < times.length - 1; i += 1) {
-    const type = i % 2 === 0 ? 'work' : 'rest';
-    const length = times[i + 1] - times[i];
-    const lengthRate = length / duration;
-    const locationStart = ((times[i] - edge.start) / duration) * 100;
-    const locationLenth = lengthRate * 100;
-    const location = {
-      start: `${locationStart.toFixed(4)}%`,
-      length: `${locationLenth.toFixed(4)}%`,
-    };
-    const time = {
-      start: dayjs(times[i]).format('HH:mm'),
-      end: dayjs(times[i + 1]).format('HH:mm'),
-    };
-    const durationTime = convertToTimeText(length);
-    const canDisplayTime = width * lengthRate * GRAPH_RATE > DISPLAY_TIME_THRESHOLD_PX;
-    items = [...items, { type, location, time, durationTime, canDisplayTime }];
+  let workLastTime: number | null = null;
+  for (let workIndex = 0; workIndex < works.length; workIndex += 1) {
+    const times = works[workIndex];
+    const firstWork = workIndex === 0;
+    const lastWork = workIndex === works.length - 1;
+    for (let timeIndex = 0; timeIndex < times.length - 1; timeIndex += 1) {
+      const type = timeIndex % 2 === 0 ? 'work' : 'rest';
+      const length = times[timeIndex + 1] - times[timeIndex];
+      const lengthRate = length / duration;
+      const locationStart = ((times[timeIndex] - edge.start) / duration) * 100;
+      const locationLenth = lengthRate * 100;
+      const location = {
+        start: `${locationStart.toFixed(4)}%`,
+        length: `${locationLenth.toFixed(4)}%`,
+      };
+      const time = {
+        start: dayjs(times[timeIndex]).format('HH:mm'),
+        end: dayjs(times[timeIndex + 1]).format('HH:mm'),
+      };
+      const durationTime = convertToTimeText(length);
+      const canDisplayTime = width * lengthRate * GRAPH_RATE > DISPLAY_TIME_THRESHOLD_PX;
+      let first =
+        timeIndex === 0 && (workLastTime === null || times[timeIndex] - workLastTime > HOUR);
+      let last = timeIndex === times.length - 2;
+      if (!canDisplayTime) {
+        first = first && !lastWork;
+        last = last && !firstWork;
+      }
+      items = [...items, { type, location, time, durationTime, canDisplayTime, first, last }];
+      if (last) {
+        workLastTime = times[timeIndex + 1];
+      }
+    }
   }
   return items;
 };
 
-// restTimeの計算方法を変えたときに、昔のデータを変えた計算方法に従うものにアップデートした
-// 変更点: 休憩中に退勤を押した場合、最後の休憩の打刻から退勤時刻までの時間を休憩時間に含めずに、その休憩時間の打刻を退勤時間とした
 // (() => {
 //   const workTimeStoreData = workTimeStore.store;
 //   for (const jobId of Object.keys(workTimeStoreData)) {
@@ -352,10 +329,18 @@ const generateGraphItems = (
 //     for (const year of Object.keys(jobWorkData)) {
 //       for (const month of Object.keys(jobWorkData[year])) {
 //         for (const date of Object.keys(jobWorkData[year][month])) {
-//           const { startTimes, pauseTimes, finishTime } = jobWorkData[year][month][date];
-//           const { workTime, restTime } = parseWorkTime(startTimes, pauseTimes, finishTime);
-//           jobWorkData[year][month][date].workTime = workTime;
-//           jobWorkData[year][month][date].restTime = restTime;
+//           const { works } = jobWorkData[year][month][date];
+//           const counts = works.map((work) => parseWorkTime(work));
+//           const countSum = counts.reduce(
+//             (pre, cur) => {
+//               return {
+//                 workTime: pre.workTime + cur.workTime,
+//                 restTime: pre.restTime + cur.restTime,
+//               };
+//             },
+//             { workTime: 0, restTime: 0 },
+//           );
+//           jobWorkData[year][month][date] = { ...countSum, works };
 //         }
 //       }
 //     }

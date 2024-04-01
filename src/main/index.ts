@@ -109,9 +109,7 @@ ipcMain.handle('deleteCurrentJob', () => deleteCurrentJob());
 ipcMain.handle(
   'registerWorkTime',
   // @ts-ignore
-  (e, startTimes: number[], pauseTimes: number[], finishTime?: number) => {
-    registerWorkTime(startTimes, pauseTimes, finishTime);
-  },
+  (e, times: number[]) => registerWorkTime(times),
 );
 
 ipcMain.handle('getTodayWorkTime', () => {

@@ -9,8 +9,7 @@ const api = {
   changeCurrentJob: (jobId: string) => ipcRenderer.invoke('changeCurrentJob', jobId),
   renameCurrentJob: (jobName: string) => ipcRenderer.invoke('renameCurrentJob', jobName),
   deleteCurrentJob: () => ipcRenderer.invoke('deleteCurrentJob'),
-  registerWorkTime: (startTimes: number[], pauseTimes: number[], finishTime?: number) =>
-    ipcRenderer.invoke('registerWorkTime', startTimes, pauseTimes, finishTime),
+  registerWorkTime: (times: number) => ipcRenderer.invoke('registerWorkTime', times),
   getTodayWorkTime: () => ipcRenderer.invoke('getTodayWorkTime'),
   openCalendar: () => ipcRenderer.invoke('openCalendar'),
   getMonthWorkTime: (year: number, month: number) =>

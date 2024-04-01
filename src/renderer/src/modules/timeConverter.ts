@@ -8,28 +8,16 @@ export const convertTime = (milliSecondsTime: number) => {
 
 const zeroPad = (num: number) => num.toString().padStart(2, '0');
 
-export const parseWorkTime = (startTimes: number[], pauseTimes: number[]) => {
-  const copiedStartTimes = [...startTimes];
-  const copiedPauseTimes = [...pauseTimes];
-  let prevPauseTime: number | null = null;
-  let workTime = 0;
-  let pausedTime = 0;
-  while (copiedStartTimes.length > 0 && copiedPauseTimes.length > 0) {
-    const startTime = copiedStartTimes.splice(0, 1)[0];
-    const pauseTime = copiedPauseTimes.splice(0, 1)[0];
-    workTime += pauseTime - startTime;
-    if (prevPauseTime !== null) {
-      pausedTime += startTime - prevPauseTime;
+export const parseWorkTime = (times: number[]) => {
+  let [workTime, restTime] = [0, 0];
+  const calcTimes = [...times, Date.now()];
+  for (let i = 0; i < times.length; i += 1) {
+    const interval = calcTimes[i + 1] - calcTimes[i];
+    if (i % 2 === 0) {
+      workTime += interval;
+    } else {
+      restTime += interval;
     }
-    prevPauseTime = pauseTime;
   }
-  if (copiedStartTimes.length > 0) {
-    workTime += Date.now() - copiedStartTimes[0];
-    if (prevPauseTime !== null) {
-      pausedTime += copiedStartTimes[0] - prevPauseTime;
-    }
-  } else if (prevPauseTime !== null) {
-    pausedTime += Date.now() - prevPauseTime;
-  }
-  return { workTime, pausedTime };
+  return { workTime, restTime };
 };

@@ -1,34 +1,41 @@
 import { atom } from 'recoil';
 import { DateWorkTimes, Holiday } from '../../../preload/dataType';
+import { parseWorkTime } from './timeConverter';
 
-type PlayStatus = 'playing' | 'paused' | 'stopped';
-
-const defaultStartTimes = JSON.parse(localStorage.startTimes ?? '[]') as number[];
-const defaultPauseTimes = JSON.parse(localStorage.pauseTimes ?? '[]') as number[];
-
-const defaultPlayStatus = (): PlayStatus => {
-  if (defaultStartTimes.length === 0) {
-    return 'stopped';
-  }
-  if (defaultStartTimes.length > defaultPauseTimes.length) {
-    return 'playing';
-  }
-  return 'paused';
+const defaultTimes = JSON.parse(localStorage.times ?? '[]') as number[];
+type Count = { workTime: number; restTime: number };
+const storedCount = JSON.parse(localStorage.count ?? '{"workTime":0,"restTime":0}') as Count;
+const timeCount = parseWorkTime(defaultTimes);
+const defaultCount = {
+  workTime: storedCount.workTime + timeCount.workTime,
+  restTime: storedCount.restTime + timeCount.restTime,
 };
 
-export const playStatusAtom = atom<PlayStatus>({
+const defaultWorkStatus = () => {
+  if (defaultTimes.length === 0) {
+    return 'workOff';
+  }
+  if (defaultTimes.length % 2 === 1) {
+    return 'working';
+  }
+  return 'resting';
+};
+
+export type WorkStatus = ReturnType<typeof defaultWorkStatus>;
+
+export const workStatusAtom = atom<WorkStatus>({
   key: 'playStatusAtom',
-  default: defaultPlayStatus(),
+  default: defaultWorkStatus(),
 });
 
-export const startTimesAtom = atom({
-  key: 'startTimesAtom',
-  default: defaultStartTimes,
+export const timesAtom = atom({
+  key: 'timesAtom',
+  default: defaultTimes,
 });
 
-export const pauseTimesAtom = atom({
-  key: 'pauseTimesAtom',
-  default: defaultPauseTimes,
+export const countAtom = atom({
+  key: 'countAtom',
+  default: defaultCount,
 });
 
 export const currentJobAtom = atom({

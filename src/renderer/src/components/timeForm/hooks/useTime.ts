@@ -1,139 +1,133 @@
 import { useRecoilState } from 'recoil';
-import { pauseTimesAtom, playStatusAtom, startTimesAtom } from '../../../modules/store';
+import { WorkStatus, countAtom, timesAtom, workStatusAtom } from '../../../modules/store';
 import { useEffect, useState } from 'react';
 import { parseWorkTime } from '../../../modules/timeConverter';
 import dayjs from 'dayjs';
 
 export const useTime = () => {
-  const [playStatus, setPlayStatus] = useRecoilState(playStatusAtom);
-  const [startTimes, setStartTimes] = useRecoilState(startTimesAtom);
-  const [pauseTimes, setPauseTimes] = useRecoilState(pauseTimesAtom);
-
-  const firstTimes = parseWorkTime(startTimes, pauseTimes);
-  const [workTime, setWorkTime] = useState(firstTimes.workTime);
-  const [pausedTime, setPausedTime] = useState(firstTimes.pausedTime);
+  const [workStatus, setWorkStatus] = useRecoilState(workStatusAtom);
+  const [times, setTimes] = useRecoilState(timesAtom);
+  const [count, setCount] = useRecoilState(countAtom);
+  const [savedCount, setSavedCount] = useState(count);
   const [preDate, setPreDate] = useState(dayjs());
   const [showRequiredAlert, setShowRequiredAlert] = useState(false);
   const [requiredTimeText, setRequiredTimeText] = useState('');
 
   const start = async () => {
-    let _startTimes = [...startTimes];
-    let _pauseTimes = [...pauseTimes];
-    if (playStatus === 'stopped') {
-      const saved = await window.api.getTodayWorkTime();
-      _startTimes = [...saved.startTimes];
-      _pauseTimes = [...saved.pauseTimes];
-    }
-    const requiredTimeText = createRequiredTimeText(_startTimes, _pauseTimes);
+    const requiredTimeText = createRequiredTimeText(times);
     if (requiredTimeText !== '') {
-      if (playStatus === 'stopped') {
-        setRequiredTimeText(`せっかく退勤したんだし、あと${requiredTimeText}くらいはやめとこうぜ`);
-      } else {
-        setRequiredTimeText(`あと${requiredTimeText}は休んでもらわんとな...`);
-      }
+      setRequiredTimeText(`あと${requiredTimeText}は休んでもらわんとな...`);
       setShowRequiredAlert(true);
       return;
-    } else if (playStatus === 'stopped') {
-      localStorage.pauseTimes = JSON.stringify(_pauseTimes);
-      setPauseTimes(_pauseTimes);
     }
-    setPlayStatus('playing');
-    const updatedStartTimes = [..._startTimes, Date.now()];
-    setStartTimes(updatedStartTimes);
-    localStorage.startTimes = JSON.stringify(updatedStartTimes);
+    if (workStatus === 'workOff') {
+      const saved = await window.api.getTodayWorkTime();
+      setCount(saved);
+      setSavedCount(saved);
+      localStorage.count = JSON.stringify(saved);
+    }
+    setWorkStatus('working');
+    const updatedTimes = [...times, Date.now()];
+    setTimes(updatedTimes);
+    localStorage.times = JSON.stringify(updatedTimes);
   };
 
   const pause = () => {
-    const requiredTimeText = createRequiredTimeText(startTimes, pauseTimes);
+    const requiredTimeText = createRequiredTimeText(times);
     if (requiredTimeText !== '') {
       setRequiredTimeText(`あと${requiredTimeText}くらいは頑張ろうぜ`);
       setShowRequiredAlert(true);
       return;
     }
-    setPlayStatus('paused');
-    const updatedPauseTimes = [...pauseTimes, Date.now()];
-    setPauseTimes(updatedPauseTimes);
-    localStorage.pauseTimes = JSON.stringify(updatedPauseTimes);
+    setWorkStatus('resting');
+    const updatedTimes = [...times, Date.now()];
+    setTimes(updatedTimes);
+    localStorage.times = JSON.stringify(updatedTimes);
   };
 
   const stop = () => {
-    if (playStatus === 'playing') {
-      const requiredTimeText = createRequiredTimeText(startTimes, pauseTimes);
+    if (workStatus === 'working') {
+      const requiredTimeText = createRequiredTimeText(times);
       if (requiredTimeText !== '') {
         setRequiredTimeText(`${requiredTimeText}だけはやってみよ？`);
         setShowRequiredAlert(true);
         return;
       }
     }
-    setPlayStatus('stopped');
-    localStorage.removeItem('startTimes');
-    localStorage.removeItem('pauseTimes');
-    window.api.registerWorkTime(startTimes, pauseTimes);
-    setWorkTime(0);
-    setPausedTime(0);
-    setStartTimes([]);
-    setPauseTimes([]);
+    setWorkStatus('workOff');
+    localStorage.removeItem('times');
+    localStorage.removeItem('count');
+    let registerTimes = [...times];
+    if (times.length % 2 === 1) {
+      registerTimes = [...times, Date.now()];
+    }
+    window.api.registerWorkTime(registerTimes);
+    setCount({ workTime: 0, restTime: 0 });
+    setTimes([]);
   };
 
   useEffect(() => {
     const interval = window.setInterval(async () => {
       const currentDate = dayjs();
-      if (preDate.date() !== currentDate.date() && playStatus !== 'stopped') {
-        const dayEndTime = preDate.endOf('day').valueOf();
-        window.api.registerWorkTime(startTimes, pauseTimes, dayEndTime);
-        localStorage.removeItem('startTimes');
-        localStorage.removeItem('pauseTimes');
-        setWorkTime(0);
-        setPausedTime(0);
-        if (playStatus === 'paused') {
-          setStartTimes([]);
-          setPlayStatus('stopped');
+      if (preDate.date() !== currentDate.date() && workStatus !== 'workOff') {
+        let registerTimes = [...times];
+        if (times.length % 2 === 1) {
+          const dayEndTime = preDate.endOf('day').valueOf();
+          registerTimes = [...times, dayEndTime];
+        }
+        window.api.registerWorkTime(registerTimes);
+        localStorage.removeItem('count');
+        localStorage.removeItem('times');
+        setCount({ workTime: 0, restTime: 0 });
+        if (workStatus === 'resting') {
+          setWorkStatus('workOff');
+          setTimes([]);
         } else {
           const now = currentDate.valueOf();
-          setStartTimes([now]);
-          localStorage.startTimes = JSON.stringify([now]);
+          setTimes([now]);
+          localStorage.times = JSON.stringify([now]);
         }
-        setPauseTimes([]);
         setPreDate(currentDate);
         return;
       }
       setPreDate(currentDate);
-      const now = parseWorkTime(startTimes, pauseTimes);
-      setWorkTime(now.workTime);
-      setPausedTime(now.pausedTime);
+      const { workTime, restTime } = parseWorkTime(times);
+      setCount({
+        workTime: savedCount.workTime + workTime,
+        restTime: savedCount.restTime + restTime,
+      });
     }, 100);
     return () => {
       window.clearInterval(interval);
     };
-  }, [startTimes, pauseTimes, playStatus, preDate]);
+  }, [times, workStatus, preDate]);
 
   useEffect(() => {
-    if (playStatus === 'stopped') {
+    if (workStatus === 'workOff') {
       return;
     }
-    const lastSavedTime =
-      playStatus === 'playing'
-        ? startTimes[startTimes.length - 1]
-        : pauseTimes[pauseTimes.length - 1];
+    const lastSavedTime = times.slice(-1)[0];
     const now = dayjs();
     if (now.isSame(lastSavedTime, 'day')) {
       return;
     }
-    const dayStartTime = now.startOf('day').valueOf();
-    window.api.registerWorkTime(startTimes, pauseTimes, dayStartTime - 1);
-    localStorage.removeItem('startTimes');
-    localStorage.removeItem('pauseTimes');
-    if (playStatus === 'paused') {
-      setWorkTime(0);
-      setPausedTime(0);
-      setStartTimes([]);
-      setPauseTimes([]);
-      setPlayStatus('stopped');
+    let registeringTimes = [...times];
+    if (times.length % 2 === 1) {
+      const registeringDayEndTime = dayjs(lastSavedTime).endOf('day').valueOf();
+      registeringTimes = [...times, registeringDayEndTime];
+    }
+    window.api.registerWorkTime(registeringTimes);
+    localStorage.removeItem('times');
+    localStorage.removeItem('count');
+    if (workStatus === 'resting') {
+      setTimes([]);
+      setCount({ workTime: 0, restTime: 0 });
+      setWorkStatus('workOff');
       return;
     }
-    setStartTimes([dayStartTime]);
-    localStorage.startTimes = JSON.stringify([dayStartTime]);
-    setPauseTimes([]);
+    const dayStartTime = now.startOf('day').valueOf();
+    setTimes([dayStartTime]);
+    localStorage.times = JSON.stringify([dayStartTime]);
   }, []);
 
   const handleAlertClose = () => setShowRequiredAlert(false);
@@ -142,9 +136,8 @@ export const useTime = () => {
     start,
     pause,
     stop,
-    workTime,
-    pausedTime,
-    playStatus,
+    count,
+    workStatus: workStatus as WorkStatus,
     showRequiredAlert,
     requiredTimeText,
     handleAlertClose,
@@ -153,15 +146,12 @@ export const useTime = () => {
 
 const REQUIRED_TIME = 5 * 60 * 1000; // 5分
 
-const createRequiredTimeText = (startTimes: number[], pauseTimes: number[]) => {
-  if (startTimes.length === 0) {
+const createRequiredTimeText = (times: number[]) => {
+  if (times.length === 0) {
     return '';
   }
-  const targetTIme =
-    startTimes.length > pauseTimes.length
-      ? startTimes[startTimes.length - 1]
-      : pauseTimes[pauseTimes.length - 1];
-  const remainedRequiredTime = REQUIRED_TIME - (Date.now() - targetTIme);
+  const targetTime = times.slice(-1)[0];
+  const remainedRequiredTime = REQUIRED_TIME - (Date.now() - targetTime);
   if (remainedRequiredTime < 0) {
     return '';
   }

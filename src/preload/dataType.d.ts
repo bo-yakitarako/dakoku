@@ -1,9 +1,7 @@
 export type WorkTime = {
   workTime: number;
   restTime: number;
-  startTimes: number[];
-  pauseTimes: number[];
-  finishTime: number;
+  works: number[][];
 };
 
 export type DateWorkTimes = { [date in string]: WorkTime };
@@ -32,6 +30,8 @@ export type DayDetailGraphItem = {
   };
   durationTime: string; // HH時間mm分 or mm分ss秒
   canDisplayTime: boolean;
+  first: boolean;
+  last: boolean;
 };
 
 export type DayDetailGraph = {

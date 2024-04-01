@@ -7,13 +7,8 @@ export const WorkTimeGraph: React.FC<DayDetailGraph> = ({ startHour, endHour, it
   return (
     <Graph>
       <Typography color="text.secondary">{startHour}</Typography>
-      {items.map((item, index) => (
-        <GraphItem
-          key={item.time.start}
-          {...item}
-          first={index === 0}
-          last={index === items.length - 1}
-        />
+      {items.map((item) => (
+        <GraphItem key={item.time.start} {...item} />
       ))}
       <Typography color="text.secondary">{endHour}</Typography>
     </Graph>

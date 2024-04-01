@@ -3,12 +3,7 @@ import { Tooltip, TooltipProps, Typography, tooltipClasses } from '@mui/material
 import { blue, yellow } from '@mui/material/colors';
 import { DayDetailGraphItem } from '../../../../preload/dataType';
 
-type Props = DayDetailGraphItem & {
-  first: boolean;
-  last: boolean;
-};
-
-export const GraphItem: React.FC<Props> = (props) => {
+export const GraphItem: React.FC<DayDetailGraphItem> = (props) => {
   const { time, durationTime, first, last, ...remained } = props;
   const tooltipTitle = `${time.start} - ${time.end}`;
   return props.canDisplayTime ? (
