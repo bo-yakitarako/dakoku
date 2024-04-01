@@ -17,7 +17,7 @@ export const DateTooltip: React.FC<EventContentArg> = (arg) => {
 
   const onClick = () => {
     setLoading(true);
-    window.api.openDayDetail();
+    window.api.openDayDetail(d.year(), d.month() + 1, d.date(), false);
   };
 
   return (

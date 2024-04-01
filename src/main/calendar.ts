@@ -33,10 +33,13 @@ export const createCalendarWindow = (mainWindow: BrowserWindow) => {
     calendarWindow = null;
   });
 
-  // @ts-ignore
-  ipcMain.handle('openDayDetail', async () => {
-    await createDayDetailWindow(calendarWindow!);
-  });
+  ipcMain.handle(
+    'openDayDetail',
+    // @ts-ignore
+    async (e, year: number, month: number, day: number, isAll: boolean) => {
+      createDayDetailWindow(calendarWindow!, year, month, day, isAll);
+    },
+  );
 
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
     calendarWindow.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/calendar.html`);
