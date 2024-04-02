@@ -151,7 +151,7 @@ const ItemWrapper = styled.div<StyleProps>`
   }
 `;
 
-const hexToRgb = (hex: string) => {
+export const hexToRgb = (hex: string) => {
   if (hex.startsWith('#')) {
     hex = hex.slice(1);
   }

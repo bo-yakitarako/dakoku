@@ -1,8 +1,10 @@
 import styled from '@emotion/styled';
 import { Box, CircularProgress, Typography } from '@mui/material';
+import { blue, yellow } from '@mui/material/colors';
 import { DayDetailData } from '../../../../preload/dataType';
 import { useEffect, useState } from 'react';
 import { WorkTimeGraph } from './WorkTimeGraph';
+import { hexToRgb } from './GraphItem';
 
 export const DayDetail: React.FC = () => {
   const [dayDetailData, setDayDetailData] = useState<DayDetailData | null>(null);
@@ -41,6 +43,16 @@ export const DayDetail: React.FC = () => {
           <Typography>休憩時間:{restTimeSum}</Typography>
         </div>
       </GraphWrapper>
+      <Footer>
+        <ColorDesciption type="work">
+          <Typography>勤務時間:</Typography>
+          <span />
+        </ColorDesciption>
+        <ColorDesciption type="rest">
+          <Typography>休憩時間:</Typography>
+          <span />
+        </ColorDesciption>
+      </Footer>
     </Wrapper>
   );
 };
@@ -94,5 +106,31 @@ const GraphWrapper = styled(Box)`
       font-size: 14px;
       color: ${({ theme }) => theme.palette.text.secondary};
     }
+  }
+`;
+
+const Footer = styled(Box)`
+  position: absolute;
+  display: flex;
+  right: 0;
+  bottom: 0;
+  padding: 16px;
+  gap: 20px;
+`;
+
+const ColorDesciption = styled.div<{ type: 'work' | 'rest' }>`
+  position: relative;
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  > p {
+    font-size: 12px;
+    color: ${({ theme }) => theme.palette.text.secondary};
+  }
+  > span {
+    width: 60px;
+    height: 12px;
+    border-top: solid 2px ${({ type }) => (type === 'work' ? blue[200] : yellow[200])};
+    background: rgba(${({ type }) => hexToRgb(type === 'work' ? blue[200] : yellow[200])}, 0.4);
   }
 `;
