@@ -4,51 +4,57 @@ import { blue, yellow } from '@mui/material/colors';
 import { DayDetailGraphItem } from '../../../../preload/dataType';
 
 export const GraphItem: React.FC<DayDetailGraphItem> = (props) => {
-  const { time, durationTime, first, last, ...remained } = props;
-  const tooltipTitle = `${time.start} - ${time.end}`;
-  return props.canDisplayTime ? (
-    <ItemWrapper {...remained}>
-      <Typography>{durationTime}</Typography>
-      <Typography>{time.start}</Typography>
-      <Typography>{time.end}</Typography>
-      {first && <Typography className="first">{time.start}</Typography>}
-      {last && <Typography className="last">{time.end}</Typography>}
-    </ItemWrapper>
-  ) : (
-    <ColoredTooltip
-      title={tooltipTitle}
-      placement="bottom"
-      enterDelay={0}
-      leaveDelay={0}
-      slotProps={{
-        popper: {
-          sx: {
-            [`&.${tooltipClasses.popper}[data-popper-placement*="bottom"] .${tooltipClasses.tooltip}`]:
-              {
-                marginTop: '0px',
-              },
-            [`&.${tooltipClasses.popper}[data-popper-placement*="top"] .${tooltipClasses.tooltip}`]:
-              {
-                marginBottom: '0px',
-              },
-            [`&.${tooltipClasses.popper}[data-popper-placement*="right"] .${tooltipClasses.tooltip}`]:
-              {
-                marginLeft: '0px',
-              },
-            [`&.${tooltipClasses.popper}[data-popper-placement*="left"] .${tooltipClasses.tooltip}`]:
-              {
-                marginRight: '0px',
-              },
-          },
-        },
-      }}
-    >
+  const { time, durationTime, first, last, jobName, isAll, ...remained } = props;
+  const jobTooltipTitle = isAll ? jobName : null;
+  return (
+    <JobNameTooltip title={jobTooltipTitle} placement="top" enterDelay={0} leaveDelay={0}>
       <ItemWrapper {...remained}>
-        <Typography>{durationTime}</Typography>
-        {first && <Typography className="first">{time.start}</Typography>}
-        {last && <Typography className="last">{time.end}</Typography>}
+        {props.canDisplayTime ? (
+          <div>
+            <Typography>{durationTime}</Typography>
+            <Typography>{time.start}</Typography>
+            <Typography>{time.end}</Typography>
+            {first && <Typography className="first">{time.start}</Typography>}
+            {last && <Typography className="last">{time.end}</Typography>}
+          </div>
+        ) : (
+          <TimeTooltip
+            title={`${time.start} - ${time.end}`}
+            placement="bottom"
+            enterDelay={0}
+            leaveDelay={0}
+            slotProps={{
+              popper: {
+                sx: {
+                  [`&.${tooltipClasses.popper}[data-popper-placement*="bottom"] .${tooltipClasses.tooltip}`]:
+                    {
+                      marginTop: '0px',
+                    },
+                  [`&.${tooltipClasses.popper}[data-popper-placement*="top"] .${tooltipClasses.tooltip}`]:
+                    {
+                      marginBottom: '0px',
+                    },
+                  [`&.${tooltipClasses.popper}[data-popper-placement*="right"] .${tooltipClasses.tooltip}`]:
+                    {
+                      marginLeft: '0px',
+                    },
+                  [`&.${tooltipClasses.popper}[data-popper-placement*="left"] .${tooltipClasses.tooltip}`]:
+                    {
+                      marginRight: '0px',
+                    },
+                },
+              },
+            }}
+          >
+            <div>
+              <Typography>{durationTime}</Typography>
+              {first && <Typography className="first">{time.start}</Typography>}
+              {last && <Typography className="last">{time.end}</Typography>}
+            </div>
+          </TimeTooltip>
+        )}
       </ItemWrapper>
-    </ColoredTooltip>
+    </JobNameTooltip>
   );
 };
 
@@ -75,29 +81,53 @@ const ItemWrapper = styled.div<StyleProps>`
   transition: background 0.2s;
   z-index: 1;
 
-  > p {
-    color: transparent;
-    transition: color 0.2s;
-    font-size: 12px;
-    white-space: nowrap;
-    ${({ canDisplayTime, theme }) =>
-      canDisplayTime
-        ? `
-      &:not(:first-of-type) {
-        position: absolute;
-        bottom: -20px;
-      }
-      &:nth-of-type(2) {
-        left: 0;
-        transform: translateX(-50%);
-      }
-      &:nth-of-type(3) {
-        right: 0;
-        transform: translateX(50%);
-      }
-      &:nth-of-type(n + 4) {
-        top: -20px;
-        color: ${theme.palette.text.primary};
+  > div {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    > p {
+      color: transparent;
+      transition: color 0.2s;
+      font-size: 12px;
+      white-space: nowrap;
+      ${({ canDisplayTime, theme }) =>
+        canDisplayTime
+          ? `
+        &:not(:first-of-type) {
+          position: absolute;
+          bottom: -20px;
+        }
+        &:nth-of-type(2) {
+          left: 0;
+          transform: translateX(-50%);
+        }
+        &:nth-of-type(3) {
+          right: 0;
+          transform: translateX(50%);
+        }
+        &:nth-of-type(n + 4) {
+          top: -20px;
+          color: ${theme.palette.text.primary};
+          &.first {
+            left: 0;
+            transform: translateX(-50%);
+          }
+          &.last {
+            right: 0;
+            transform: translateX(50%);
+          }
+        }
+      `
+          : `
+        &:not(:first-of-type) {
+          position: absolute;
+          top: -20px;
+          color: ${theme.palette.text.primary};
+        }
         &.first {
           left: 0;
           transform: translateX(-50%);
@@ -106,30 +136,17 @@ const ItemWrapper = styled.div<StyleProps>`
           right: 0;
           transform: translateX(50%);
         }
-      }
-    `
-        : `
-      &:not(:first-of-type) {
-        position: absolute;
-        top: -20px;
-        color: ${theme.palette.text.primary};
-      }
-      &.first {
-        left: 0;
-        transform: translateX(-50%);
-      }
-      &.last {
-        right: 0;
-        transform: translateX(50%);
-      }
-    `}
+      `}
+    }
   }
 
   &:hover {
     cursor: default;
     background: rgba(${({ type }) => hexToRgb(type === 'work' ? blue[200] : yellow[200])}, 0.55);
-    > p {
-      color: ${({ theme }) => theme.palette.text.primary};
+    > div {
+      > p {
+        color: ${({ theme }) => theme.palette.text.primary};
+      }
     }
   }
 `;
@@ -150,7 +167,21 @@ const hexToRgb = (hex: string) => {
   return `${r}, ${g}, ${b}`;
 };
 
-const ColoredTooltip = styled(({ className, ...props }: TooltipProps) => (
+const JobNameTooltip = styled(({ className, ...props }: TooltipProps) => (
+  <Tooltip {...props} arrow classes={{ popper: className }} />
+))(({ theme }) => {
+  return {
+    [`& .${tooltipClasses.arrow}`]: {
+      color: theme.palette.success.dark,
+    },
+    [`& .${tooltipClasses.tooltip}`]: {
+      backgroundColor: theme.palette.success.dark,
+      fontSize: 11.5,
+    },
+  };
+});
+
+const TimeTooltip = styled(({ className, ...props }: TooltipProps) => (
   <Tooltip {...props} arrow classes={{ popper: className }} />
 ))(() => {
   return {

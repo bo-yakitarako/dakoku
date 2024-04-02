@@ -20,6 +20,7 @@ export type Holiday = { day: number; name: string };
 
 export type DayDetailGraphItem = {
   type: 'work' | 'rest';
+  jobName: string;
   location: {
     start: string; // xx.xxx%
     length: string; // zz.zzz%
@@ -27,25 +28,21 @@ export type DayDetailGraphItem = {
   time: {
     start: string; // HH時mm分
     end: string; // HH時mm分
+    startUnix: number;
+    endUnix: number;
   };
   durationTime: string; // HH時間mm分 or mm分ss秒
   canDisplayTime: boolean;
   first: boolean;
   last: boolean;
+  isAll: boolean;
 };
 
 export type DayDetailGraph = {
   startHour: string; // HH時
   endHour: string; // HH時
   items: DayDetailGraphItem[];
-};
-
-export type DayDetailJobItem = {
-  jobId: string;
-  jobName: string;
-  workTimeSum: string;
-  restTimeSum: string;
-  graph: DayDetailGraph;
+  isAll: boolean;
 };
 
 export type DayDetailData = {
@@ -54,9 +51,8 @@ export type DayDetailData = {
     month: number;
     day: number;
   };
-  jobItems: DayDetailJobItem[];
-  jobSum?: {
-    workTimeSum: string;
-    restTimeSum: string;
-  };
+  name: string;
+  workTimeSum: string;
+  restTimeSum: string;
+  graph: DayDetailGraph;
 };

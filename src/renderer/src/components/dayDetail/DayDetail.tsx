@@ -2,19 +2,18 @@ import styled from '@emotion/styled';
 import { Box, CircularProgress, Typography } from '@mui/material';
 import { DayDetailData } from '../../../../preload/dataType';
 import { useEffect, useState } from 'react';
-import { JobItem } from './JobItem';
+import { WorkTimeGraph } from './WorkTimeGraph';
 
 export const DayDetail: React.FC = () => {
   const [dayDetailData, setDayDetailData] = useState<DayDetailData | null>(null);
 
   useEffect(() => {
     // @ts-ignore
-    window.ipcRenderer.on('data', (_, data: dayDetailData) => {
+    window.ipcRenderer.on('data', (_, data: DayDetailData) => {
       setDayDetailData(data);
       const { year, month, day } = data.date;
       const dateString = `${year}年${month}月${day}日`;
-      const titleName = data.jobSum ? '全おしごと' : data.jobItems[0].jobName;
-      document.title = `dakoku - 時間詳細: ${dateString} ${titleName}`;
+      document.title = `dakoku - 時間詳細: ${dateString} ${data.name}`;
     });
   }, []);
 
@@ -26,25 +25,22 @@ export const DayDetail: React.FC = () => {
     );
   }
 
-  const { date, jobItems, jobSum } = dayDetailData;
+  const { date, name, workTimeSum, restTimeSum, graph } = dayDetailData;
   const { year, month, day } = date;
   const dateString = `${year}年${month}月${day}日`;
   return (
     <Wrapper>
       <Header>
         <Typography variant="h1">{dateString}</Typography>
-        {jobSum !== undefined && (
-          <div>
-            <Typography>勤務時間合計: {jobSum.workTimeSum}</Typography>
-            <Typography>休憩時間合計: {jobSum.restTimeSum}</Typography>
-          </div>
-        )}
       </Header>
-      <JobsWrapper>
-        {jobItems.map((jobItem) => (
-          <JobItem key={jobItem.jobId} {...jobItem} />
-        ))}
-      </JobsWrapper>
+      <GraphWrapper>
+        <Typography variant="h2">{name}</Typography>
+        <WorkTimeGraph {...graph} />
+        <div>
+          <Typography>勤務時間:{workTimeSum}</Typography>
+          <Typography>休憩時間:{restTimeSum}</Typography>
+        </div>
+      </GraphWrapper>
     </Wrapper>
   );
 };
@@ -82,9 +78,21 @@ const Header = styled(Box)`
   }
 `;
 
-const JobsWrapper = styled(Box)`
-  display: flex;
-  flex-direction: column;
-  gap: 32px;
+const GraphWrapper = styled(Box)`
   width: fit-content;
+
+  > h2 {
+    font-size: 20px;
+  }
+
+  > div {
+    position: relative;
+    display: flex;
+    gap: 12px;
+    z-index: 1;
+    > p {
+      font-size: 14px;
+      color: ${({ theme }) => theme.palette.text.secondary};
+    }
+  }
 `;
