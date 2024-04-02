@@ -18,6 +18,7 @@ declare global {
       getMonthWorkTime: (
         year: number,
         month: number,
+        isAll: boolean,
       ) => Promise<{ workTimeSum: string; dates: DateWorkTimes }>;
       getHolidays: (year: number, month: number) => Promise<Holiday[]>;
       openDayDetail: (

@@ -2,7 +2,16 @@ import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import localeJa from '@fullcalendar/core/locales/ja';
 import styled from '@emotion/styled';
-import { Box, Button, ButtonGroup, CircularProgress, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  ButtonGroup,
+  CircularProgress,
+  FormControlLabel,
+  FormGroup,
+  Switch,
+  Typography,
+} from '@mui/material';
 import { DateTooltip } from './DateTooltip';
 import { useCalendarMove } from './hooks/useCalendarMove';
 import {
@@ -18,18 +27,39 @@ import { currentJobAtom } from '../../modules/store';
 import { DayCellContent } from './DayCellContent';
 
 export const Calendar: React.FC = () => {
-  const { ref, currentMonth, calendarEvents, workTimeSum, move, loading, holidays, holidayGrids } =
-    useCalendarMove();
+  const {
+    ref,
+    currentMonth,
+    calendarEvents,
+    workTimeSum,
+    move,
+    loading,
+    holidays,
+    holidayGrids,
+    checked,
+    onChecked,
+  } = useCalendarMove();
   const currentJob = useRecoilValue(currentJobAtom);
 
   useEffect(() => {
+    if (checked) {
+      document.title = 'dakoku - カレンダー: おしごとぜんぶ';
+      return;
+    }
     if (currentJob !== null) {
       document.title = `dakoku - カレンダー: ${currentJob.name}`;
     }
-  }, [currentJob]);
+  }, [currentJob, checked]);
 
   return (
     <Wrapper>
+      <IsAllCheckboxWrapper row>
+        <FormControlLabel
+          control={<Switch checked={checked} onChange={onChecked} />}
+          label="おしごとぜんぶ"
+          labelPlacement="start"
+        />
+      </IsAllCheckboxWrapper>
       <MonthTitle variant="h2">{currentMonth}</MonthTitle>
       <Options>
         <ButtonGroup variant="outlined">
@@ -77,7 +107,14 @@ export const Calendar: React.FC = () => {
 };
 
 const Wrapper = styled(Box)`
+  position: relative;
   padding: 16px;
+`;
+
+const IsAllCheckboxWrapper = styled(FormGroup)`
+  position: absolute;
+  top: 16px;
+  right: 16px;
 `;
 
 const MonthTitle = styled(Typography)`

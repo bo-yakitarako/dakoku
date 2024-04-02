@@ -161,28 +161,63 @@ const parseWorkTime = (times: number[]) => {
   return { workTime, restTime };
 };
 
-export const getMonthWorkTime = (year: number, month: number) => {
-  if (currentJob === null) {
+export const getMonthWorkTime = (year: number, month: number, isAll: boolean) => {
+  const { store } = workTimeStore;
+  let jobIds: string[] = [];
+  if (isAll) {
+    jobIds = Object.keys(store);
+  } else if (currentJob !== null) {
+    jobIds = [currentJob.jobId];
+  }
+  if (jobIds.length === 0) {
     return { dates: {}, workTimeSum: 'なんかやったっけ？' };
   }
-  const jobWorkTime = workTimeStore.get(currentJob.jobId) ?? {};
-  const workTimes = jobWorkTime[year]?.[month];
-  if (!workTimes) {
+  const { calendarDates, workTimeSumNumber } = getMonthCalcuration(jobIds, store, year, month);
+  const dateKeys = Object.keys(calendarDates);
+  if (dateKeys.length === 0) {
     return { dates: {}, workTimeSum: 'なんかやったっけ？' };
   }
-  const dates = Object.keys(workTimes).reduce((pre, cur) => {
-    const times = workTimes[cur];
+  const dates = dateKeys.reduce((pre, date) => {
+    const times = calendarDates[date];
     return {
       ...pre,
-      [cur]: {
-        workTime: convertToCalendarTime(year, month, cur, times.workTime),
+      [date]: {
+        workTime: convertToCalendarTime(year, month, date, times.workTime),
         restTime: convertToTimeText(times.restTime),
       },
     };
   }, {} as DateTimeDatas);
-  const workTimeSumCalc = Object.values(workTimes).reduce((pre, cur) => pre + cur.workTime, 0);
-  const workTimeSum = convertToTimeText(workTimeSumCalc);
+  const workTimeSum = convertToTimeText(workTimeSumNumber);
   return { dates, workTimeSum };
+};
+
+type CalendarDate = { [date in string]: { workTime: number; restTime: number } };
+
+const getMonthCalcuration = (
+  jobIds: string[],
+  store: Record<string, YearWorkTimes>,
+  year: number,
+  month: number,
+) => {
+  let workTimeSumNumber = 0;
+  const calendarDates: CalendarDate = {};
+  for (const jobId of jobIds) {
+    const dateWorkTimes = store[jobId]?.[year]?.[month];
+    if (!dateWorkTimes) {
+      continue;
+    }
+    for (const date of Object.keys(dateWorkTimes)) {
+      const { workTime, restTime } = dateWorkTimes[date];
+      workTimeSumNumber += workTime;
+      if (!calendarDates[date]) {
+        calendarDates[date] = { workTime, restTime };
+        continue;
+      }
+      calendarDates[date].workTime += workTime;
+      calendarDates[date].restTime += restTime;
+    }
+  }
+  return { calendarDates, workTimeSumNumber };
 };
 
 const convertToCalendarTime = (year: number, month: number, date: string, time: number) => {

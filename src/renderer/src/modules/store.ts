@@ -73,6 +73,11 @@ export const calendarLoadingAtom = atom({
   default: false,
 });
 
+export const calendarAllCheckAtom = atom({
+  key: 'calendarAllCheckAtom',
+  default: false,
+});
+
 export const holidaysAtom = atom({
   key: 'holidaysAtom',
   default: [] as Holiday[],

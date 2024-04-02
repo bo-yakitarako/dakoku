@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import { useRecoilState, useSetRecoilState } from 'recoil';
 import {
+  calendarAllCheckAtom,
   calendarDateAtom,
   calendarLoadingAtom,
   holidaysAtom,
@@ -16,6 +17,7 @@ export const useCalendarMove = () => {
   const setMonthWorkTimes = useSetRecoilState(monthWorkTimesAtom);
   const [holidays, setHolidays] = useRecoilState(holidaysAtom);
   const [loading, setLoading] = useRecoilState(calendarLoadingAtom);
+  const [checked, setChecked] = useRecoilState(calendarAllCheckAtom);
   const [calendarEvents, setCalendarEvents] = useState<EventSourceInput>([]);
   const [workTimeSum, setWorkTimeSum] = useState('');
   const [holidayGrids, setHolidayGrids] = useState<{ row: number; column: number }[]>([]);
@@ -25,6 +27,7 @@ export const useCalendarMove = () => {
     const { workTimeSum, dates } = await window.api.getMonthWorkTime(
       nextMonth.year(),
       nextMonth.month() + 1,
+      checked,
     );
     const holidays = await window.api.getHolidays(nextMonth.year(), nextMonth.month() + 1);
     setHolidays(holidays);
@@ -36,6 +39,23 @@ export const useCalendarMove = () => {
     const events = Object.values(dates).map(({ workTime }) => ({ date: new Date(workTime) }));
     setCalendarEvents(events);
     setCurrentDate(nextMonth.toDate());
+  };
+
+  const onChecked = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (loading) return;
+    setLoading(true);
+    setChecked(event.target.checked);
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth() + 1;
+    window.api
+      .getMonthWorkTime(year, month, event.target.checked)
+      .then(({ workTimeSum, dates }) => {
+        setMonthWorkTimes(dates);
+        setWorkTimeSum(workTimeSum);
+        const events = Object.values(dates).map(({ workTime }) => ({ date: new Date(workTime) }));
+        setCalendarEvents(events);
+        setLoading(false);
+      });
   };
 
   const currentMonth = dayjs(currentDate).format('YYYY年M月');
@@ -94,7 +114,18 @@ export const useCalendarMove = () => {
     };
   }, []);
 
-  return { ref, currentMonth, calendarEvents, workTimeSum, move, loading, holidays, holidayGrids };
+  return {
+    ref,
+    currentMonth,
+    calendarEvents,
+    workTimeSum,
+    move,
+    loading,
+    holidays,
+    holidayGrids,
+    checked,
+    onChecked,
+  };
 };
 
 const convertToGrid = (year: number, monthIndex: number, date: number) => {

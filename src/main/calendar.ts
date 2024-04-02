@@ -49,8 +49,8 @@ export const createCalendarWindow = (mainWindow: BrowserWindow) => {
 };
 
 // @ts-ignore
-ipcMain.handle('getMonthWorkTime', async (event, year: number, month: number) =>
-  getMonthWorkTime(year, month),
+ipcMain.handle('getMonthWorkTime', async (event, year: number, month: number, isAll: boolean) =>
+  getMonthWorkTime(year, month, isAll),
 );
 
 type Res = { error: string } | { date: string; name: string; type: string }[];
