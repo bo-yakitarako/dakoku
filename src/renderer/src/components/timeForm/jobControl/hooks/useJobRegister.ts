@@ -12,7 +12,7 @@ export const nameScheme = yup.object().shape({
   name: yup
     .string()
     .required('名前がほしかったんだなぁ...')
-    .max(10, 'MAX10文字、そこんとこヨロシク')
+    .max(20, 'MAX20文字、そこんとこヨロシク')
     .matches(/[^\s]/, '"空白"を受け入れてやる度量はないよ'),
 });
 
