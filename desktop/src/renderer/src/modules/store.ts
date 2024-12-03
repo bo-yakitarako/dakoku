@@ -1,5 +1,6 @@
-import { atom } from 'recoil';
+import { atom, selector } from 'recoil';
 import { DateWorkTimes, Holiday } from '../../../preload/dataType';
+import { parseWorkTime } from '../../../commonUtility/timeConverter';
 
 export type WorkStatus = 'workOff' | 'working' | 'resting';
 
@@ -14,6 +15,26 @@ export const workStatusAtom = atom<WorkStatus>({
 export const worksAtom = atom({
   key: 'worksAtom',
   default: defaultWorks,
+});
+
+export const countAtom = atom({
+  key: 'countAtom',
+  default: parseWorkTime(defaultWorks),
+});
+
+export const isWorksLoadingAtom = atom({
+  key: 'isWorksLoadingAtom',
+  default: true,
+});
+
+export const workSetSelector = selector({
+  key: 'workSetSelector',
+  get: ({ get }) => get(worksAtom),
+  set: ({ set }, newWorks) => {
+    set(worksAtom, newWorks);
+    set(countAtom, parseWorkTime(newWorks as number[][]));
+    set(isWorksLoadingAtom, false);
+  },
 });
 
 export const currentJobAtom = atom({

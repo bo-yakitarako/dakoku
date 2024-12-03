@@ -14,7 +14,7 @@ export const JobSelectBox: React.FC = () => {
         labelId="job-select-label"
         id="job-select"
         label="おしごと選択"
-        defaultValue={jobIdValue}
+        value={jobIdValue}
         onChange={onChange}
         disabled={isOpenCalendar}
       >

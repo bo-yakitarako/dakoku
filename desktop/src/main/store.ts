@@ -93,8 +93,7 @@ export const deleteCurrentJob = () => {
     workTimeStore.clear();
     return { currentJob, jobs: [] };
   }
-  const currentJobName = jobNameDict[jobIds[0]];
-  currentJob = { jobId: jobIds[0], name: currentJobName };
+  currentJob = { jobId: jobIds[0], name: jobNameDict[jobIds[0]] };
   jobStore.set('currentJob', currentJob);
   jobStore.set('jobName', jobNameDict);
   return { currentJob, jobs: convertNameDictToJobs(jobNameDict) };

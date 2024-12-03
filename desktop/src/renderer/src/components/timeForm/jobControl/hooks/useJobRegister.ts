@@ -39,7 +39,7 @@ export const useJobRegister = () => {
     setLoading(true);
     setCanJobControl(false);
     const registered = await window.api.registerJob(data.name);
-    await updateJob(registered);
+    updateJob(registered);
     setLoading(false);
     setCanJobControl(true);
     setIsOpen(false);
