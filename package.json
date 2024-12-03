@@ -6,6 +6,9 @@
   "repository": "https://github.com/bo-yakitarako/dakoku.git",
   "author": "bo-yakitarako",
   "license": "MIT",
+  "scripts": {
+    "desktop": "cd desktop && yarn dev"
+  },
   "private": true,
   "devDependencies": {
     "@eslint/compat": "^1.2.3",
