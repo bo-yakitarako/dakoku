@@ -5,7 +5,8 @@
     "src/renderer/src/mui.d.ts",
     "src/renderer/src/**/*",
     "src/renderer/src/**/*.tsx",
-    "src/preload/*.d.ts"
+    "src/preload/*.d.ts",
+    "src/commonUtility/**/*"
   ],
   "compilerOptions": {
     "composite": true,

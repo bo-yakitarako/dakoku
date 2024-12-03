@@ -1,41 +1,19 @@
 import { atom } from 'recoil';
 import { DateWorkTimes, Holiday } from '../../../preload/dataType';
-import { parseWorkTime } from './timeConverter';
 
-const defaultTimes = JSON.parse(localStorage.times ?? '[]') as number[];
-type Count = { workTime: number; restTime: number };
-const storedCount = JSON.parse(localStorage.count ?? '{"workTime":0,"restTime":0}') as Count;
-const timeCount = parseWorkTime(defaultTimes);
-const defaultCount = {
-  workTime: storedCount.workTime + timeCount.workTime,
-  restTime: storedCount.restTime + timeCount.restTime,
-};
+export type WorkStatus = 'workOff' | 'working' | 'resting';
 
-const defaultWorkStatus = () => {
-  if (defaultTimes.length === 0) {
-    return 'workOff';
-  }
-  if (defaultTimes.length % 2 === 1) {
-    return 'working';
-  }
-  return 'resting';
-};
-
-export type WorkStatus = ReturnType<typeof defaultWorkStatus>;
+const defaultWorkStatus = localStorage.workStatus ?? 'workOff';
+const defaultWorks = JSON.parse(localStorage.works ?? '[]') as number[][];
 
 export const workStatusAtom = atom<WorkStatus>({
   key: 'playStatusAtom',
-  default: defaultWorkStatus(),
+  default: defaultWorkStatus,
 });
 
-export const timesAtom = atom({
-  key: 'timesAtom',
-  default: defaultTimes,
-});
-
-export const countAtom = atom({
-  key: 'countAtom',
-  default: defaultCount,
+export const worksAtom = atom({
+  key: 'worksAtom',
+  default: defaultWorks,
 });
 
 export const currentJobAtom = atom({

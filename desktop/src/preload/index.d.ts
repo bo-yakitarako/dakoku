@@ -12,8 +12,8 @@ declare global {
       changeCurrentJob: (jobId: string) => Promise<Job | null>;
       renameCurrentJob: (jobName: string) => Promise<JobData>;
       deleteCurrentJob: () => Promise<JobData>;
-      registerWorkTime: (times: number[]) => Promise<void>;
-      getTodayWorkTime: () => Promise<{ workTime: number; restTime: number }>;
+      registerWorks: (times: number[][]) => Promise<void>;
+      getTodayWorks: () => Promise<number[][]>;
       openCalendar: () => Promise<void>;
       getMonthWorkTime: (
         year: number,

@@ -4,15 +4,15 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import icon from '../../resources/icon.png?asset';
 import {
   deleteCurrentJob,
-  getTodayWorkTime,
   initializeCurrentJob,
   getJobs,
   registerJob,
-  registerWorkTime,
+  registerWorks,
   renameCurrentJob,
   changeCurrentJob,
   getWindowBounds,
   setWindowBounds,
+  getTodayWorks,
 } from './store';
 import { createCalendarWindow } from './calendar';
 
@@ -107,11 +107,9 @@ ipcMain.handle('renameCurrentJob', (e, jobName: string) => renameCurrentJob(jobN
 ipcMain.handle('deleteCurrentJob', () => deleteCurrentJob());
 
 ipcMain.handle(
-  'registerWorkTime',
+  'registerWorks',
   // @ts-ignore
-  (e, times: number[]) => registerWorkTime(times),
+  (e, works: number[][]) => registerWorks(works),
 );
 
-ipcMain.handle('getTodayWorkTime', () => {
-  return getTodayWorkTime();
-});
+ipcMain.handle('getTodayWorks', () => getTodayWorks());

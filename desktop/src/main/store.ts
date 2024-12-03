@@ -10,6 +10,7 @@ import {
 } from '../preload/dataType';
 import dayjs from 'dayjs';
 import { BrowserWindow, Rectangle } from 'electron';
+import { parseWorkTime } from '../commonUtility/timeConverter';
 
 type Window = 'main' | 'calendar';
 
@@ -108,7 +109,7 @@ const convertNameDictToJobs = (jobNameDict: JobNameDict): Job[] => {
     .sort((a, b) => Number(a.jobId) - Number(b.jobId));
 };
 
-export const getTodayWorkTime = () => {
+export const getTodayWorks = () => {
   if (currentJob === null) {
     return { workTime: 0, restTime: 0 };
   }
@@ -117,48 +118,34 @@ export const getTodayWorkTime = () => {
   const [year, month, date] = [now.year(), now.month() + 1, now.date()];
   const work = jobWorkTime[year]?.[month]?.[date];
   if (!work) {
-    return { workTime: 0, restTime: 0 };
+    return [];
   }
-  const { workTime, restTime } = work;
-  return { workTime, restTime };
+  return [...work.works];
 };
 
-export const registerWorkTime = (times: number[]) => {
-  if (currentJob === null || times.length === 0) {
+export const registerWorks = (works: number[][]) => {
+  if (currentJob === null || works.length === 0) {
     return;
   }
-  const now = dayjs(times.slice(-1)[0]);
+  const now = dayjs(works.slice(-1)[0].slice(-1)[0]);
   const [year, month, date] = [now.year(), now.month() + 1, now.date()];
   const jobWorks = workTimeStore.get(currentJob.jobId) ?? {};
   const todayWork = jobWorks[year]?.[month]?.[date];
-  const { workTime, restTime } = parseWorkTime(times);
+  const { workTime, restTime } = parseWorkTime(works, false);
   if (todayWork) {
-    todayWork.workTime += workTime;
-    todayWork.restTime += restTime;
-    todayWork.works = [...todayWork.works, times];
+    todayWork.workTime = workTime;
+    todayWork.restTime = restTime;
+    todayWork.works = works;
     jobWorks[year][month][date] = todayWork; // 参照一緒かもしれないけど再代入を明示して確実さとわかりやすさ重視
     workTimeStore.set(currentJob.jobId, jobWorks);
     return;
   }
   const jobWorksYear = jobWorks[year] ?? {};
   const jobWorksMonth = jobWorksYear[month] ?? {};
-  const registeringMonth = { ...jobWorksMonth, [date]: { workTime, restTime, works: [times] } };
+  const registeringMonth = { ...jobWorksMonth, [date]: { workTime, restTime, works } };
   const registeringYear = { ...jobWorksYear, [month]: registeringMonth };
   const registeringItem = { ...jobWorks, [year]: registeringYear };
   workTimeStore.set(currentJob.jobId, registeringItem);
-};
-
-const parseWorkTime = (times: number[]) => {
-  let [workTime, restTime] = [0, 0];
-  for (let i = 0; i < times.length - 1; i += 1) {
-    const interval = times[i + 1] - times[i];
-    if (i % 2 === 0) {
-      workTime += interval;
-    } else {
-      restTime += interval;
-    }
-  }
-  return { workTime, restTime };
 };
 
 export const getMonthWorkTime = (year: number, month: number, isAll: boolean) => {
@@ -307,6 +294,7 @@ export const getDayDetailData = (year: number, month: number, day: number, isAll
   return { data, rectangle };
 };
 
+// eslint-disable-next-line complexity
 const generateGraphItems = (
   jobName: string,
   works: number[][],

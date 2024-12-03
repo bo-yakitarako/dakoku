@@ -1,5 +1,5 @@
 import { Box, Typography } from '@mui/material';
-import { convertTime } from '../../modules/timeConverter';
+import { convertTime } from '../../../../commonUtility/timeConverter';
 
 type Props = {
   children: React.ReactNode;

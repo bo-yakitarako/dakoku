@@ -11,7 +11,7 @@ import { useRecoilValue } from 'recoil';
 import { currentJobAtom } from '../../modules/store';
 
 export const TimeForm: React.FC = () => {
-  const { workStatus, count, start, pause, stop } = useTime();
+  const { workStatus, count, isLoading, start, pause, stop } = useTime();
   const { canOpen, openCalendar } = useOpenCalendar();
   const currentJob = useRecoilValue(currentJobAtom);
 
@@ -57,6 +57,7 @@ export const TimeForm: React.FC = () => {
             size="large"
             startIcon={<Computer />}
             onClick={start}
+            disabled={isLoading}
           >
             出勤
           </ActionButton>
