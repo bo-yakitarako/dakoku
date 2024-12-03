@@ -10,16 +10,8 @@ export const useTime = () => {
   const [count, setCount] = useRecoilState(countAtom);
   const [savedCount, setSavedCount] = useState(count);
   const [preDate, setPreDate] = useState(dayjs());
-  const [showRequiredAlert, setShowRequiredAlert] = useState(false);
-  const [requiredTimeText, setRequiredTimeText] = useState('');
 
   const start = async () => {
-    const requiredTimeText = createRequiredTimeText(times);
-    if (requiredTimeText !== '') {
-      setRequiredTimeText(`あと${requiredTimeText}は休んでもらわんとな...`);
-      setShowRequiredAlert(true);
-      return;
-    }
     if (workStatus === 'workOff') {
       const saved = await window.api.getTodayWorkTime();
       setCount(saved);
@@ -33,12 +25,6 @@ export const useTime = () => {
   };
 
   const pause = () => {
-    const requiredTimeText = createRequiredTimeText(times);
-    if (requiredTimeText !== '') {
-      setRequiredTimeText(`あと${requiredTimeText}くらいは頑張ろうぜ`);
-      setShowRequiredAlert(true);
-      return;
-    }
     setWorkStatus('resting');
     const updatedTimes = [...times, Date.now()];
     setTimes(updatedTimes);
@@ -46,14 +32,6 @@ export const useTime = () => {
   };
 
   const stop = () => {
-    if (workStatus === 'working') {
-      const requiredTimeText = createRequiredTimeText(times);
-      if (requiredTimeText !== '') {
-        setRequiredTimeText(`${requiredTimeText}だけはやってみよ？`);
-        setShowRequiredAlert(true);
-        return;
-      }
-    }
     setWorkStatus('workOff');
     localStorage.removeItem('times');
     localStorage.removeItem('count');
@@ -130,35 +108,11 @@ export const useTime = () => {
     localStorage.times = JSON.stringify([dayStartTime]);
   }, []);
 
-  const handleAlertClose = () => setShowRequiredAlert(false);
-
   return {
     start,
     pause,
     stop,
     count,
     workStatus: workStatus as WorkStatus,
-    showRequiredAlert,
-    requiredTimeText,
-    handleAlertClose,
   };
-};
-
-const REQUIRED_TIME = 5 * 60 * 1000; // 5分
-
-const createRequiredTimeText = (times: number[]) => {
-  if (times.length === 0) {
-    return '';
-  }
-  const targetTime = times.slice(-1)[0];
-  const remainedRequiredTime = REQUIRED_TIME - (Date.now() - targetTime);
-  if (remainedRequiredTime < 0) {
-    return '';
-  }
-  const minutes = Math.floor(remainedRequiredTime / 60000);
-  const seconds = Math.floor((remainedRequiredTime % 60000) / 1000);
-  if (minutes === 0) {
-    return `${seconds}秒`;
-  }
-  return `${minutes}分${seconds}秒`;
 };

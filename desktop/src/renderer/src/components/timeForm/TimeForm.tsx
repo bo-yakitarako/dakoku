@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import styled from '@emotion/styled';
 import { Time } from './Time';
-import { Alert, Box, Button, IconButton, Snackbar } from '@mui/material';
+import { Box, Button, IconButton } from '@mui/material';
 import { CalendarMonth, Computer, Devices, Home, LocalCafe } from '@mui/icons-material';
 import { useTime } from './hooks/useTime';
 import { useOpenCalendar } from './hooks/useOpenCalendar';
@@ -11,16 +11,7 @@ import { useRecoilValue } from 'recoil';
 import { currentJobAtom } from '../../modules/store';
 
 export const TimeForm: React.FC = () => {
-  const {
-    workStatus,
-    count,
-    start,
-    pause,
-    stop,
-    showRequiredAlert,
-    requiredTimeText,
-    handleAlertClose,
-  } = useTime();
+  const { workStatus, count, start, pause, stop } = useTime();
   const { canOpen, openCalendar } = useOpenCalendar();
   const currentJob = useRecoilValue(currentJobAtom);
 
@@ -115,16 +106,6 @@ export const TimeForm: React.FC = () => {
           </>
         )}
       </Buttons>
-      <Snackbar
-        open={showRequiredAlert}
-        autoHideDuration={3000}
-        onClose={handleAlertClose}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-      >
-        <Alert onClose={handleAlertClose} severity="error" variant="filled">
-          {requiredTimeText}
-        </Alert>
-      </Snackbar>
     </Wrapper>
   );
 };
