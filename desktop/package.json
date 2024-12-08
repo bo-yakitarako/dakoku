@@ -1,5 +1,5 @@
 {
-  "name": "dakoku-client",
+  "name": "dakoku-desktop",
   "version": "2.0.0",
   "description": "打刻するだけのアプリ",
   "main": "./out/main/index.js",
