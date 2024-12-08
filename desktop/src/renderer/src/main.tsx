@@ -4,7 +4,7 @@ import '@fontsource/roboto/300.css';
 import '@fontsource/roboto/400.css';
 import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
-import { WorkStatus } from './modules/store';
+import { WorkStatus } from '../../preload/dataType';
 
 type StorageKey = 'count' | 'times';
 

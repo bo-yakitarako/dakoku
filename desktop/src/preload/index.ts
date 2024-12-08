@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { electronAPI } from '@electron-toolkit/preload';
+import { TimeState } from './dataType';
 
 // Custom APIs for renderer
 const api = {
@@ -9,6 +10,7 @@ const api = {
   changeCurrentJob: (jobId: string) => ipcRenderer.invoke('changeCurrentJob', jobId),
   renameCurrentJob: (jobName: string) => ipcRenderer.invoke('renameCurrentJob', jobName),
   deleteCurrentJob: () => ipcRenderer.invoke('deleteCurrentJob'),
+  setTimeState: (timeState: Partial<TimeState>) => ipcRenderer.invoke('setTimeState', timeState),
   registerWorks: (times: number) => ipcRenderer.invoke('registerWorks', times),
   getTodayWorks: () => ipcRenderer.invoke('getTodayWorks'),
   openCalendar: () => ipcRenderer.invoke('openCalendar'),

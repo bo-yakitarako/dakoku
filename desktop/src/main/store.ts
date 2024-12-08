@@ -6,11 +6,12 @@ import {
   Job,
   JobNameDict,
   JobStore,
+  TimeState,
   YearWorkTimes,
 } from '../preload/dataType';
 import dayjs from 'dayjs';
 import { BrowserWindow, Rectangle } from 'electron';
-import { parseWorkTime } from '../commonUtility/timeConverter';
+import { parseWorkTime } from '../commonUtility/utils';
 
 type Window = 'main' | 'calendar';
 
@@ -22,6 +23,7 @@ const defaultWindowBounds = {
 const workTimeStore = new Store<Record<string, YearWorkTimes>>({ name: 'workTimes' });
 const jobStore = new Store<JobStore>({ name: 'job' });
 const windowBoundsStore = new Store<Record<Window, Rectangle>>({ name: 'windowBounds' });
+const TimeStateStore = new Store<TimeState>({ name: 'timeState' });
 
 let currentJob = jobStore.get('currentJob') ?? null;
 
@@ -106,6 +108,21 @@ const convertNameDictToJobs = (jobNameDict: JobNameDict): Job[] => {
       return { jobId, name };
     })
     .sort((a, b) => Number(a.jobId) - Number(b.jobId));
+};
+
+export const getTimeState = () => {
+  const status = TimeStateStore.get('status') ?? 'workOff';
+  const works = TimeStateStore.get('works') ?? [];
+  return { status, works };
+};
+
+export const setTimeState = ({ status, works }: Partial<TimeState>) => {
+  if (status !== undefined) {
+    TimeStateStore.set('status', status);
+  }
+  if (works !== undefined) {
+    TimeStateStore.set('works', works);
+  }
 };
 
 export const getTodayWorks = () => {

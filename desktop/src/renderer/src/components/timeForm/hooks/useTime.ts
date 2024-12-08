@@ -1,41 +1,23 @@
-import { useRecoilState } from 'recoil';
-import {
-  countAtom,
-  isWorksLoadingAtom,
-  worksAtom,
-  WorkStatus,
-  workStatusAtom,
-} from '../../../modules/store';
+import { useRecoilState, useRecoilValue } from 'recoil';
+import { countAtom, isWorksLoadingAtom, worksAtom, workStatusAtom } from '../../../modules/store';
 import { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
 import { useUpdateTimes } from './useUpdateTimes';
-import { parseWorkTime } from '../../../../../commonUtility/timeConverter';
+import { parseWorkTime } from '../../../../../commonUtility/utils';
 
 export const useTime = () => {
-  const [workStatus, setWorkStatus] = useRecoilState(workStatusAtom);
+  const workStatus = useRecoilValue(workStatusAtom);
   const [works, setWorks] = useRecoilState(worksAtom);
   const [count, setCount] = useRecoilState(countAtom);
   const [preDate, setPreDate] = useState(dayjs());
   const [isLoading, setIsLoading] = useRecoilState(isWorksLoadingAtom);
   const updateTimes = useUpdateTimes();
 
-  const updateWorkStatus = (workStatus: WorkStatus) => {
-    setWorkStatus(workStatus);
-    localStorage.workStatus = workStatus;
-  };
-
-  const start = () => {
-    updateTimes();
-    updateWorkStatus('working');
-  };
-
-  const pause = () => {
-    updateTimes();
-    updateWorkStatus('resting');
-  };
+  const start = () => updateTimes('working');
+  const pause = () => updateTimes('resting');
 
   const stop = async () => {
-    localStorage.removeItem('works');
+    setIsLoading(true);
     let stopTimes = [...works[works.length - 1]];
     if (stopTimes.length % 2 === 1) {
       stopTimes = [...stopTimes, Date.now()];
@@ -43,9 +25,7 @@ export const useTime = () => {
     const registeredTimes = [...works];
     registeredTimes[registeredTimes.length - 1] = stopTimes;
     await window.api.registerWorks(registeredTimes);
-    setWorks([]);
-    setIsLoading(true);
-    updateWorkStatus('workOff');
+    await updateTimes('workOff');
   };
 
   useEffect(() => {
@@ -63,14 +43,12 @@ export const useTime = () => {
         const registeredTimes = [...works];
         registeredTimes[registeredTimes.length - 1] = stopTimes;
         await window.api.registerWorks(registeredTimes);
-        localStorage.removeItem('works');
         if (workStatus === 'resting') {
-          updateWorkStatus('workOff');
-          setWorks([]);
+          await updateTimes('workOff');
         } else {
           const firstTimes = [[currentDate.valueOf()]];
+          await window.api.setTimeState({ works: firstTimes });
           setWorks(firstTimes);
-          localStorage.works = JSON.stringify(firstTimes);
         }
         setPreDate(currentDate);
         return;
@@ -85,6 +63,7 @@ export const useTime = () => {
 
   useEffect(() => {
     if (workStatus !== 'workOff') {
+      setIsLoading(false);
       return;
     }
     window.api.getTodayWorks().then((todayWorks) => {
@@ -110,18 +89,16 @@ export const useTime = () => {
     }
     const registeringTimes = [...works];
     registeringTimes[registeringTimes.length - 1] = stopTimes;
-    window.api.registerWorks(registeringTimes).then(() => {
-      localStorage.removeItem('works');
+    window.api.registerWorks(registeringTimes).then(async () => {
       if (workStatus === 'resting') {
         setIsLoading(true);
-        setWorks([]);
         setCount({ workTime: 0, restTime: 0 });
-        updateWorkStatus('workOff');
+        await updateTimes('workOff');
         return;
       }
       const dayStartTimes = [[now.startOf('day').valueOf()]];
+      await window.api.setTimeState({ works: dayStartTimes });
       setWorks(dayStartTimes);
-      localStorage.works = JSON.stringify(dayStartTimes);
     });
   }, []);
 

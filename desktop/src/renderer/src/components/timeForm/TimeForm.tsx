@@ -70,6 +70,7 @@ export const TimeForm: React.FC = () => {
               size="large"
               startIcon={<LocalCafe />}
               onClick={pause}
+              disabled={isLoading}
             >
               休憩
             </ActionButton>
@@ -79,6 +80,7 @@ export const TimeForm: React.FC = () => {
               size="large"
               startIcon={<Home />}
               onClick={stop}
+              disabled={isLoading}
             >
               退勤
             </ActionButton>
@@ -92,6 +94,7 @@ export const TimeForm: React.FC = () => {
               size="large"
               startIcon={<Devices />}
               onClick={start}
+              disabled={isLoading}
             >
               再開
             </ActionButton>
@@ -101,6 +104,7 @@ export const TimeForm: React.FC = () => {
               size="large"
               startIcon={<Home />}
               onClick={stop}
+              disabled={isLoading}
             >
               退勤
             </ActionButton>

@@ -1,6 +1,6 @@
 import { ElectronAPI } from '@electron-toolkit/preload';
 import { IpcRenderer } from 'electron';
-import { DateWorkTimes, DayDetailData, Holiday, Job, JobData } from './dataType';
+import { DateWorkTimes, DayDetailData, Holiday, Job, JobData, TimeState } from './dataType';
 
 declare global {
   interface Window {
@@ -12,6 +12,7 @@ declare global {
       changeCurrentJob: (jobId: string) => Promise<Job | null>;
       renameCurrentJob: (jobName: string) => Promise<JobData>;
       deleteCurrentJob: () => Promise<JobData>;
+      setTimeState: (timeState: Partial<TimeState>) => Promise<void>;
       registerWorks: (times: number[][]) => Promise<void>;
       getTodayWorks: () => Promise<number[][]>;
       openCalendar: () => Promise<void>;

@@ -13,10 +13,14 @@ import {
   getWindowBounds,
   setWindowBounds,
   getTodayWorks,
+  setTimeState,
+  getTimeState,
 } from './store';
 import { createCalendarWindow } from './calendar';
+import { toURLParams } from '../commonUtility/utils';
+import { TimeState } from '../preload/dataType';
 
-function createWindow(): void {
+async function createWindow() {
   // Create the browser window.
   const windowBounds = getWindowBounds('main');
   const mainWindow = new BrowserWindow({
@@ -49,12 +53,15 @@ function createWindow(): void {
     return { action: 'deny' };
   });
 
+  const initialData = getTimeState();
+  const paramString = toURLParams(initialData);
+
   // HMR for renderer base on electron-vite cli.
   // Load the remote URL for development or the local html file for production.
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    mainWindow.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/index.html`);
+    mainWindow.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/index.html?${paramString}`);
   } else {
-    mainWindow.loadFile(join(__dirname, '../renderer/index.html'));
+    mainWindow.loadURL(`file://${join(__dirname, '../renderer/index.html')}?${paramString}`);
   }
 }
 
@@ -105,6 +112,9 @@ ipcMain.handle('changeCurrentJob', (e, jobId: string) => changeCurrentJob(jobId)
 // @ts-ignore
 ipcMain.handle('renameCurrentJob', (e, jobName: string) => renameCurrentJob(jobName));
 ipcMain.handle('deleteCurrentJob', () => deleteCurrentJob());
+
+// @ts-ignore
+ipcMain.handle('setTimeState', (e, timeState: Partial<TimeState>) => setTimeState(timeState));
 
 ipcMain.handle(
   'registerWorks',

@@ -4,6 +4,9 @@ export type WorkTime = {
   works: number[][];
 };
 
+export type WorkStatus = 'workOff' | 'working' | 'resting';
+export type TimeState = { status: WorkStatus; works: number[][] };
+
 export type DateWorkTimes = { [date in string]: WorkTime };
 export type MonthWorkTimes = { [month in string]: DateWorkTimes };
 export type YearWorkTimes = { [year in string]: MonthWorkTimes };

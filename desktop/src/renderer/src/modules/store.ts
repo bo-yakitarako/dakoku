@@ -1,25 +1,22 @@
 import { atom, selector } from 'recoil';
-import { DateWorkTimes, Holiday } from '../../../preload/dataType';
-import { parseWorkTime } from '../../../commonUtility/timeConverter';
+import { DateWorkTimes, Holiday, TimeState, WorkStatus } from '../../../preload/dataType';
+import { getParams, parseWorkTime } from '../../../commonUtility/utils';
 
-export type WorkStatus = 'workOff' | 'working' | 'resting';
-
-const defaultWorkStatus = localStorage.workStatus ?? 'workOff';
-const defaultWorks = JSON.parse(localStorage.works ?? '[]') as number[][];
+const { status, works } = getParams<Partial<TimeState>>(location.href);
 
 export const workStatusAtom = atom<WorkStatus>({
   key: 'playStatusAtom',
-  default: defaultWorkStatus,
+  default: status ?? 'workOff',
 });
 
 export const worksAtom = atom({
   key: 'worksAtom',
-  default: defaultWorks,
+  default: works ?? [],
 });
 
 export const countAtom = atom({
   key: 'countAtom',
-  default: parseWorkTime(defaultWorks),
+  default: parseWorkTime(works ?? []),
 });
 
 export const isWorksLoadingAtom = atom({
