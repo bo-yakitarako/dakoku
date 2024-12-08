@@ -9,8 +9,8 @@ export const useUpdateTimes = () => {
   const setIsLoading = useSetRecoilState(isWorksLoadingAtom);
 
   return useCallback(
-    async (nextStatus: WorkStatus) => {
-      if (nextStatus === 'workOff') {
+    async (nextWorkStatus: WorkStatus) => {
+      if (nextWorkStatus === 'workOff') {
         await window.api.setTimeState({ status: 'workOff', works: [] });
         setWorks([]);
         setWorkStatus('workOff');
@@ -26,9 +26,9 @@ export const useUpdateTimes = () => {
       }
       const lastWork = [...works[works.length - 1], Date.now()];
       const nextWorks = [...works.slice(0, works.length - 1), lastWork];
-      await window.api.setTimeState({ status: nextStatus, works: nextWorks });
+      await window.api.setTimeState({ status: nextWorkStatus, works: nextWorks });
       setWorks(nextWorks);
-      setWorkStatus(nextStatus);
+      setWorkStatus(nextWorkStatus);
       setIsLoading(false);
     },
     [workStatus, works],
