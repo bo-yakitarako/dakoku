@@ -21,6 +21,22 @@ import { toURLParams } from '../commonUtility/utils';
 import { TimeState } from '../preload/dataType';
 
 async function createWindow() {
+  const aho = true;
+  if (aho) {
+    const noConnectionWindow = new BrowserWindow({
+      width: 320,
+      height: 200,
+      show: false,
+      autoHideMenuBar: true,
+    });
+    noConnectionWindow.on('ready-to-show', () => noConnectionWindow.show());
+    const loadURL =
+      is.dev && process.env['ELECTRON_RENDERER_URL']
+        ? `${process.env['ELECTRON_RENDERER_URL']}/noConnection.html`
+        : `file://${join(__dirname, '../renderer/noConnection.html')}`;
+    noConnectionWindow.loadURL(loadURL);
+    return;
+  }
   // Create the browser window.
   const windowBounds = getWindowBounds('main');
   const mainWindow = new BrowserWindow({
