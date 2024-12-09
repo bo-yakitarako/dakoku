@@ -1,0 +1,29 @@
+{
+  "name": "dakoku-server",
+  "version": "2.0.0",
+  "description": "あばー",
+  "main": "index.js",
+  "author": "bo-yakitarako",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "build": "esbuild src/index.ts --bundle --minify --platform=node --outfile=dist/index.js",
+    "start": "yarn build && node dist/index.js",
+    "dev": "nodemon",
+    "utility": "node copyUtility.js",
+    "docker": "docker compose up -d",
+    "docker-stop": "docker compose down",
+    "docker-db": "docker compose exec -it mongodb bash"
+  },
+  "dependencies": {
+    "@types/dotenv": "^8.2.3",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "mongodb": "^6.11.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "esbuild": "^0.24.0",
+    "nodemon": "^3.1.7"
+  }
+}
