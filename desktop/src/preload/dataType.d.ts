@@ -6,6 +6,7 @@ export type WorkTime = {
 
 export type WorkStatus = 'workOff' | 'working' | 'resting';
 export type TimeState = { status: WorkStatus; works: number[][] };
+export type TimeStateDict = { [jobId in string]: TimeState };
 
 export type DateWorkTimes = { [date in string]: WorkTime };
 export type MonthWorkTimes = { [month in string]: DateWorkTimes };

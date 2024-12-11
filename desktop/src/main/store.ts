@@ -7,6 +7,7 @@ import {
   JobNameDict,
   JobStore,
   TimeState,
+  TimeStateDict,
   YearWorkTimes,
 } from '../preload/dataType';
 import dayjs from 'dayjs';
@@ -23,7 +24,7 @@ const defaultWindowBounds = {
 const workTimeStore = new Store<Record<string, YearWorkTimes>>({ name: 'workTimes' });
 const jobStore = new Store<JobStore>({ name: 'job' });
 const windowBoundsStore = new Store<Record<Window, Rectangle>>({ name: 'windowBounds' });
-const TimeStateStore = new Store<TimeState>({ name: 'timeState' });
+const TimeStateDictStore = new Store<TimeStateDict>({ name: 'timeState' });
 
 let currentJob = jobStore.get('currentJob') ?? null;
 
@@ -110,19 +111,30 @@ const convertNameDictToJobs = (jobNameDict: JobNameDict): Job[] => {
     .sort((a, b) => Number(a.jobId) - Number(b.jobId));
 };
 
-export const getTimeState = () => {
-  const status = TimeStateStore.get('status') ?? 'workOff';
-  const works = TimeStateStore.get('works') ?? [];
-  return { status, works };
+export const getTimeState = (): TimeState => {
+  if (currentJob === null) {
+    return { status: 'workOff', works: [] };
+  }
+  return TimeStateDictStore.get(currentJob.jobId) ?? { status: 'workOff', works: [] };
 };
 
-export const setTimeState = ({ status, works }: Partial<TimeState>) => {
+export const setTimeState = (timeState?: Partial<TimeState>) => {
+  if (currentJob === null) {
+    return;
+  }
+  if (timeState === undefined) {
+    TimeStateDictStore.delete(currentJob.jobId);
+    return;
+  }
+  const newState = TimeStateDictStore.get(currentJob.jobId) ?? { status: 'workOff', works: [] };
+  const { status, works } = timeState;
   if (status !== undefined) {
-    TimeStateStore.set('status', status);
+    newState.status = status;
   }
   if (works !== undefined) {
-    TimeStateStore.set('works', works);
+    newState.works = works;
   }
+  TimeStateDictStore.set(currentJob.jobId, newState);
 };
 
 export const getTodayWorks = () => {

@@ -11,7 +11,7 @@ export const useUpdateTimes = () => {
   return useCallback(
     async (nextWorkStatus: WorkStatus) => {
       if (nextWorkStatus === 'workOff') {
-        await window.api.setTimeState({ status: 'workOff', works: [] });
+        await window.api.setTimeState();
         setWorks([]);
         setWorkStatus('workOff');
         return;

@@ -12,7 +12,7 @@ declare global {
       changeCurrentJob: (jobId: string) => Promise<Job | null>;
       renameCurrentJob: (jobName: string) => Promise<JobData>;
       deleteCurrentJob: () => Promise<JobData>;
-      setTimeState: (timeState: Partial<TimeState>) => Promise<void>;
+      setTimeState: (timeState?: Partial<TimeState>) => Promise<void>;
       registerWorks: (times: number[][]) => Promise<void>;
       getTodayWorks: () => Promise<number[][]>;
       openCalendar: () => Promise<void>;

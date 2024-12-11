@@ -130,7 +130,7 @@ ipcMain.handle('renameCurrentJob', (e, jobName: string) => renameCurrentJob(jobN
 ipcMain.handle('deleteCurrentJob', () => deleteCurrentJob());
 
 // @ts-ignore
-ipcMain.handle('setTimeState', (e, timeState: Partial<TimeState>) => setTimeState(timeState));
+ipcMain.handle('setTimeState', (e, timeState?: Partial<TimeState>) => setTimeState(timeState));
 
 ipcMain.handle(
   'registerWorks',
