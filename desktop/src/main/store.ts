@@ -322,13 +322,13 @@ export const getDayDetailData = (year: number, month: number, day: number, isAll
   return { data, rectangle };
 };
 
-// eslint-disable-next-line complexity
 const generateGraphItems = (
   jobName: string,
   works: number[][],
   edge: { start: number; end: number },
   width: number,
   isAll: boolean,
+  // eslint-disable-next-line complexity
 ) => {
   const duration = edge.end - edge.start;
   let items: DayDetailGraphItem[] = [];
