@@ -12,23 +12,23 @@ importers:
         specifier: ^8.2.3
         version: 8.2.3
       dotenv:
-        specifier: ^16.4.7
+        specifier: ^16.6.1
         version: 16.6.1
       express:
-        specifier: ^4.21.2
+        specifier: ^4.22.1
         version: 4.22.1
       mongodb:
-        specifier: ^6.11.0
+        specifier: ^6.21.0
         version: 6.21.0
     devDependencies:
       '@types/express':
-        specifier: ^5.0.0
+        specifier: ^5.0.6
         version: 5.0.6
       esbuild:
-        specifier: ^0.24.0
+        specifier: ^0.24.2
         version: 0.24.2
       nodemon:
-        specifier: ^3.1.7
+        specifier: ^3.1.11
         version: 3.1.11
 
 packages:
