@@ -8,7 +8,7 @@
   "private": true,
   "scripts": {
     "build": "esbuild src/index.ts --bundle --minify --platform=node --outfile=dist/index.js",
-    "start": "yarn build && node dist/index.js",
+    "start": "pnpm build && node dist/index.js",
     "dev": "nodemon",
     "utility": "node copyUtility.js",
     "docker": "docker compose up -d",

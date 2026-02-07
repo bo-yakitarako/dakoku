@@ -7,7 +7,7 @@
   "author": "bo-yakitarako",
   "license": "MIT",
   "scripts": {
-    "desktop": "cd desktop && yarn dev"
+    "desktop": "cd desktop && pnpm dev"
   },
   "private": true,
   "devDependencies": {
