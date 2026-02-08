@@ -15,8 +15,10 @@
     "docker-stop": "docker compose down"
   },
   "dependencies": {
+    "@hono/node-server": "^1.19.9",
     "dayjs": "^1.11.19",
     "dotenv": "^17.2.4",
+    "hono": "^4.11.9",
     "mongodb": "^7.1.0"
   },
   "devDependencies": {
