@@ -1,4 +1,3 @@
-import styled from '@emotion/styled';
 import { Box, CircularProgress, Typography } from '@mui/material';
 import { blue, yellow } from '@mui/material/colors';
 import { DayDetailData } from '../../../../preload/dataType';
@@ -21,9 +20,20 @@ export const DayDetail: React.FC = () => {
 
   if (dayDetailData === null) {
     return (
-      <Wrapper>
+      <Box
+        sx={{
+          display: 'flex',
+          position: 'relative',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          width: '100%',
+          height: '100vh',
+          padding: '16px',
+        }}
+      >
         <CircularProgress />
-      </Wrapper>
+      </Box>
     );
   }
 
@@ -31,106 +41,121 @@ export const DayDetail: React.FC = () => {
   const { year, month, day } = date;
   const dateString = `${year}年${month}月${day}日`;
   return (
-    <Wrapper>
-      <Header>
+    <Box
+      sx={{
+        display: 'flex',
+        position: 'relative',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: '100%',
+        height: '100vh',
+        padding: '16px',
+      }}
+    >
+      <Box
+        sx={{
+          position: 'absolute',
+          left: 0,
+          top: 0,
+          width: '100vw',
+          '& > h1': {
+            position: 'relative',
+            fontSize: '24px',
+            padding: '16px 16px 0',
+          },
+          '& > div': {
+            position: 'relative',
+            display: 'flex',
+            gap: '16px',
+            paddingLeft: '16px',
+            '& > p': {
+              fontSize: '14px',
+              color: 'text.secondary',
+            },
+          },
+        }}
+      >
         <Typography variant="h1">{dateString}</Typography>
-      </Header>
-      <GraphWrapper>
+      </Box>
+      <Box
+        sx={{
+          width: 'fit-content',
+          '& > h2': { fontSize: '18px' },
+          '& > div': {
+            position: 'relative',
+            display: 'flex',
+            gap: '12px',
+            zIndex: 1,
+            '& > p': {
+              fontSize: '14px',
+              color: 'text.secondary',
+            },
+          },
+        }}
+      >
         <Typography variant="h2">{name}</Typography>
         <WorkTimeGraph {...graph} />
         <div>
           <Typography>勤務時間:{workTimeSum}</Typography>
           <Typography>休憩時間:{restTimeSum}</Typography>
         </div>
-      </GraphWrapper>
-      <Footer>
-        <ColorDesciption type="work">
+      </Box>
+      <Box
+        sx={{
+          position: 'absolute',
+          display: 'flex',
+          right: 0,
+          bottom: 0,
+          padding: '16px',
+          gap: '20px',
+        }}
+      >
+        <Box
+          component="div"
+          sx={{
+            position: 'relative',
+            display: 'flex',
+            gap: '4px',
+            alignItems: 'center',
+            '& > p': {
+              fontSize: '12px',
+              color: 'text.secondary',
+            },
+            '& > span': {
+              width: '60px',
+              height: '12px',
+              borderTop: `solid 2px ${blue[200]}`,
+              background: `rgba(${hexToRgb(blue[200])}, 0.4)`,
+            },
+          }}
+        >
           <Typography>勤務時間:</Typography>
           <span />
-        </ColorDesciption>
-        <ColorDesciption type="rest">
+        </Box>
+        <Box
+          component="div"
+          sx={{
+            position: 'relative',
+            display: 'flex',
+            gap: '4px',
+            alignItems: 'center',
+            '& > p': {
+              fontSize: '12px',
+              color: 'text.secondary',
+            },
+            '& > span': {
+              width: '60px',
+              height: '12px',
+              borderTop: `solid 2px ${yellow[200]}`,
+              background: `rgba(${hexToRgb(yellow[200])}, 0.4)`,
+            },
+          }}
+        >
           <Typography>休憩時間:</Typography>
           <span />
-        </ColorDesciption>
-      </Footer>
-    </Wrapper>
+        </Box>
+      </Box>
+    </Box>
   );
 };
-
-const Wrapper = styled(Box)`
-  display: flex;
-  position: relative;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  height: 100vh;
-  padding: 16px;
-`;
-
-const Header = styled(Box)`
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 100vw;
-  > h1 {
-    position: relative;
-    font-size: 24px;
-    padding: 16px 16px 0;
-  }
-  > div {
-    position: relative;
-    display: flex;
-    gap: 16px;
-    padding-left: 16px;
-    > p {
-      font-size: 14px;
-      color: ${({ theme }) => theme.palette.text.secondary};
-    }
-  }
-`;
-
-const GraphWrapper = styled(Box)`
-  width: fit-content;
-
-  > h2 {
-    font-size: 18px;
-  }
-
-  > div {
-    position: relative;
-    display: flex;
-    gap: 12px;
-    z-index: 1;
-    > p {
-      font-size: 14px;
-      color: ${({ theme }) => theme.palette.text.secondary};
-    }
-  }
-`;
-
-const Footer = styled(Box)`
-  position: absolute;
-  display: flex;
-  right: 0;
-  bottom: 0;
-  padding: 16px;
-  gap: 20px;
-`;
-
-const ColorDesciption = styled.div<{ type: 'work' | 'rest' }>`
-  position: relative;
-  display: flex;
-  gap: 4px;
-  align-items: center;
-  > p {
-    font-size: 12px;
-    color: ${({ theme }) => theme.palette.text.secondary};
-  }
-  > span {
-    width: 60px;
-    height: 12px;
-    border-top: solid 2px ${({ type }) => (type === 'work' ? blue[200] : yellow[200])};
-    background: rgba(${({ type }) => hexToRgb(type === 'work' ? blue[200] : yellow[200])}, 0.4);
-  }
-`;

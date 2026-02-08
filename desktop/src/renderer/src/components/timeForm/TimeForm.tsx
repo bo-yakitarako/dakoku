@@ -1,5 +1,4 @@
 import React, { useEffect } from 'react';
-import styled from '@emotion/styled';
 import { Time } from './Time';
 import { Box, Button, IconButton } from '@mui/material';
 import { CalendarMonth, Computer, Devices, Home, LocalCafe } from '@mui/icons-material';
@@ -22,10 +21,26 @@ export const TimeForm: React.FC = () => {
   }, [currentJob]);
 
   return (
-    <Wrapper>
-      <CalendarButton color="info" onClick={openCalendar} disabled={!canOpen}>
+    <Box
+      component="main"
+      sx={{
+        display: 'flex',
+        position: 'relative',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100vh',
+        gap: '1rem',
+      }}
+    >
+      <IconButton
+        color="info"
+        onClick={openCalendar}
+        disabled={!canOpen}
+        sx={{ position: 'absolute', top: '8px', left: '8px' }}
+      >
         <CalendarMonth />
-      </CalendarButton>
+      </IconButton>
       {workStatus === 'workOff' ? (
         <>
           <JobSelectBox />
@@ -49,93 +64,73 @@ export const TimeForm: React.FC = () => {
           </Time>
         </Box>
       )}
-      <Buttons>
+      <Box sx={{ display: 'flex', gap: '16px' }}>
         {workStatus === 'workOff' && (
-          <ActionButton
+          <Button
             variant="outlined"
             color="primary"
             size="large"
             startIcon={<Computer />}
             onClick={start}
             disabled={isLoading}
+            sx={{ width: '120px' }}
           >
             出勤
-          </ActionButton>
+          </Button>
         )}
         {workStatus === 'working' && (
           <>
-            <ActionButton
+            <Button
               variant="outlined"
               color="success"
               size="large"
               startIcon={<LocalCafe />}
               onClick={pause}
               disabled={isLoading}
+              sx={{ width: '120px' }}
             >
               休憩
-            </ActionButton>
-            <ActionButton
+            </Button>
+            <Button
               variant="outlined"
               color="warning"
               size="large"
               startIcon={<Home />}
               onClick={stop}
               disabled={isLoading}
+              sx={{ width: '120px' }}
             >
               退勤
-            </ActionButton>
+            </Button>
           </>
         )}
         {workStatus === 'resting' && (
           <>
-            <ActionButton
+            <Button
               variant="outlined"
               color="primary"
               size="large"
               startIcon={<Devices />}
               onClick={start}
               disabled={isLoading}
+              sx={{ width: '120px' }}
             >
               再開
-            </ActionButton>
-            <ActionButton
+            </Button>
+            <Button
               variant="outlined"
               color="warning"
               size="large"
               startIcon={<Home />}
               onClick={stop}
               disabled={isLoading}
+              sx={{ width: '120px' }}
             >
               退勤
-            </ActionButton>
+            </Button>
           </>
         )}
-      </Buttons>
-    </Wrapper>
+      </Box>
+    </Box>
   );
 };
-
-const Wrapper = styled.main`
-  display: flex;
-  position: relative;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
-  gap: 1rem;
-`;
-
-const Buttons = styled(Box)`
-  display: flex;
-  gap: 16px;
-`;
-
-const ActionButton = styled(Button)`
-  width: 120px;
-`;
-
-const CalendarButton = styled(IconButton)`
-  position: absolute;
-  top: 8px;
-  left: 8px;
-`;

@@ -1,7 +1,6 @@
 import ReactDOM from 'react-dom/client';
 import { Box, CssBaseline, Typography } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-import styled from '@emotion/styled';
 import { Warning } from '@mui/icons-material';
 import '@fontsource/roboto/300.css';
 import '@fontsource/roboto/400.css';
@@ -20,18 +19,18 @@ function App() {
   return (
     <ThemeProvider theme={darkTheme}>
       <CssBaseline />
-      <Center>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh',
+          gap: '4px',
+        }}
+      >
         <Warning color="warning" />
         <Typography>サーバーと接続できないのじゃ</Typography>
-      </Center>
+      </Box>
     </ThemeProvider>
   );
 }
-
-const Center = styled(Box)`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  gap: 4px;
-`;

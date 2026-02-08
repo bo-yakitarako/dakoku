@@ -1,4 +1,3 @@
-import styled from '@emotion/styled';
 import { FormControl, InputLabel, MenuItem, Select } from '@mui/material';
 import { useJobSelect } from './hooks/useJobSelect';
 import { useRecoilValue } from 'recoil';
@@ -8,7 +7,14 @@ export const JobSelectBox: React.FC = () => {
   const isOpenCalendar = !useRecoilValue(canOpenCalendarAtom);
   const { jobs, jobIdValue, onChange } = useJobSelect();
   return (
-    <Wrapper>
+    <FormControl
+      sx={{
+        position: 'absolute',
+        top: '16px',
+        right: '16px',
+        minWidth: '150px',
+      }}
+    >
       <InputLabel id="job-select-label">おしごと選択</InputLabel>
       <Select
         labelId="job-select-label"
@@ -24,13 +30,6 @@ export const JobSelectBox: React.FC = () => {
           </MenuItem>
         ))}
       </Select>
-    </Wrapper>
+    </FormControl>
   );
 };
-
-const Wrapper = styled(FormControl)`
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  min-width: 150px;
-`;

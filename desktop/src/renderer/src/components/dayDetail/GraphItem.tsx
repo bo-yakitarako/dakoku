@@ -1,14 +1,104 @@
-import styled from '@emotion/styled';
-import { Tooltip, TooltipProps, Typography, tooltipClasses } from '@mui/material';
+import { Box, Tooltip, Typography, tooltipClasses } from '@mui/material';
 import { blue, yellow } from '@mui/material/colors';
 import { DayDetailGraphItem } from '../../../../preload/dataType';
 
 export const GraphItem: React.FC<DayDetailGraphItem> = (props) => {
-  const { time, durationTime, first, last, jobName, isAll, ...remained } = props;
+  const { time, durationTime, first, last, jobName, isAll } = props;
   const jobTooltipTitle = isAll ? jobName : null;
+  const baseColor = props.type === 'work' ? blue[200] : yellow[200];
+  const baseRgb = hexToRgb(baseColor);
   return (
-    <JobNameTooltip title={jobTooltipTitle} placement="top" enterDelay={0} leaveDelay={0}>
-      <ItemWrapper {...remained}>
+    <Tooltip
+      title={jobTooltipTitle}
+      placement="top"
+      enterDelay={0}
+      leaveDelay={0}
+      arrow
+      slotProps={{
+        tooltip: { sx: { backgroundColor: 'success.dark', fontSize: 11.5 } },
+        arrow: { sx: { color: 'success.dark' } },
+      }}
+    >
+      <Box
+        component="div"
+        sx={(theme) => ({
+          position: 'absolute',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          width: props.location.length,
+          height: '100%',
+          left: props.location.start,
+          bottom: 0,
+          borderTop: `solid 2px ${baseColor}`,
+          background: `rgba(${baseRgb}, 0.4)`,
+          transition: 'background 0.2s',
+          zIndex: 1,
+          '& > div': {
+            position: 'relative',
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            '& > p': {
+              color: 'transparent',
+              transition: 'color 0.2s',
+              fontSize: '12px',
+              whiteSpace: 'nowrap',
+              ...(props.canDisplayTime
+                ? {
+                    '&:not(:first-of-type)': {
+                      position: 'absolute',
+                      bottom: '-20px',
+                    },
+                    '&:nth-of-type(2)': {
+                      left: 0,
+                      transform: 'translateX(-50%)',
+                    },
+                    '&:nth-of-type(3)': {
+                      right: 0,
+                      transform: 'translateX(50%)',
+                    },
+                    '&:nth-of-type(n + 4)': {
+                      top: '-20px',
+                      color: theme.palette.text.primary,
+                      '&.first': {
+                        left: 0,
+                        transform: 'translateX(-50%)',
+                      },
+                      '&.last': {
+                        right: 0,
+                        transform: 'translateX(50%)',
+                      },
+                    },
+                  }
+                : {
+                    '&:not(:first-of-type)': {
+                      position: 'absolute',
+                      top: '-20px',
+                      color: theme.palette.text.primary,
+                    },
+                    '&.first': {
+                      left: 0,
+                      transform: 'translateX(-50%)',
+                    },
+                    '&.last': {
+                      right: 0,
+                      transform: 'translateX(50%)',
+                    },
+                  }),
+            },
+          },
+          '&:hover': {
+            cursor: 'default',
+            background: `rgba(${baseRgb}, 0.55)`,
+            '& > div > p': {
+              color: theme.palette.text.primary,
+            },
+          },
+        })}
+      >
         {props.canDisplayTime ? (
           <div>
             <Typography>{durationTime}</Typography>
@@ -18,12 +108,15 @@ export const GraphItem: React.FC<DayDetailGraphItem> = (props) => {
             {last && <Typography className="last">{time.end}</Typography>}
           </div>
         ) : (
-          <TimeTooltip
+          <Tooltip
             title={`${time.start} - ${time.end}`}
             placement="bottom"
             enterDelay={0}
             leaveDelay={0}
+            arrow
             slotProps={{
+              tooltip: { sx: { backgroundColor: 'transparent', fontSize: 11.5 } },
+              arrow: { sx: { display: 'none' } },
               popper: {
                 sx: {
                   [`&.${tooltipClasses.popper}[data-popper-placement*="bottom"] .${tooltipClasses.tooltip}`]:
@@ -51,105 +144,12 @@ export const GraphItem: React.FC<DayDetailGraphItem> = (props) => {
               {first && <Typography className="first">{time.start}</Typography>}
               {last && <Typography className="last">{time.end}</Typography>}
             </div>
-          </TimeTooltip>
+          </Tooltip>
         )}
-      </ItemWrapper>
-    </JobNameTooltip>
+      </Box>
+    </Tooltip>
   );
 };
-
-type StyleProps = {
-  type: 'work' | 'rest';
-  location: {
-    start: string; // xx.xxx%
-    length: string; // zz.zzz%
-  };
-  canDisplayTime: boolean;
-};
-
-const ItemWrapper = styled.div<StyleProps>`
-  position: absolute;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: ${({ location }) => location.length};
-  height: 100%;
-  left: ${({ location }) => location.start};
-  bottom: 0;
-  border-top: solid 2px ${({ type }) => (type === 'work' ? blue[200] : yellow[200])};
-  background: rgba(${({ type }) => hexToRgb(type === 'work' ? blue[200] : yellow[200])}, 0.4);
-  transition: background 0.2s;
-  z-index: 1;
-
-  > div {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    > p {
-      color: transparent;
-      transition: color 0.2s;
-      font-size: 12px;
-      white-space: nowrap;
-      ${({ canDisplayTime, theme }) =>
-        canDisplayTime
-          ? `
-        &:not(:first-of-type) {
-          position: absolute;
-          bottom: -20px;
-        }
-        &:nth-of-type(2) {
-          left: 0;
-          transform: translateX(-50%);
-        }
-        &:nth-of-type(3) {
-          right: 0;
-          transform: translateX(50%);
-        }
-        &:nth-of-type(n + 4) {
-          top: -20px;
-          color: ${theme.palette.text.primary};
-          &.first {
-            left: 0;
-            transform: translateX(-50%);
-          }
-          &.last {
-            right: 0;
-            transform: translateX(50%);
-          }
-        }
-      `
-          : `
-        &:not(:first-of-type) {
-          position: absolute;
-          top: -20px;
-          color: ${theme.palette.text.primary};
-        }
-        &.first {
-          left: 0;
-          transform: translateX(-50%);
-        }
-        &.last {
-          right: 0;
-          transform: translateX(50%);
-        }
-      `}
-    }
-  }
-
-  &:hover {
-    cursor: default;
-    background: rgba(${({ type }) => hexToRgb(type === 'work' ? blue[200] : yellow[200])}, 0.55);
-    > div {
-      > p {
-        color: ${({ theme }) => theme.palette.text.primary};
-      }
-    }
-  }
-`;
 
 export const hexToRgb = (hex: string) => {
   if (hex.startsWith('#')) {
@@ -166,31 +166,3 @@ export const hexToRgb = (hex: string) => {
   const b = parseInt(hex.slice(4, 6), 16);
   return `${r}, ${g}, ${b}`;
 };
-
-const JobNameTooltip = styled(({ className, ...props }: TooltipProps) => (
-  <Tooltip {...props} arrow classes={{ popper: className }} />
-))(({ theme }) => {
-  return {
-    [`& .${tooltipClasses.arrow}`]: {
-      color: theme.palette.success.dark,
-    },
-    [`& .${tooltipClasses.tooltip}`]: {
-      backgroundColor: theme.palette.success.dark,
-      fontSize: 11.5,
-    },
-  };
-});
-
-const TimeTooltip = styled(({ className, ...props }: TooltipProps) => (
-  <Tooltip {...props} arrow classes={{ popper: className }} />
-))(() => {
-  return {
-    [`& .${tooltipClasses.arrow}`]: {
-      display: 'none',
-    },
-    [`& .${tooltipClasses.tooltip}`]: {
-      backgroundColor: 'transparent',
-      fontSize: 11.5,
-    },
-  };
-});

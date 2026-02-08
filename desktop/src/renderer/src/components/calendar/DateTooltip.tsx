@@ -1,8 +1,7 @@
-import styled from '@emotion/styled';
 import { EventContentArg } from '@fullcalendar/core';
 import { Circle } from '@mui/icons-material';
 import { Box, Typography } from '@mui/material';
-import Tooltip, { tooltipClasses, TooltipProps } from '@mui/material/Tooltip';
+import Tooltip from '@mui/material/Tooltip';
 import dayjs from 'dayjs';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { calendarAllCheckAtom, calendarLoadingAtom, monthWorkTimesAtom } from '../../modules/store';
@@ -22,39 +21,30 @@ export const DateTooltip: React.FC<EventContentArg> = (arg) => {
   };
 
   return (
-    <ColoredTooltip title={`休憩時間: ${restTimeText}`} arrow>
-      <Container onClick={onClick}>
+    <Tooltip
+      title={`休憩時間: ${restTimeText}`}
+      arrow
+      slotProps={{
+        tooltip: { sx: { backgroundColor: 'success.dark' } },
+        arrow: { sx: { color: 'success.dark' } },
+      }}
+    >
+      <Box
+        onClick={onClick}
+        sx={{
+          display: 'flex',
+          width: '100%',
+          gap: '4px',
+          justifyContent: 'center',
+          alignItems: 'center',
+          '& > svg': { fontSize: '12px' },
+          '& > p': { fontSize: '14px' },
+          '&:hover': { cursor: 'pointer' },
+        }}
+      >
         <Circle color="primary" />
         <Typography>{timeText}</Typography>
-      </Container>
-    </ColoredTooltip>
+      </Box>
+    </Tooltip>
   );
 };
-
-const Container = styled(Box)`
-  display: flex;
-  width: 100%;
-  gap: 4px;
-  justify-content: center;
-  align-items: center;
-  > svg {
-    font-size: 12px;
-  }
-  > p {
-    font-size: 14px;
-  }
-  &:hover {
-    cursor: pointer;
-  }
-`;
-
-const ColoredTooltip = styled(({ className, ...props }: TooltipProps) => (
-  <Tooltip {...props} arrow classes={{ popper: className }} />
-))(({ theme }) => ({
-  [`& .${tooltipClasses.arrow}`]: {
-    color: theme.palette.success.dark,
-  },
-  [`& .${tooltipClasses.tooltip}`]: {
-    backgroundColor: theme.palette.success.dark,
-  },
-}));

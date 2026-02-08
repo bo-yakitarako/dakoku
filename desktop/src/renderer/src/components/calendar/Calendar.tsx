@@ -1,7 +1,6 @@
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import localeJa from '@fullcalendar/core/locales/ja';
-import styled from '@emotion/styled';
 import {
   Box,
   Button,
@@ -41,6 +40,117 @@ export const Calendar: React.FC = () => {
   } = useCalendarMove();
   const currentJob = useRecoilValue(currentJobAtom);
 
+  const todayColorSx = (() => {
+    if (loading && holidays.length === 0) {
+      return {};
+    }
+    const today = dayjs();
+    const day = today.day();
+    let color = '';
+    if (day === 0 || holidays.map(({ day }) => day).includes(today.date())) {
+      color = '#fcc';
+    }
+    if (day === 6) {
+      color = '#ccf';
+    }
+    if (color === '') {
+      return {};
+    }
+    return {
+      '& .fc-day-today': {
+        backgroundColor: 'var(--fc-today-bg-color)',
+        '& .fc-daygrid-day-number': {
+          color,
+        },
+      },
+    };
+  })();
+
+  const holidayGridSx = holidayGrids.reduce<Record<string, object>>((acc, { row, column }) => {
+    acc[`& tr:nth-of-type(${row}) td:nth-of-type(${column})`] = {
+      backgroundColor: 'rgba(255, 0, 0, 0.1)',
+      '& .fc-col-header-cell-cushion, & .fc-daygrid-day-number': {
+        color: '#fdd',
+      },
+    };
+    return acc;
+  }, {});
+
+  const customFullCalendarSx = {
+    position: 'relative',
+    width: '100%',
+    height: 'fit-content',
+    ...(loading
+      ? {
+          '&::after': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'rgba(0, 0, 0, 0.4)',
+            zIndex: 1,
+          },
+          ...(holidays.length === 0
+            ? {
+                '& .fc-day-today': {
+                  backgroundColor: 'transparent !important',
+                },
+              }
+            : {}),
+        }
+      : {}),
+    ...(!loading || holidays.length > 0
+      ? {
+          '& .fc-day-sat': {
+            backgroundColor: 'rgba(0, 0, 255, 0.1)',
+            '& .fc-col-header-cell-cushion, & .fc-daygrid-day-number': {
+              color: '#ddf',
+            },
+          },
+          '& .fc-day-sun': {
+            backgroundColor: 'rgba(255, 0, 0, 0.1)',
+            '& .fc-col-header-cell-cushion, & .fc-daygrid-day-number': {
+              color: '#fdd',
+            },
+          },
+        }
+      : {}),
+    '& .fc-scrollgrid-sync-table': {
+      ...holidayGridSx,
+      '& .fc-daygrid-day-frame': {
+        minHeight: '100%',
+        position: 'relative',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        '& .fc-daygrid-day-top': {
+          position: 'absolute',
+          top: 0,
+          width: '100%',
+        },
+      },
+      '& .fc-daygrid-day-number': {
+        width: '100%',
+      },
+    },
+    ...todayColorSx,
+    '& .fc-day-other.fc-day-today': {
+      backgroundColor: 'transparent',
+    },
+    '& .fc-day-otther.fc-day-today.fc-day-sat': {
+      backgroundColor: 'rgba(0, 0, 255, 0.1)',
+    },
+    '& .fc-day-other.fc-day-today.fc-day-sun': {
+      backgroundColor: 'rgba(255, 0, 0, 0.1)',
+    },
+    '& .fc-day-other *': {
+      display: 'none',
+    },
+  } as const;
+
   useEffect(() => {
     if (checked) {
       document.title = 'dakoku - カレンダー: おしごとぜんぶ';
@@ -52,16 +162,29 @@ export const Calendar: React.FC = () => {
   }, [currentJob, checked]);
 
   return (
-    <Wrapper>
-      <IsAllCheckboxWrapper row>
+    <Box sx={{ position: 'relative', padding: '16px' }}>
+      <FormGroup row sx={{ position: 'absolute', top: '16px', right: '16px' }}>
         <FormControlLabel
           control={<Switch checked={checked} onChange={onChecked} />}
           label="おしごとぜんぶ"
           labelPlacement="start"
         />
-      </IsAllCheckboxWrapper>
-      <MonthTitle variant="h2">{currentMonth}</MonthTitle>
-      <Options>
+      </FormGroup>
+      <Typography
+        variant="h2"
+        sx={{ fontSize: '32px', fontWeight: 'bold', textAlign: 'center', marginBottom: '16px' }}
+      >
+        {currentMonth}
+      </Typography>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: '8px',
+          '& > p': { fontSize: '16px' },
+        }}
+      >
         <ButtonGroup variant="outlined">
           <Button onClick={move.prevYear}>
             <KeyboardDoubleArrowLeft />
@@ -79,12 +202,8 @@ export const Calendar: React.FC = () => {
             <KeyboardDoubleArrowRight />
           </Button>
         </ButtonGroup>
-      </Options>
-      <CustomFullCalendar
-        holidays={holidays.map(({ day }) => day)}
-        holidayGrids={holidayGrids}
-        loading={String(loading) as 'true' | 'false'}
-      >
+      </Box>
+      <Box sx={customFullCalendarSx}>
         <FullCalendar
           ref={ref}
           plugins={[dayGridPlugin]}
@@ -97,180 +216,19 @@ export const Calendar: React.FC = () => {
           dayCellContent={(arg) => <DayCellContent {...arg} />}
         />
         {loading && (
-          <LoadingWrapper>
+          <Box
+            sx={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              zIndex: 2,
+            }}
+          >
             <CircularProgress size={80} />
-          </LoadingWrapper>
+          </Box>
         )}
-      </CustomFullCalendar>
-    </Wrapper>
+      </Box>
+    </Box>
   );
 };
-
-const Wrapper = styled(Box)`
-  position: relative;
-  padding: 16px;
-`;
-
-const IsAllCheckboxWrapper = styled(FormGroup)`
-  position: absolute;
-  top: 16px;
-  right: 16px;
-`;
-
-const MonthTitle = styled(Typography)`
-  font-size: 32px;
-  font-weight: bold;
-  text-align: center;
-  margin-bottom: 16px;
-`;
-
-const Options = styled(Box)`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 8px;
-  > p {
-    font-size: 16px;
-  }
-`;
-
-type CalendarProps = {
-  holidays: number[];
-  holidayGrids: { row: number; column: number }[];
-  loading: 'true' | 'false';
-};
-
-const CustomFullCalendar = styled.div<CalendarProps>`
-  position: relative;
-  width: 100%;
-  height: fit-content;
-
-  ${({ loading, holidays }) =>
-    loading === 'true'
-      ? `
-    &::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.4);
-      z-index: 1;
-    }
-    ${
-      holidays.length === 0
-        ? `
-      .fc-day-today {
-        background-color: transparent !important;
-      }
-    `
-        : ''
-    }
-  `
-      : ''}
-
-  ${({ loading, holidays }) =>
-    loading === 'false' || holidays.length > 0
-      ? `
-    .fc-day-sat {
-      background-color: rgba(0, 0, 255, 0.1);
-      .fc-col-header-cell-cushion,
-      .fc-daygrid-day-number {
-        color: #ddf;
-      }
-    }
-
-    .fc-day-sun {
-      background-color: rgba(255, 0, 0, 0.1);
-      .fc-col-header-cell-cushion,
-      .fc-daygrid-day-number {
-        color: #fdd;
-      }
-    }
-  `
-      : ''}
-
-  .fc-scrollgrid-sync-table {
-    ${({ holidayGrids }) =>
-      holidayGrids
-        .map(
-          ({ row, column }) => `
-      tr:nth-of-type(${row}) td:nth-of-type(${column}) {
-        background-color: rgba(255, 0, 0, 0.1);
-        .fc-col-header-cell-cushion,
-        .fc-daygrid-day-number {
-          color: #fdd;
-        }
-      }
-    `,
-        )
-        .join('')}
-
-    .fc-daygrid-day-frame {
-      min-height: 100%;
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      .fc-daygrid-day-top {
-        position: absolute;
-        top: 0;
-        width: 100%;
-      }
-    }
-
-    .fc-daygrid-day-number {
-      width: 100%;
-    }
-  }
-
-  ${({ holidays, loading }) => {
-    if (loading === 'true' && holidays.length === 0) {
-      return '';
-    }
-    const today = dayjs();
-    const day = today.day();
-    let color = '';
-    if (day === 0 || holidays.includes(today.date())) {
-      color = '#fcc';
-    }
-    if (day === 6) {
-      color = '#ccf';
-    }
-    if (color === '') {
-      return '';
-    }
-    return `
-      .fc-day-today {
-        background-color: var(--fc-today-bg-color);
-        .fc-daygrid-day-number {
-          color: ${color};
-        }
-      }
-    `;
-  }}
-  .fc-day-other.fc-day-today {
-    background-color: transparent;
-  }
-  .fc-day-otther.fc-day-today.fc-day-sat {
-    background-color: rgba(0, 0, 255, 0.1);
-  }
-  .fc-day-other.fc-day-today.fc-day-sun {
-    background-color: rgba(255, 0, 0, 0.1);
-  }
-  .fc-day-other {
-    * {
-      display: none;
-    }
-  }
-`;
-
-const LoadingWrapper = styled(Box)`
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 2;
-`;
