@@ -2,6 +2,7 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron';
 import { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import icon from '../../resources/icon.png?asset';
+import { config } from 'dotenv';
 import {
   deleteCurrentJob,
   initializeCurrentJob,
@@ -20,21 +21,25 @@ import { createCalendarWindow } from './calendar';
 import { toURLParams } from '../commonUtility/utils';
 import { TimeState } from '../preload/dataType';
 
+config();
+
+let apiToken: string | null = null;
+
 async function createWindow() {
   const aho = true;
   if (aho) {
-    const noConnectionWindow = new BrowserWindow({
+    const authWindow = new BrowserWindow({
       width: 320,
-      height: 200,
+      height: 520,
       show: false,
       autoHideMenuBar: true,
     });
-    noConnectionWindow.on('ready-to-show', () => noConnectionWindow.show());
+    authWindow.on('ready-to-show', () => authWindow.show());
     const loadURL =
       is.dev && process.env['ELECTRON_RENDERER_URL']
-        ? `${process.env['ELECTRON_RENDERER_URL']}/noConnection.html`
-        : `file://${join(__dirname, '../renderer/noConnection.html')}`;
-    noConnectionWindow.loadURL(loadURL);
+        ? `${process.env['ELECTRON_RENDERER_URL']}/auth.html`
+        : `file://${join(__dirname, '../renderer/auth.html')}`;
+    authWindow.loadURL(loadURL);
     return;
   }
   // Create the browser window.
@@ -139,3 +144,46 @@ ipcMain.handle(
 );
 
 ipcMain.handle('getTodayWorks', () => getTodayWorks());
+
+ipcMain.handle('setAuthToken', (_event, token: string) => {
+  apiToken = token;
+});
+
+ipcMain.handle('clearAuthToken', () => {
+  apiToken = null;
+});
+
+ipcMain.handle('apiPing', async () => {
+  const apiOrigin = process.env.API_ORIGIN ?? 'http://localhost:8080';
+  const token = apiToken ?? '';
+
+  if (!token) {
+    return {
+      ok: false,
+      status: 401,
+      data: { message: 'No token' },
+    };
+  }
+
+  const response = await fetch(`${apiOrigin}/ping`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({}),
+  });
+
+  let data: unknown = null;
+  try {
+    data = await response.json();
+  } catch {
+    data = null;
+  }
+
+  return {
+    ok: response.ok,
+    status: response.status,
+    data,
+  };
+});

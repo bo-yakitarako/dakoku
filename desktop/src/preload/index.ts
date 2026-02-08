@@ -13,6 +13,9 @@ const api = {
   setTimeState: (timeState?: Partial<TimeState>) => ipcRenderer.invoke('setTimeState', timeState),
   registerWorks: (times: number) => ipcRenderer.invoke('registerWorks', times),
   getTodayWorks: () => ipcRenderer.invoke('getTodayWorks'),
+  setAuthToken: (token: string) => ipcRenderer.invoke('setAuthToken', token),
+  clearAuthToken: () => ipcRenderer.invoke('clearAuthToken'),
+  apiPing: () => ipcRenderer.invoke('apiPing'),
   openCalendar: () => ipcRenderer.invoke('openCalendar'),
   getMonthWorkTime: (year: number, month: number, isAll: boolean) =>
     ipcRenderer.invoke('getMonthWorkTime', year, month, isAll),

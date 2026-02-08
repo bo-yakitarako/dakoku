@@ -15,6 +15,9 @@ declare global {
       setTimeState: (timeState?: Partial<TimeState>) => Promise<void>;
       registerWorks: (times: number[][]) => Promise<void>;
       getTodayWorks: () => Promise<number[][]>;
+      setAuthToken: (token: string) => Promise<void>;
+      clearAuthToken: () => Promise<void>;
+      apiPing: () => Promise<{ ok: boolean; status: number; data: unknown }>;
       openCalendar: () => Promise<void>;
       getMonthWorkTime: (
         year: number,

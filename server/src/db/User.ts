@@ -4,6 +4,7 @@ namespace User {
   export type Data = {
     name: string;
     email: string;
+    firebaseId: string;
   };
 }
 
@@ -16,5 +17,9 @@ export class User extends Model<User.Data> {
 
   public get email() {
     return this._data.email;
+  }
+
+  public get firebaseId() {
+    return this._data.firebaseId;
   }
 }
