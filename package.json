@@ -7,10 +7,12 @@
   "author": "bo-yakitarako",
   "license": "MIT",
   "scripts": {
-    "desktop": "cd desktop && pnpm dev"
+    "dev": "concurrently \"pnpm -C desktop dev\" \"pnpm -C server dev\"",
+    "build": "pnpm -C server build && pnpm -C desktop build"
   },
   "private": true,
   "devDependencies": {
+    "concurrently": "^9.1.2",
     "@eslint/compat": "^1.4.1",
     "@eslint/eslintrc": "^3.3.3",
     "@eslint/js": "^9.39.2",
