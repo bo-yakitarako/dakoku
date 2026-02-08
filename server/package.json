@@ -12,11 +12,11 @@
     "dev": "nodemon",
     "utility": "node copyUtility.js",
     "docker": "docker compose up -d",
-    "docker-stop": "docker compose down",
-    "docker-db": "docker compose exec -it mongodb bash"
+    "docker-stop": "docker compose down"
   },
   "dependencies": {
     "@types/dotenv": "^8.2.3",
+    "dayjs": "^1.11.19",
     "dotenv": "^16.6.1",
     "express": "^4.22.1",
     "mongodb": "^6.21.0"

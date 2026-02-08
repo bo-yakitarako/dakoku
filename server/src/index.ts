@@ -1,10 +1,9 @@
 import { config } from 'dotenv';
-import { connect } from './db';
+import { User } from './db/User';
 
 config();
 
-connect('unchiburi', async (collection) => {
-  await collection.insertOne({ timpo: 'でっかい', value: [2, 4, 10, 5] });
-  const data = await collection.find().toArray();
-  return data;
-}).then((data) => console.log(data));
+(async () => {
+  const user = await User.create({ name: 'ぼかすか', email: 'komanechi@baka.com' });
+  console.log(user.createdAt.format('YYYY-MM-DD HH:mm:ss'));
+})();

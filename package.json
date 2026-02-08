@@ -8,7 +8,9 @@
   "license": "MIT",
   "scripts": {
     "dev": "concurrently \"pnpm -C desktop dev\" \"pnpm -C server dev\"",
-    "build": "pnpm -C server build && pnpm -C desktop build"
+    "build": "pnpm -C server build && pnpm -C desktop build",
+    "docker": "pnpm -C server docker",
+    "docker-stop": "pnpm -C server docker-stop"
   },
   "private": true,
   "devDependencies": {
