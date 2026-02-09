@@ -56,16 +56,14 @@ app.post('/ping', async (c) => {
     return c.json({ message: 'Email is required' }, 400);
   }
 
-  const name = decoded.name ?? decoded.email;
   const existing = await User.find({ firebaseId: decoded.uid });
   if (!existing) {
     await User.create({
-      name,
       email: decoded.email,
       firebaseId: decoded.uid,
     });
-  } else if (existing.email !== decoded.email || existing.name !== name) {
-    await existing.update({ email: decoded.email, name });
+  } else if (existing.email !== decoded.email) {
+    await existing.update({ email: decoded.email });
   }
 
   return c.json({ message: 'pong!' });
