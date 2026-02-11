@@ -1,14 +1,6 @@
 import ReactDOM from 'react-dom/client';
 import { useEffect, useMemo, useState } from 'react';
-import {
-  Alert,
-  Box,
-  Button,
-  CssBaseline,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, Button, CssBaseline, Stack, TextField, Typography } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { Warning } from '@mui/icons-material';
 import { getApps, initializeApp } from 'firebase/app';
@@ -50,8 +42,7 @@ function App() {
       authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN as string | undefined,
       projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID as string | undefined,
       appId: import.meta.env.VITE_FIREBASE_APP_ID as string | undefined,
-      messagingSenderId: import.meta.env
-        .VITE_FIREBASE_MESSAGING_SENDER_ID as string | undefined,
+      messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID as string | undefined,
       storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET as string | undefined,
     }),
     [],
@@ -110,7 +101,7 @@ function App() {
   const handlePing = async () => {
     try {
       const result = await window.api.apiPing();
-      // eslint-disable-next-line no-console
+
       console.log(result);
       setInfo(`Ping: ${JSON.stringify(result)}`);
     } catch (err) {
@@ -163,10 +154,7 @@ function App() {
           <Button variant="contained" onClick={handleSubmit} disabled={loading || missingConfig}>
             {mode === 'login' ? 'ログイン' : '新規登録'}
           </Button>
-          <Button
-            variant="text"
-            onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
-          >
+          <Button variant="text" onClick={() => setMode(mode === 'login' ? 'register' : 'login')}>
             {mode === 'login' ? '新規登録に切り替え' : 'ログインに切り替え'}
           </Button>
 

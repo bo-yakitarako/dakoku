@@ -10,13 +10,15 @@ const __dirname = path.dirname(__filename);
 const compat = new FlatCompat({ baseDirectory: __dirname });
 
 export default [
+  {
+    ignores: ['**/node_modules/**', '**/dist/**', '**/out/**'],
+  },
   ...compat.extends(
     'plugin:@typescript-eslint/recommended',
     'plugin:prettier/recommended',
     'prettier',
   ),
   {
-    ignores: ['dist', 'node_modules'],
     plugins: {
       '@typescript-eslint': typescriptEslint,
     },
