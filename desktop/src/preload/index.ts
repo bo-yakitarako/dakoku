@@ -15,6 +15,11 @@ const api = {
   getTodayWorks: () => ipcRenderer.invoke('getTodayWorks'),
   setAuthToken: (token: string) => ipcRenderer.invoke('setAuthToken', token),
   clearAuthToken: () => ipcRenderer.invoke('clearAuthToken'),
+  authRegister: (email: string, password: string) =>
+    ipcRenderer.invoke('authRegister', email, password),
+  authLogin: (email: string, password: string) => ipcRenderer.invoke('authLogin', email, password),
+  authRefresh: () => ipcRenderer.invoke('authRefresh'),
+  authLogout: () => ipcRenderer.invoke('authLogout'),
   apiPing: () => ipcRenderer.invoke('apiPing'),
   openCalendar: () => ipcRenderer.invoke('openCalendar'),
   getMonthWorkTime: (year: number, month: number, isAll: boolean) =>

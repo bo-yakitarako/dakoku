@@ -3,6 +3,7 @@ import { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import icon from '../../resources/icon.png?asset';
 import { config } from 'dotenv';
+import Store from 'electron-store';
 import {
   deleteCurrentJob,
   initializeCurrentJob,
@@ -20,11 +21,26 @@ import {
 import { createCalendarWindow } from './calendar';
 import { toURLParams } from '../commonUtility/utils';
 import { TimeState } from '../preload/dataType';
+import {
+  getRefreshCookie as getHttpRefreshCookie,
+  post,
+  setAccessToken,
+  setRefreshCookie,
+} from './http';
 
 config();
 
-let apiToken: string | null = null;
+type AuthState = {
+  accessToken: string | null;
+  refreshCookie: string | null;
+};
+
+const authStore = new Store<AuthState>({ name: 'auth' });
+let apiToken: string | null = authStore.get('accessToken') ?? null;
+let refreshCookie: string | null = authStore.get('refreshCookie') ?? null;
 const apiOrigin = process.env.VITE_API_ORIGIN ?? 'http://localhost:8080';
+setAccessToken(apiToken);
+setRefreshCookie(refreshCookie);
 
 function buildAuthWindowCsp() {
   const scriptSrc = is.dev ? "script-src 'self' 'unsafe-inline'" : "script-src 'self'";
@@ -35,6 +51,19 @@ function buildAuthWindowCsp() {
     "img-src 'self' data:",
     `connect-src 'self' ${apiOrigin} http://localhost:* http://127.0.0.1:* ws://localhost:* ws://127.0.0.1:*`,
   ].join('; ');
+}
+
+function setAuthState(next: Partial<AuthState>) {
+  if (typeof next.accessToken !== 'undefined') {
+    apiToken = next.accessToken;
+    authStore.set('accessToken', next.accessToken);
+    setAccessToken(next.accessToken);
+  }
+  if (typeof next.refreshCookie !== 'undefined') {
+    refreshCookie = next.refreshCookie;
+    authStore.set('refreshCookie', next.refreshCookie);
+    setRefreshCookie(next.refreshCookie);
+  }
 }
 
 async function createWindow() {
@@ -173,11 +202,54 @@ ipcMain.handle(
 ipcMain.handle('getTodayWorks', () => getTodayWorks());
 
 ipcMain.handle('setAuthToken', (_event, token: string) => {
-  apiToken = token;
+  setAuthState({ accessToken: token });
 });
 
 ipcMain.handle('clearAuthToken', () => {
-  apiToken = null;
+  setAuthState({ accessToken: null });
+});
+
+ipcMain.handle('authRegister', async (_event, email: string, password: string) => {
+  const result = await post('/auth/register', {
+    form: { email, password },
+  });
+  setAuthState({ refreshCookie: getHttpRefreshCookie() });
+  const accessToken =
+    result.data && typeof result.data === 'object' && 'accessToken' in result.data
+      ? ((result.data as { accessToken?: string }).accessToken ?? null)
+      : null;
+  setAuthState({ accessToken });
+  return result;
+});
+
+ipcMain.handle('authLogin', async (_event, email: string, password: string) => {
+  const result = await post('/auth/login', {
+    form: { email, password },
+  });
+  setAuthState({ refreshCookie: getHttpRefreshCookie() });
+  const accessToken =
+    result.data && typeof result.data === 'object' && 'accessToken' in result.data
+      ? ((result.data as { accessToken?: string }).accessToken ?? null)
+      : null;
+  setAuthState({ accessToken });
+  return result;
+});
+
+ipcMain.handle('authRefresh', async () => {
+  const result = await post('/auth/refresh');
+  setAuthState({ refreshCookie: getHttpRefreshCookie() });
+  const accessToken =
+    result.data && typeof result.data === 'object' && 'accessToken' in result.data
+      ? ((result.data as { accessToken?: string }).accessToken ?? null)
+      : null;
+  setAuthState({ accessToken });
+  return result;
+});
+
+ipcMain.handle('authLogout', async () => {
+  const result = await post('/auth/logout');
+  setAuthState({ accessToken: null, refreshCookie: null });
+  return result;
 });
 
 ipcMain.handle('apiPing', async () => {
@@ -191,25 +263,7 @@ ipcMain.handle('apiPing', async () => {
     };
   }
 
-  const response = await fetch(`${apiOrigin}/ping`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({}),
+  return post('/ping', {
+    includeAccessToken: true,
   });
-
-  let data: unknown = null;
-  try {
-    data = await response.json();
-  } catch {
-    data = null;
-  }
-
-  return {
-    ok: response.ok,
-    status: response.status,
-    data,
-  };
 });

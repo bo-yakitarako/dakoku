@@ -6,6 +6,16 @@ declare global {
   interface Window {
     electron: ElectronAPI;
     api: {
+      authRegister: (
+        email: string,
+        password: string,
+      ) => Promise<{ ok: boolean; status: number; data: unknown }>;
+      authLogin: (
+        email: string,
+        password: string,
+      ) => Promise<{ ok: boolean; status: number; data: unknown }>;
+      authRefresh: () => Promise<{ ok: boolean; status: number; data: unknown }>;
+      authLogout: () => Promise<{ ok: boolean; status: number; data: unknown }>;
       initializeCurrentJob: () => Promise<Job | null>;
       getJobs: () => Promise<Job[]>;
       registerJob: (jobName: string) => Promise<JobData>;
