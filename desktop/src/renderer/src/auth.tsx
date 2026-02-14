@@ -1,17 +1,8 @@
 import ReactDOM from 'react-dom/client';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Alert, Box, Button, CssBaseline, Stack, TextField, Typography } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { Warning } from '@mui/icons-material';
-import { getApps, initializeApp } from 'firebase/app';
-import {
-  browserLocalPersistence,
-  createUserWithEmailAndPassword,
-  getAuth,
-  onIdTokenChanged,
-  setPersistence,
-  signInWithEmailAndPassword,
-} from 'firebase/auth';
 import '@fontsource/roboto/300.css';
 import '@fontsource/roboto/400.css';
 import '@fontsource/roboto/500.css';
@@ -36,60 +27,62 @@ function App() {
   const [tokenReady, setTokenReady] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const firebaseConfig = useMemo(
-    () => ({
-      apiKey: import.meta.env.VITE_FIREBASE_API_KEY as string | undefined,
-      authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN as string | undefined,
-      projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID as string | undefined,
-      appId: import.meta.env.VITE_FIREBASE_APP_ID as string | undefined,
-      messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID as string | undefined,
-      storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET as string | undefined,
-    }),
-    [],
-  );
+  const apiOrigin = import.meta.env.VITE_API_ORIGIN ?? 'http://localhost:8080';
 
-  const missingConfig =
-    !firebaseConfig.apiKey ||
-    !firebaseConfig.authDomain ||
-    !firebaseConfig.projectId ||
-    !firebaseConfig.appId;
+  const bindAccessToken = async (accessToken: string | null) => {
+    if (!accessToken) {
+      await window.api.clearAuthToken();
+      setTokenReady(false);
+      return;
+    }
+    await window.api.setAuthToken(accessToken);
+    setTokenReady(true);
+  };
+
+  const refreshAccessToken = async () => {
+    const response = await fetch(`${apiOrigin}/auth/refresh`, {
+      method: 'POST',
+      credentials: 'include',
+    });
+    if (!response.ok) {
+      await bindAccessToken(null);
+      return false;
+    }
+    const data = (await response.json()) as { accessToken?: string };
+    await bindAccessToken(data.accessToken ?? null);
+    return !!data.accessToken;
+  };
 
   useEffect(() => {
-    if (missingConfig) return;
-    const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    setPersistence(auth, browserLocalPersistence).catch(() => undefined);
-
-    const unsubscribe = onIdTokenChanged(auth, async (user) => {
-      if (!user) {
-        setTokenReady(false);
-        setInfo('未ログイン');
-        await window.api.clearAuthToken();
-        return;
-      }
-      const token = await user.getIdToken();
-      await window.api.setAuthToken(token);
-      setTokenReady(true);
-      setInfo('ログイン済み');
-    });
-
-    return () => unsubscribe();
-  }, [firebaseConfig, missingConfig]);
+    refreshAccessToken().catch(() => undefined);
+  }, []);
 
   const handleSubmit = async () => {
-    if (missingConfig) return;
     setLoading(true);
     setError(null);
     setInfo(null);
+
+    const endpoint = mode === 'login' ? '/auth/login' : '/auth/register';
     try {
-      const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
-      const auth = getAuth(app);
-      if (mode === 'login') {
-        await signInWithEmailAndPassword(auth, email, password);
-      } else {
-        await createUserWithEmailAndPassword(auth, email, password);
+      const params = new URLSearchParams({
+        email,
+        password,
+      });
+      const response = await fetch(`${apiOrigin}${endpoint}`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+        },
+        body: params.toString(),
+      });
+
+      const data = (await response.json()) as { accessToken?: string; message?: string };
+      if (!response.ok || !data.accessToken) {
+        throw new Error(data.message ?? '認証に失敗しました');
       }
-      await auth.currentUser?.getIdToken(true);
+
+      await bindAccessToken(data.accessToken);
       setInfo(mode === 'login' ? 'ログインしました' : '登録しました');
     } catch (err) {
       setError(err instanceof Error ? err.message : '認証に失敗しました');
@@ -100,8 +93,13 @@ function App() {
 
   const handlePing = async () => {
     try {
-      const result = await window.api.apiPing();
-
+      let result = await window.api.apiPing();
+      if (result.status === 401) {
+        const refreshed = await refreshAccessToken();
+        if (refreshed) {
+          result = await window.api.apiPing();
+        }
+      }
       console.log(result);
       setInfo(`Ping: ${JSON.stringify(result)}`);
     } catch (err) {
@@ -126,12 +124,6 @@ function App() {
             <Typography>ログインが必要です</Typography>
           </Box>
 
-          {missingConfig && (
-            <Alert severity="error">
-              Firebase設定が不足しています。`.env` を確認してください。
-            </Alert>
-          )}
-
           {error && <Alert severity="error">{error}</Alert>}
           {info && <Alert severity="info">{info}</Alert>}
 
@@ -151,7 +143,7 @@ function App() {
             autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
           />
 
-          <Button variant="contained" onClick={handleSubmit} disabled={loading || missingConfig}>
+          <Button variant="contained" onClick={handleSubmit} disabled={loading}>
             {mode === 'login' ? 'ログイン' : '新規登録'}
           </Button>
           <Button variant="text" onClick={() => setMode(mode === 'login' ? 'register' : 'login')}>

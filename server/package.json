@@ -10,21 +10,31 @@
     "build": "tsup src/index.ts --format cjs --platform node --minify --out-dir dist",
     "start": "pnpm build && node dist/index.js",
     "dev": "pnpm utility && tsx watch src/index.ts",
-    "utility": "node copyUtility.js",
-    "docker": "docker compose up -d",
-    "docker-stop": "docker compose down"
+    "supabase": "pnpm exec supabase start",
+    "supabase:stop": "pnpm exec supabase stop && docker rm -f supabase_vector_server",
+    "migrate": "pnpm exec supabase migration up",
+    "new": "pnpm exec supabase migration new",
+    "dbreset": "pnpm exec supabase db reset",
+    "utility": "node copyUtility.js"
   },
   "dependencies": {
     "@hono/node-server": "^1.19.9",
+    "@supabase/supabase-js": "^2.95.3",
     "dayjs": "^1.11.19",
     "dotenv": "^17.2.4",
-    "firebase-admin": "^13.6.1",
     "hono": "^4.11.9",
-    "mongodb": "^7.1.0"
+    "jsonwebtoken": "^9.0.3"
   },
   "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^25.2.2",
+    "supabase": "^2.76.8",
     "tsup": "^8.5.1",
     "tsx": "^4.20.5"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "supabase"
+    ]
   }
 }

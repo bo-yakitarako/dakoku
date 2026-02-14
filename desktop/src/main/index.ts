@@ -24,16 +24,43 @@ import { TimeState } from '../preload/dataType';
 config();
 
 let apiToken: string | null = null;
+const apiOrigin = process.env.VITE_API_ORIGIN ?? 'http://localhost:8080';
+
+function buildAuthWindowCsp() {
+  const scriptSrc = is.dev ? "script-src 'self' 'unsafe-inline'" : "script-src 'self'";
+  return [
+    "default-src 'self'",
+    scriptSrc,
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data:",
+    `connect-src 'self' ${apiOrigin} http://localhost:* http://127.0.0.1:* ws://localhost:* ws://127.0.0.1:*`,
+  ].join('; ');
+}
 
 async function createWindow() {
   const aho = true;
   if (aho) {
     const authWindow = new BrowserWindow({
-      width: 320,
+      width: 720,
       height: 520,
       show: false,
       autoHideMenuBar: true,
+      webPreferences: {
+        preload: join(__dirname, '../preload/index.js'),
+        sandbox: false,
+      },
     });
+
+    const authWindowCsp = buildAuthWindowCsp();
+    authWindow.webContents.session.webRequest.onHeadersReceived((details, callback) => {
+      callback({
+        responseHeaders: {
+          ...details.responseHeaders,
+          'Content-Security-Policy': [authWindowCsp],
+        },
+      });
+    });
+
     authWindow.on('ready-to-show', () => authWindow.show());
     const loadURL =
       is.dev && process.env['ELECTRON_RENDERER_URL']
@@ -154,7 +181,6 @@ ipcMain.handle('clearAuthToken', () => {
 });
 
 ipcMain.handle('apiPing', async () => {
-  const apiOrigin = process.env.API_ORIGIN ?? 'http://localhost:8080';
   const token = apiToken ?? '';
 
   if (!token) {

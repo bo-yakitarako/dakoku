@@ -4,3 +4,8 @@ node_modules/
 src/utils.ts
 
 dist/
+
+supabase/.branches/
+supabase/.temp/
+supabase/snippets/
+

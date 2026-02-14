@@ -9,8 +9,11 @@
   "scripts": {
     "dev": "concurrently \"pnpm -C desktop dev\" \"pnpm -C server dev\"",
     "build": "pnpm -C server build && pnpm -C desktop build",
-    "docker": "pnpm -C server docker",
-    "docker-stop": "pnpm -C server docker-stop"
+    "supabase": "pnpm -C server supabase",
+    "supabase:stop": "pnpm -C server supabase:stop",
+    "migrate": "pnpm -C server migrate",
+    "new": "pnpm -C server new",
+    "dbreset": "pnpm -C server dbreset"
   },
   "private": true,
   "devDependencies": {
