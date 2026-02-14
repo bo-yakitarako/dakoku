@@ -6,13 +6,13 @@ import { useTime } from './hooks/useTime';
 import { useOpenCalendar } from './hooks/useOpenCalendar';
 import { JobSelectBox } from './JobSelectBox';
 import { JobControl } from './jobControl/JobControl';
-import { useRecoilValue } from 'recoil';
+import { useAtomValue } from 'jotai';
 import { currentJobAtom } from '../../modules/store';
 
 export const TimeForm: React.FC = () => {
   const { workStatus, count, isLoading, start, pause, stop } = useTime();
   const { canOpen, openCalendar } = useOpenCalendar();
-  const currentJob = useRecoilValue(currentJobAtom);
+  const currentJob = useAtomValue(currentJobAtom);
 
   useEffect(() => {
     if (currentJob != null) {

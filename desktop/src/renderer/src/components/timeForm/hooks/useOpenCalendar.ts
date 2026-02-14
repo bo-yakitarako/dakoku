@@ -1,9 +1,9 @@
 import { useEffect } from 'react';
-import { useRecoilState } from 'recoil';
+import { useAtom } from 'jotai';
 import { canOpenCalendarAtom } from '../../../modules/store';
 
 export const useOpenCalendar = () => {
-  const [canOpen, setCanOpen] = useRecoilState(canOpenCalendarAtom);
+  const [canOpen, setCanOpen] = useAtom(canOpenCalendarAtom);
 
   useEffect(() => {
     const closedCalendar = window.ipcRenderer.on('closedCalendar', () => {

@@ -1,10 +1,10 @@
 import { DayCellContentArg } from '@fullcalendar/core';
-import { useRecoilValue } from 'recoil';
+import { useAtomValue } from 'jotai';
 import { holidaysAtom } from '../../modules/store';
 import { Box, Typography } from '@mui/material';
 
 export const DayCellContent: React.FC<DayCellContentArg> = ({ date, dayNumberText }) => {
-  const holidays = useRecoilValue(holidaysAtom);
+  const holidays = useAtomValue(holidaysAtom);
   const holiday = holidays.find((holiday) => holiday.day === date.getDate());
 
   if (holiday === undefined) {

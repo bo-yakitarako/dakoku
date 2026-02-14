@@ -3,14 +3,14 @@ import { Circle } from '@mui/icons-material';
 import { Box, Typography } from '@mui/material';
 import Tooltip from '@mui/material/Tooltip';
 import dayjs from 'dayjs';
-import { useRecoilValue, useSetRecoilState } from 'recoil';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { calendarAllCheckAtom, calendarLoadingAtom, monthWorkTimesAtom } from '../../modules/store';
 
 export const DateTooltip: React.FC<EventContentArg> = (arg) => {
   const { start } = arg.event;
-  const workTimes = useRecoilValue(monthWorkTimesAtom);
-  const setLoading = useSetRecoilState(calendarLoadingAtom);
-  const isAll = useRecoilValue(calendarAllCheckAtom);
+  const workTimes = useAtomValue(monthWorkTimesAtom);
+  const setLoading = useSetAtom(calendarLoadingAtom);
+  const isAll = useAtomValue(calendarAllCheckAtom);
   const restTimeText = workTimes[start!.getDate()]?.restTime ?? '';
   const d = dayjs(start);
   const timeText = d.hour() === 0 ? d.format('m分s秒') : d.format('H時間m分');

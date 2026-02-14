@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { useRecoilState, useRecoilValue } from 'recoil';
+import { useAtom, useAtomValue } from 'jotai';
 import { canJobControlAtom, currentJobAtom } from '../../../../modules/store';
 import { useUpdateJob } from './useUpdateJob';
 
 export const useDeleteJob = () => {
-  const [canOpen, setCanJobControl] = useRecoilState(canJobControlAtom);
-  const currentJob = useRecoilValue(currentJobAtom);
+  const [canOpen, setCanJobControl] = useAtom(canJobControlAtom);
+  const currentJob = useAtomValue(currentJobAtom);
   const [isOpen, setIsOpen] = useState(false);
   const updateJob = useUpdateJob();
 

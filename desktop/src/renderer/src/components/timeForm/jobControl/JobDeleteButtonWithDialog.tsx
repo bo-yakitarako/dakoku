@@ -10,10 +10,10 @@ import {
 import { LoadingButton } from '@mui/lab';
 import { useDeleteJob } from './hooks/useDeleteJob';
 import { canOpenCalendarAtom } from '../../../modules/store';
-import { useRecoilValue } from 'recoil';
+import { useAtomValue } from 'jotai';
 
 export const JobDeleteButtonWithDialog: React.FC = () => {
-  const isOpenCalendar = !useRecoilValue(canOpenCalendarAtom);
+  const isOpenCalendar = !useAtomValue(canOpenCalendarAtom);
   const { isOpen, toggleDialog, jobName, canOpen, deleteJob } = useDeleteJob();
   return (
     <>

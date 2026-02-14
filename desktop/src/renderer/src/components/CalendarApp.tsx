@@ -1,6 +1,6 @@
 import { CssBaseline } from '@mui/material';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { RecoilRoot } from 'recoil';
+import { Provider as JotaiProvider } from 'jotai';
 import { Calendar } from './calendar/Calendar';
 
 export const darkTheme = createTheme({
@@ -11,11 +11,11 @@ export const darkTheme = createTheme({
 
 export const CalendarApp: React.FC = () => {
   return (
-    <RecoilRoot>
+    <JotaiProvider>
       <ThemeProvider theme={darkTheme}>
         <CssBaseline />
         <Calendar />
       </ThemeProvider>
-    </RecoilRoot>
+    </JotaiProvider>
   );
 };

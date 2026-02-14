@@ -20,7 +20,7 @@ import {
   KeyboardDoubleArrowRight,
 } from '@mui/icons-material';
 import { useEffect } from 'react';
-import { useRecoilValue } from 'recoil';
+import { useAtomValue } from 'jotai';
 import dayjs from 'dayjs';
 import { currentJobAtom } from '../../modules/store';
 import { DayCellContent } from './DayCellContent';
@@ -38,7 +38,7 @@ export const Calendar: React.FC = () => {
     checked,
     onChecked,
   } = useCalendarMove();
-  const currentJob = useRecoilValue(currentJobAtom);
+  const currentJob = useAtomValue(currentJobAtom);
 
   const todayColorSx = (() => {
     if (loading && holidays.length === 0) {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useRecoilState, useRecoilValue } from 'recoil';
+import { useAtom, useAtomValue } from 'jotai';
 import * as yup from 'yup';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -17,8 +17,8 @@ export const nameScheme = yup.object().shape({
 });
 
 export const useJobRegister = () => {
-  const currentJob = useRecoilValue(currentJobAtom);
-  const [canOpen, setCanJobControl] = useRecoilState(canJobControlAtom);
+  const currentJob = useAtomValue(currentJobAtom);
+  const [canOpen, setCanJobControl] = useAtom(canJobControlAtom);
   const [isOpen, setIsOpen] = useState(currentJob === null);
   const [loading, setLoading] = useState(false);
   const updateJob = useUpdateJob();

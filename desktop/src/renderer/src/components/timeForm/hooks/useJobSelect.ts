@@ -1,4 +1,4 @@
-import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import {
   canJobControlAtom,
   currentJobAtom,
@@ -9,11 +9,11 @@ import {
 import { SelectChangeEvent } from '@mui/material';
 
 export const useJobSelect = () => {
-  const jobs = useRecoilValue(jobsAtom);
-  const [currentJob, setCurrentJob] = useRecoilState(currentJobAtom);
-  const setCanJobControl = useSetRecoilState(canJobControlAtom);
-  const setIsLoading = useSetRecoilState(isWorksLoadingAtom);
-  const setWorks = useSetRecoilState(workSetSelector);
+  const jobs = useAtomValue(jobsAtom);
+  const [currentJob, setCurrentJob] = useAtom(currentJobAtom);
+  const setCanJobControl = useSetAtom(canJobControlAtom);
+  const setIsLoading = useSetAtom(isWorksLoadingAtom);
+  const setWorks = useSetAtom(workSetSelector);
   const jobIdValue = currentJob?.jobId;
 
   const onChange = async (e: SelectChangeEvent<string>) => {

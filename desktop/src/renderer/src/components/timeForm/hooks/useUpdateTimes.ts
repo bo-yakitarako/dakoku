@@ -1,12 +1,12 @@
 import { isWorksLoadingAtom, worksAtom, workStatusAtom } from '@renderer/modules/store';
 import { useCallback } from 'react';
-import { useRecoilState, useSetRecoilState } from 'recoil';
+import { useAtom, useSetAtom } from 'jotai';
 import { WorkStatus } from 'src/preload/dataType';
 
 export const useUpdateTimes = () => {
-  const [workStatus, setWorkStatus] = useRecoilState(workStatusAtom);
-  const [works, setWorks] = useRecoilState(worksAtom);
-  const setIsLoading = useSetRecoilState(isWorksLoadingAtom);
+  const [workStatus, setWorkStatus] = useAtom(workStatusAtom);
+  const [works, setWorks] = useAtom(worksAtom);
+  const setIsLoading = useSetAtom(isWorksLoadingAtom);
 
   return useCallback(
     async (nextWorkStatus: WorkStatus) => {

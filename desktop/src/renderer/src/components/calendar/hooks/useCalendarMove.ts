@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import FullCalendar from '@fullcalendar/react';
-import { useRecoilState, useSetRecoilState } from 'recoil';
+import { useAtom, useSetAtom } from 'jotai';
 import {
   calendarAllCheckAtom,
   calendarDateAtom,
@@ -13,11 +13,11 @@ import { EventSourceInput } from '@fullcalendar/core';
 
 export const useCalendarMove = () => {
   const ref = useRef<FullCalendar>(null);
-  const [currentDate, setCurrentDate] = useRecoilState(calendarDateAtom);
-  const setMonthWorkTimes = useSetRecoilState(monthWorkTimesAtom);
-  const [holidays, setHolidays] = useRecoilState(holidaysAtom);
-  const [loading, setLoading] = useRecoilState(calendarLoadingAtom);
-  const [checked, setChecked] = useRecoilState(calendarAllCheckAtom);
+  const [currentDate, setCurrentDate] = useAtom(calendarDateAtom);
+  const setMonthWorkTimes = useSetAtom(monthWorkTimesAtom);
+  const [holidays, setHolidays] = useAtom(holidaysAtom);
+  const [loading, setLoading] = useAtom(calendarLoadingAtom);
+  const [checked, setChecked] = useAtom(calendarAllCheckAtom);
   const [calendarEvents, setCalendarEvents] = useState<EventSourceInput>([]);
   const [workTimeSum, setWorkTimeSum] = useState('');
   const [holidayGrids, setHolidayGrids] = useState<{ row: number; column: number }[]>([]);

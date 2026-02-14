@@ -1,8 +1,19 @@
 import ReactDOM from 'react-dom/client';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Alert, Box, Button, CssBaseline, Stack, TextField, Typography } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-import { Warning } from '@mui/icons-material';
+import { Provider as JotaiProvider, useAtom } from 'jotai';
+import { QueryClient } from '@tanstack/react-query';
+import { QueryClientAtomProvider } from 'jotai-tanstack-query/react';
+import {
+  accessTokenAtom,
+  authModeAtom,
+  emailAtom,
+  errorAtom,
+  infoAtom,
+  passwordAtom,
+} from './modules/store';
+import { authMutationAtom, refreshAtom } from './modules/promiseStore';
 import '@fontsource/roboto/300.css';
 import '@fontsource/roboto/400.css';
 import '@fontsource/roboto/500.css';
@@ -14,96 +25,57 @@ const darkTheme = createTheme({
   },
 });
 
-ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(<App />);
+const queryClient = new QueryClient();
 
-type AuthMode = 'login' | 'register';
+function getAccessToken(data: unknown): string | null {
+  if (!data || typeof data !== 'object') return null;
+  if (!('accessToken' in data)) return null;
+  const token = (data as { accessToken?: string }).accessToken;
+  return token ?? null;
+}
+
+function getMessage(data: unknown): string | undefined {
+  if (!data || typeof data !== 'object') return undefined;
+  if (!('message' in data)) return undefined;
+  const message = (data as { message?: string }).message;
+  return message;
+}
+
+ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
+  <JotaiProvider>
+    <QueryClientAtomProvider client={queryClient}>
+      <App />
+    </QueryClientAtomProvider>
+  </JotaiProvider>,
+);
 
 function App() {
-  const [mode, setMode] = useState<AuthMode>('login');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [info, setInfo] = useState<string | null>(null);
-  const [tokenReady, setTokenReady] = useState(false);
-  const [loading, setLoading] = useState(false);
-
-  const apiOrigin = import.meta.env.VITE_API_ORIGIN ?? 'http://localhost:8080';
-
-  const bindAccessToken = async (accessToken: string | null) => {
-    if (!accessToken) {
-      await window.api.clearAuthToken();
-      setTokenReady(false);
-      return;
-    }
-    await window.api.setAuthToken(accessToken);
-    setTokenReady(true);
-  };
-
-  const refreshAccessToken = async () => {
-    const response = await fetch(`${apiOrigin}/auth/refresh`, {
-      method: 'POST',
-      credentials: 'include',
-    });
-    if (!response.ok) {
-      await bindAccessToken(null);
-      return false;
-    }
-    const data = (await response.json()) as { accessToken?: string };
-    await bindAccessToken(data.accessToken ?? null);
-    return !!data.accessToken;
-  };
+  const [mode, setMode] = useAtom(authModeAtom);
+  const [email, setEmail] = useAtom(emailAtom);
+  const [password, setPassword] = useAtom(passwordAtom);
+  const [error, setError] = useAtom(errorAtom);
+  const [info, setInfo] = useAtom(infoAtom);
+  const [, setAccessToken] = useAtom(accessTokenAtom);
+  const [refreshQuery] = useAtom(refreshAtom);
+  const [authMutation] = useAtom(authMutationAtom);
 
   useEffect(() => {
-    refreshAccessToken().catch(() => undefined);
-  }, []);
+    if (!refreshQuery.data) return;
+    setAccessToken(getAccessToken(refreshQuery.data.data));
+  }, [refreshQuery.data, setAccessToken]);
 
   const handleSubmit = async () => {
-    setLoading(true);
     setError(null);
     setInfo(null);
-
-    const endpoint = mode === 'login' ? '/auth/login' : '/auth/register';
     try {
-      const params = new URLSearchParams({
-        email,
-        password,
-      });
-      const response = await fetch(`${apiOrigin}${endpoint}`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
-        },
-        body: params.toString(),
-      });
-
-      const data = (await response.json()) as { accessToken?: string; message?: string };
-      if (!response.ok || !data.accessToken) {
-        throw new Error(data.message ?? '認証に失敗しました');
+      const result = await authMutation.mutateAsync({ mode, email, password });
+      if (!result.ok) {
+        throw new Error(getMessage(result.data) ?? '認証に失敗しました');
       }
-
-      await bindAccessToken(data.accessToken);
+      setAccessToken(getAccessToken(result.data));
       setInfo(mode === 'login' ? 'ログインしました' : '登録しました');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '認証に失敗しました');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handlePing = async () => {
-    try {
-      let result = await window.api.apiPing();
-      if (result.status === 401) {
-        const refreshed = await refreshAccessToken();
-        if (refreshed) {
-          result = await window.api.apiPing();
-        }
-      }
-      console.log(result);
-      setInfo(`Ping: ${JSON.stringify(result)}`);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Pingに失敗しました');
+    } catch (mutationError) {
+      setError(mutationError instanceof Error ? mutationError.message : '認証に失敗しました');
     }
   };
 
@@ -120,8 +92,7 @@ function App() {
       >
         <Stack spacing={2} sx={{ width: 320 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Warning color="warning" />
-            <Typography>ログインが必要です</Typography>
+            <Typography>{mode === 'login' ? 'ログイン' : '新規登録'}</Typography>
           </Box>
 
           {error && <Alert severity="error">{error}</Alert>}
@@ -142,16 +113,26 @@ function App() {
             size="small"
             autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
           />
+          {mode === 'register' && (
+            <TextField
+              label="Passwordの確認"
+              type="password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              size="small"
+              autoComplete="new-password"
+            />
+          )}
 
-          <Button variant="contained" onClick={handleSubmit} disabled={loading}>
+          <Button
+            variant="contained"
+            onClick={handleSubmit}
+            disabled={authMutation.isPending || refreshQuery.isFetching}
+          >
             {mode === 'login' ? 'ログイン' : '新規登録'}
           </Button>
           <Button variant="text" onClick={() => setMode(mode === 'login' ? 'register' : 'login')}>
-            {mode === 'login' ? '新規登録に切り替え' : 'ログインに切り替え'}
-          </Button>
-
-          <Button variant="outlined" onClick={handlePing} disabled={!tokenReady}>
-            リクエスト
+            {mode === 'login' ? '新規登録はこちら' : 'ログインはこちら'}
           </Button>
         </Stack>
       </Box>

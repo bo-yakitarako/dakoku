@@ -1,4 +1,4 @@
-import { useSetRecoilState } from 'recoil';
+import { useSetAtom } from 'jotai';
 import { JobData } from '../../../../../../preload/dataType';
 import {
   currentJobAtom,
@@ -8,10 +8,10 @@ import {
 } from '../../../../modules/store';
 
 export const useUpdateJob = () => {
-  const setIsLoading = useSetRecoilState(isWorksLoadingAtom);
-  const setWorks = useSetRecoilState(workSetSelector);
-  const setCurrentJob = useSetRecoilState(currentJobAtom);
-  const setJobs = useSetRecoilState(jobsAtom);
+  const setIsLoading = useSetAtom(isWorksLoadingAtom);
+  const setWorks = useSetAtom(workSetSelector);
+  const setCurrentJob = useSetAtom(currentJobAtom);
+  const setJobs = useSetAtom(jobsAtom);
 
   return (jobData: JobData) => {
     setCurrentJob(jobData.currentJob);

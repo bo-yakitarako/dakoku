@@ -1,4 +1,4 @@
-import { useRecoilState, useRecoilValue } from 'recoil';
+import { useAtom, useAtomValue } from 'jotai';
 import { countAtom, isWorksLoadingAtom, worksAtom, workStatusAtom } from '../../../modules/store';
 import { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
@@ -6,11 +6,11 @@ import { useUpdateTimes } from './useUpdateTimes';
 import { parseWorkTime } from '../../../../../commonUtility/utils';
 
 export const useTime = () => {
-  const workStatus = useRecoilValue(workStatusAtom);
-  const [works, setWorks] = useRecoilState(worksAtom);
-  const [count, setCount] = useRecoilState(countAtom);
+  const workStatus = useAtomValue(workStatusAtom);
+  const [works, setWorks] = useAtom(worksAtom);
+  const [count, setCount] = useAtom(countAtom);
   const [preDate, setPreDate] = useState(dayjs());
-  const [isLoading, setIsLoading] = useRecoilState(isWorksLoadingAtom);
+  const [isLoading, setIsLoading] = useAtom(isWorksLoadingAtom);
   const updateTimes = useUpdateTimes();
 
   const start = () => updateTimes('working');

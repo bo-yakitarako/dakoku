@@ -10,3 +10,9 @@
 - モデルの外に返すデータ構造は常に `Data` 型（camelCase）に統一すること。
 - 生SQLやDB固有機能の直接利用は最小化し、可能な限りモデル層に閉じ込めること。
 - 変更を加えたファイルに対しては、作業後に必ず `eslint --fix` を実行すること。
+
+### Coding Rules for Desktop
+これらは`desktop`以下のElectron開発でのみ適用する
+- `jotai`を要する状態管理変数については`store.ts`または`promiseStore.ts`で管理する
+- `desktop/src/renderer/src/modules/store.ts` には通常の `atom` のみを定義すること。
+- `atomWithQuery` / `atomWithMutation` など Promise を扱う atom は `desktop/src/renderer/src/modules/promiseStore.ts` に定義すること。

@@ -1,10 +1,10 @@
 import { FormControl, InputLabel, MenuItem, Select } from '@mui/material';
 import { useJobSelect } from './hooks/useJobSelect';
-import { useRecoilValue } from 'recoil';
+import { useAtomValue } from 'jotai';
 import { canOpenCalendarAtom } from '../../modules/store';
 
 export const JobSelectBox: React.FC = () => {
-  const isOpenCalendar = !useRecoilValue(canOpenCalendarAtom);
+  const isOpenCalendar = !useAtomValue(canOpenCalendarAtom);
   const { jobs, jobIdValue, onChange } = useJobSelect();
   return (
     <FormControl

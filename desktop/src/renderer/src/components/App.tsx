@@ -1,7 +1,7 @@
 import { CssBaseline } from '@mui/material';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { Provider as JotaiProvider } from 'jotai';
 import { TimeForm } from './timeForm/TimeForm';
-import { RecoilRoot } from 'recoil';
 
 const darkTheme = createTheme({
   palette: {
@@ -11,11 +11,11 @@ const darkTheme = createTheme({
 
 export const App: React.FC = () => {
   return (
-    <RecoilRoot>
+    <JotaiProvider>
       <ThemeProvider theme={darkTheme}>
         <CssBaseline />
         <TimeForm />
       </ThemeProvider>
-    </RecoilRoot>
+    </JotaiProvider>
   );
 };
