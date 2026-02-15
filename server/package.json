@@ -10,7 +10,7 @@
     "build": "tsup src/index.ts --format cjs --platform node --minify --out-dir dist",
     "start": "pnpm build && node dist/index.js",
     "dev": "pnpm utility && tsx watch src/index.ts",
-    "supabase": "pnpm exec supabase start --ignore-health-check",
+    "supabase": "pnpm exec supabase start",
     "supabase:stop": "pnpm exec supabase stop && docker rm -f supabase_vector_server",
     "migrate": "pnpm exec supabase migration up",
     "new": "pnpm exec supabase migration new",
