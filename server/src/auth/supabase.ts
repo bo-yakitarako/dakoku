@@ -84,3 +84,16 @@ export async function loginWithSupabase(email: string, password: string) {
     throw new Error(`[supabase.login] ${message}`);
   }
 }
+
+export async function findSupabaseUserById(userId: string) {
+  try {
+    const { data, error } = await getSupabaseAdminClient().auth.admin.getUserById(userId);
+    if (error || !data.user) {
+      throw error ?? new Error('Failed to fetch user');
+    }
+    return data.user;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(`[supabase.findUser] ${message}`);
+  }
+}
