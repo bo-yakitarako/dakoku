@@ -1,4 +1,3 @@
-import { serve } from '@hono/node-server';
 import { createAccessToken, createRefreshToken, verifyRefreshToken } from './auth/tokens';
 import { loginWithSupabase, registerWithSupabase } from './auth/supabase';
 import * as http from './http';
@@ -113,15 +112,3 @@ http.authPost('/post', async (c) => {
     payload,
   });
 });
-
-const port = Number(process.env.PORT ?? 8080);
-
-serve(
-  {
-    fetch: http.fetch,
-    port,
-  },
-  (info) => {
-    console.log(`Server running on http://localhost:${info.port}`);
-  },
-);

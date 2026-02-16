@@ -135,5 +135,21 @@ export function authPost(path: string, handler: AuthenticatedHandler) {
 }
 
 export const get = app.get.bind(app);
+import { serve } from '@hono/node-server';
+
 export const post = app.post.bind(app);
 export const fetch = app.fetch;
+
+export function listen(port: number) {
+  serve(
+    {
+      fetch: app.fetch,
+      port,
+    },
+    (info) => {
+      console.log(`Server running on http://localhost:${info.port}`);
+    },
+  );
+}
+
+listen(Number(process.env.PORT ?? 8080));
