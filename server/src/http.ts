@@ -1,3 +1,4 @@
+import { serve } from '@hono/node-server';
 import { config } from 'dotenv';
 import { cors } from 'hono/cors';
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
@@ -135,12 +136,9 @@ export function authPost(path: string, handler: AuthenticatedHandler) {
 }
 
 export const get = app.get.bind(app);
-import { serve } from '@hono/node-server';
-
 export const post = app.post.bind(app);
-export const fetch = app.fetch;
 
-export function listen(port: number) {
+function listen(port: number) {
   serve(
     {
       fetch: app.fetch,
