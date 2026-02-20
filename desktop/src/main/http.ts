@@ -13,25 +13,29 @@ const apiOrigin = process.env.VITE_API_ORIGIN ?? 'http://localhost:8080';
 let accessToken: string | null = null;
 let refreshCookie: string | null = null;
 
-export function setAccessToken(token: string | null) {
+export const setAccessToken = (token: string | null) => {
   accessToken = token;
-}
+};
 
-export function setRefreshCookie(cookie: string | null) {
+export const setRefreshCookie = (cookie: string | null) => {
   refreshCookie = cookie;
-}
+};
 
-export function getRefreshCookie() {
+export const getRefreshCookie = () => {
   return refreshCookie;
-}
+};
 
-function parseCookiePair(setCookieHeader: string) {
+const parseCookiePair = (setCookieHeader: string) => {
   const match = setCookieHeader.match(/^\s*([^=]+)=([^;]*)/);
   if (!match) return null;
   return `${match[1]}=${match[2]}`;
-}
+};
 
-async function requestServer(method: 'GET' | 'POST', path: string, options: RequestOptions = {}) {
+const requestServer = async (
+  method: 'GET' | 'POST',
+  path: string,
+  options: RequestOptions = {},
+) => {
   const headers: Record<string, string> = {};
   let body: string | undefined;
 
@@ -73,12 +77,12 @@ async function requestServer(method: 'GET' | 'POST', path: string, options: Requ
     status: response.status,
     data,
   } as HttpResponse;
-}
+};
 
-export function get(path: string, options: RequestOptions = {}) {
+export const get = (path: string, options: RequestOptions = {}) => {
   return requestServer('GET', path, options);
-}
+};
 
-export function post(path: string, options: RequestOptions = {}) {
+export const post = (path: string, options: RequestOptions = {}) => {
   return requestServer('POST', path, options);
-}
+};

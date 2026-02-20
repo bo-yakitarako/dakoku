@@ -3,31 +3,31 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 let anonClient: SupabaseClient | null = null;
 let adminClient: SupabaseClient | null = null;
 
-function getSupabaseUrl() {
+const getSupabaseUrl = () => {
   const supabaseUrl = process.env.SUPABASE_URL;
   if (!supabaseUrl) {
     throw new Error('SUPABASE_URL is not set');
   }
   return supabaseUrl;
-}
+};
 
-function getSupabaseAnonKey() {
+const getSupabaseAnonKey = () => {
   const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
   if (!supabaseAnonKey) {
     throw new Error('SUPABASE_ANON_KEY is not set');
   }
   return supabaseAnonKey;
-}
+};
 
-function getSupabaseServiceRoleKey() {
+const getSupabaseServiceRoleKey = () => {
   const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!supabaseServiceRoleKey) {
     throw new Error('SUPABASE_SERVICE_ROLE_KEY is not set');
   }
   return supabaseServiceRoleKey;
-}
+};
 
-export function getSupabaseAnonClient() {
+export const getSupabaseAnonClient = () => {
   if (anonClient) return anonClient;
   anonClient = createClient(getSupabaseUrl(), getSupabaseAnonKey(), {
     auth: {
@@ -36,9 +36,9 @@ export function getSupabaseAnonClient() {
     },
   });
   return anonClient;
-}
+};
 
-export function getSupabaseAdminClient() {
+export const getSupabaseAdminClient = () => {
   if (adminClient) return adminClient;
   adminClient = createClient(getSupabaseUrl(), getSupabaseServiceRoleKey(), {
     auth: {
@@ -47,9 +47,9 @@ export function getSupabaseAdminClient() {
     },
   });
   return adminClient;
-}
+};
 
-export async function registerWithSupabase(email: string, password: string) {
+export const registerWithSupabase = async (email: string, password: string) => {
   try {
     const { data, error } = await getSupabaseAdminClient().auth.admin.createUser({
       email,
@@ -64,9 +64,9 @@ export async function registerWithSupabase(email: string, password: string) {
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(`[supabase.register] ${message}`);
   }
-}
+};
 
-export async function loginWithSupabase(email: string, password: string) {
+export const loginWithSupabase = async (email: string, password: string) => {
   try {
     const { data, error } = await getSupabaseAnonClient().auth.signInWithPassword({
       email,
@@ -83,9 +83,9 @@ export async function loginWithSupabase(email: string, password: string) {
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(`[supabase.login] ${message}`);
   }
-}
+};
 
-export async function findSupabaseUserById(userId: string) {
+export const findSupabaseUserById = async (userId: string) => {
   try {
     const { data, error } = await getSupabaseAdminClient().auth.admin.getUserById(userId);
     if (error || !data.user) {
@@ -96,4 +96,4 @@ export async function findSupabaseUserById(userId: string) {
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(`[supabase.findUser] ${message}`);
   }
-}
+};

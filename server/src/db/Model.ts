@@ -16,7 +16,7 @@ type ModelClass<C extends Model<T>, T extends Document = Document> = {
 
 let supabaseClient: SupabaseClient | null = null;
 
-function getSupabaseClient() {
+const getSupabaseClient = () => {
   if (supabaseClient) return supabaseClient;
 
   const supabaseUrl = process.env.SUPABASE_URL;
@@ -32,21 +32,21 @@ function getSupabaseClient() {
     },
   });
   return supabaseClient;
-}
+};
 
-function toSnakeCase(value: string) {
+const toSnakeCase = (value: string) => {
   return value.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLowerCase();
-}
+};
 
-function toCamelCase(value: string) {
+const toCamelCase = (value: string) => {
   return value.replace(/_([a-z])/g, (_, char: string) => char.toUpperCase());
-}
+};
 
-function isRecord(value: unknown): value is Record<string, unknown> {
+const isRecord = (value: unknown): value is Record<string, unknown> => {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
+};
 
-function mapKeysDeep(value: unknown, transform: (key: string) => string): unknown {
+const mapKeysDeep = (value: unknown, transform: (key: string) => string): unknown => {
   if (Array.isArray(value)) {
     return value.map((item) => mapKeysDeep(item, transform));
   }
@@ -58,11 +58,11 @@ function mapKeysDeep(value: unknown, transform: (key: string) => string): unknow
   return Object.fromEntries(
     Object.entries(value).map(([key, item]) => [transform(key), mapKeysDeep(item, transform)]),
   );
-}
+};
 
-function toDbQueryKey(key: string) {
+const toDbQueryKey = (key: string) => {
   return toSnakeCase(key);
-}
+};
 
 function toDbPayload<T extends Document>(data: T & BasePropsWithoutId) {
   return mapKeysDeep(data, toSnakeCase) as Record<string, unknown>;

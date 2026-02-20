@@ -42,7 +42,7 @@ const apiOrigin = process.env.VITE_API_ORIGIN ?? 'http://localhost:8080';
 setAccessToken(apiToken);
 setRefreshCookie(refreshCookie);
 
-function buildAuthWindowCsp() {
+const buildAuthWindowCsp = () => {
   const scriptSrc = is.dev ? "script-src 'self' 'unsafe-inline'" : "script-src 'self'";
   return [
     "default-src 'self'",
@@ -51,9 +51,9 @@ function buildAuthWindowCsp() {
     "img-src 'self' data:",
     `connect-src 'self' ${apiOrigin} http://localhost:* http://127.0.0.1:* ws://localhost:* ws://127.0.0.1:*`,
   ].join('; ');
-}
+};
 
-function setAuthState(next: Partial<AuthState>) {
+const setAuthState = (next: Partial<AuthState>) => {
   if (typeof next.accessToken !== 'undefined') {
     apiToken = next.accessToken;
     authStore.set('accessToken', next.accessToken);
@@ -64,9 +64,9 @@ function setAuthState(next: Partial<AuthState>) {
     authStore.set('refreshCookie', next.refreshCookie);
     setRefreshCookie(next.refreshCookie);
   }
-}
+};
 
-async function createWindow() {
+const createWindow = async () => {
   const aho = true;
   if (aho) {
     const authWindow = new BrowserWindow({
@@ -140,7 +140,7 @@ async function createWindow() {
   } else {
     mainWindow.loadURL(`file://${join(__dirname, '../renderer/index.html')}?${paramString}`);
   }
-}
+};
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.

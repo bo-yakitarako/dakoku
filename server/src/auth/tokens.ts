@@ -10,35 +10,35 @@ const accessTokenExpiresIn = '15m';
 const refreshTokenExpiresInSeconds = 60 * 60 * 24 * 7;
 const refreshTokenExpiresIn = '7d';
 
-function getAccessSecret() {
+const getAccessSecret = () => {
   const secret = process.env.SERVER_JWT_SECRET;
   if (!secret) {
     throw new Error('SERVER_JWT_SECRET is not set');
   }
   return secret;
-}
+};
 
-function getRefreshSecret() {
+const getRefreshSecret = () => {
   const secret = process.env.SERVER_REFRESH_SECRET;
   if (!secret) {
     throw new Error('SERVER_REFRESH_SECRET is not set');
   }
   return secret;
-}
+};
 
-export function createAccessToken(payload: TokenPayload) {
+export const createAccessToken = (payload: TokenPayload) => {
   return jwt.sign(payload, getAccessSecret(), {
     expiresIn: accessTokenExpiresIn,
   });
-}
+};
 
-export function createRefreshToken(payload: TokenPayload) {
+export const createRefreshToken = (payload: TokenPayload) => {
   return jwt.sign(payload, getRefreshSecret(), {
     expiresIn: refreshTokenExpiresIn,
   });
-}
+};
 
-function toPayload(decoded: string | JwtPayload): TokenPayload {
+const toPayload = (decoded: string | JwtPayload): TokenPayload => {
   if (typeof decoded === 'string') {
     throw new Error('Invalid token payload');
   }
@@ -49,22 +49,22 @@ function toPayload(decoded: string | JwtPayload): TokenPayload {
     sub: String(decoded.sub),
     email: String(decoded.email),
   };
-}
+};
 
-export function verifyAccessToken(token: string) {
+export const verifyAccessToken = (token: string) => {
   const decoded = jwt.verify(token, getAccessSecret());
   return toPayload(decoded);
-}
+};
 
-export function verifyRefreshToken(token: string) {
+export const verifyRefreshToken = (token: string) => {
   const decoded = jwt.verify(token, getRefreshSecret());
   return toPayload(decoded);
-}
+};
 
-export function getRefreshCookieMaxAge() {
+export const getRefreshCookieMaxAge = () => {
   return refreshTokenExpiresInSeconds;
-}
+};
 
-export function getAccessTokenExpiresAt() {
+export const getAccessTokenExpiresAt = () => {
   return dayjs().add(15, 'minute').toISOString();
-}
+};

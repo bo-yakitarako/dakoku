@@ -30,12 +30,12 @@ app.use(
   }),
 );
 
-export function logApiError(route: string, error: unknown, extra?: Record<string, unknown>) {
+export const logApiError = (route: string, error: unknown, extra?: Record<string, unknown>) => {
   const message = error instanceof Error ? error.message : String(error);
   console.error(`[server] ${route} failed: ${message}`, extra ?? {});
-}
+};
 
-export async function parseAuthBody(c: Context, route: string) {
+export const parseAuthBody = async (c: Context, route: string) => {
   const contentType = c.req.header('content-type') ?? '';
   const rawBody = await c.req.text();
   const preview = rawBody.length > 200 ? `${rawBody.slice(0, 200)}...` : rawBody;
@@ -72,9 +72,9 @@ export async function parseAuthBody(c: Context, route: string) {
     rawBody: preview,
   });
   throw new Error('Unsupported Content-Type');
-}
+};
 
-export function setRefreshCookie(c: Context, token: string) {
+export const setRefreshCookie = (c: Context, token: string) => {
   setCookie(c, refreshCookieName, token, {
     httpOnly: true,
     secure: isSecureCookie,
@@ -82,36 +82,36 @@ export function setRefreshCookie(c: Context, token: string) {
     path: '/auth',
     maxAge: getRefreshCookieMaxAge(),
   });
-}
+};
 
-export function clearRefreshCookie(c: Context) {
+export const clearRefreshCookie = (c: Context) => {
   deleteCookie(c, refreshCookieName, {
     path: '/auth',
   });
-}
+};
 
-export function getRefreshCookie(c: Context) {
+export const getRefreshCookie = (c: Context) => {
   return getCookie(c, refreshCookieName);
-}
+};
 
 type AuthenticatedHandler = (
   c: Context,
   user: Awaited<ReturnType<typeof findSupabaseUserById>>,
 ) => Response | Promise<Response>;
 
-function getBearerToken(c: Context) {
+const getBearerToken = (c: Context) => {
   const authHeader = c.req.header('authorization') ?? '';
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
   if (!token) throw new Error('Unauthorized');
   return token;
-}
+};
 
-function verifyServerTokenFromRequest(c: Context) {
+const verifyServerTokenFromRequest = (c: Context) => {
   const token = getBearerToken(c);
   return verifyAccessToken(token);
-}
+};
 
-export function authGet(path: string, handler: AuthenticatedHandler) {
+export const authGet = (path: string, handler: AuthenticatedHandler) => {
   app.get(path, async (c) => {
     try {
       const payload = verifyServerTokenFromRequest(c);
@@ -121,9 +121,9 @@ export function authGet(path: string, handler: AuthenticatedHandler) {
       return c.json({ message: 'Unauthorized' }, 401);
     }
   });
-}
+};
 
-export function authPost(path: string, handler: AuthenticatedHandler) {
+export const authPost = (path: string, handler: AuthenticatedHandler) => {
   app.post(path, async (c) => {
     try {
       const payload = verifyServerTokenFromRequest(c);
@@ -133,21 +133,17 @@ export function authPost(path: string, handler: AuthenticatedHandler) {
       return c.json({ message: 'Unauthorized' }, 401);
     }
   });
-}
+};
 
 export const get = app.get.bind(app);
 export const post = app.post.bind(app);
 
-function listen(port: number) {
-  serve(
-    {
-      fetch: app.fetch,
-      port,
-    },
-    (info) => {
-      console.log(`Server running on http://localhost:${info.port}`);
-    },
-  );
-}
-
-listen(Number(process.env.PORT ?? 8080));
+serve(
+  {
+    fetch: app.fetch,
+    port: Number(process.env.PORT ?? 8080),
+  },
+  (info) => {
+    console.log(`Server running on http://localhost:${info.port}`);
+  },
+);
