@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAtom, useAtomValue } from 'jotai';
-import { canJobControlAtom, currentJobAtom } from '../../../../modules/store';
-import { useUpdateJob } from './useUpdateJob';
+import { canJobControlAtom, currentJobAtom } from '@/renderer/src/modules/store';
+import { useUpdateJob } from '@/renderer/src/components/timeForm/jobControl/hooks/useUpdateJob';
 
 export const useDeleteJob = () => {
   const [canOpen, setCanJobControl] = useAtom(canJobControlAtom);

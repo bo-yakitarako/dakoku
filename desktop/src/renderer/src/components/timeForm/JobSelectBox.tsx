@@ -1,7 +1,7 @@
 import { FormControl, InputLabel, MenuItem, Select } from '@mui/material';
-import { useJobSelect } from './hooks/useJobSelect';
+import { useJobSelect } from '@/renderer/src/components/timeForm/hooks/useJobSelect';
 import { useAtomValue } from 'jotai';
-import { canOpenCalendarAtom } from '../../modules/store';
+import { canOpenCalendarAtom } from '@/renderer/src/modules/store';
 
 export const JobSelectBox: React.FC = () => {
   const isOpenCalendar = !useAtomValue(canOpenCalendarAtom);

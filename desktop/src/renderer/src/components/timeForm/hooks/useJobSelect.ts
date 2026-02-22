@@ -5,7 +5,7 @@ import {
   isWorksLoadingAtom,
   jobsAtom,
   workSetSelector,
-} from '../../../modules/store';
+} from '@/renderer/src/modules/store';
 import { SelectChangeEvent } from '@mui/material';
 
 export const useJobSelect = () => {

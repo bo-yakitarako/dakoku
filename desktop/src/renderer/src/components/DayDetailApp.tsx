@@ -1,6 +1,6 @@
 import { CssBaseline } from '@mui/material';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { DayDetail } from './dayDetail/DayDetail';
+import { DayDetail } from '@/renderer/src/components/dayDetail/DayDetail';
 
 export const darkTheme = createTheme({
   palette: {

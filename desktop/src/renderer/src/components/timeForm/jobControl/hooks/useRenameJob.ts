@@ -2,9 +2,12 @@ import { useState } from 'react';
 import { useAtom, useAtomValue } from 'jotai';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { canJobControlAtom, currentJobAtom } from '../../../../modules/store';
-import { NameInputs, nameScheme } from './useJobRegister';
-import { useUpdateJob } from './useUpdateJob';
+import { canJobControlAtom, currentJobAtom } from '@/renderer/src/modules/store';
+import {
+  NameInputs,
+  nameScheme,
+} from '@/renderer/src/components/timeForm/jobControl/hooks/useJobRegister';
+import { useUpdateJob } from '@/renderer/src/components/timeForm/jobControl/hooks/useUpdateJob';
 
 export const useRenameJob = () => {
   const [canOpen, setCanJobControl] = useAtom(canJobControlAtom);

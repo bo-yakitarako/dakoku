@@ -9,7 +9,7 @@ import {
   TextField,
 } from '@mui/material';
 import { LoadingButton } from '@mui/lab';
-import { useRenameJob } from './hooks/useRenameJob';
+import { useRenameJob } from '@/renderer/src/components/timeForm/jobControl/hooks/useRenameJob';
 
 export const JobRenameButtonWithDialog: React.FC = () => {
   const { isOpen, canOpen, toggleDialog, submit, loading, error, props, jobName } = useRenameJob();

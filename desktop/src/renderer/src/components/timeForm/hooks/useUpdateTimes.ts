@@ -1,7 +1,7 @@
-import { isWorksLoadingAtom, worksAtom, workStatusAtom } from '@renderer/modules/store';
+import { isWorksLoadingAtom, worksAtom, workStatusAtom } from '@/renderer/src/modules/store';
 import { useCallback } from 'react';
 import { useAtom, useSetAtom } from 'jotai';
-import { WorkStatus } from 'src/preload/dataType';
+import { WorkStatus } from '@/preload/dataType';
 
 export const useUpdateTimes = () => {
   const [workStatus, setWorkStatus] = useAtom(workStatusAtom);

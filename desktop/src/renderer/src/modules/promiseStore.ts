@@ -1,5 +1,5 @@
 import { atomWithMutation, atomWithQuery } from 'jotai-tanstack-query';
-import { AuthMode } from './store';
+import { AuthMode } from '@/renderer/src/modules/store';
 
 export const refreshAtom = atomWithQuery(() => ({
   queryKey: ['auth', 'refresh'],

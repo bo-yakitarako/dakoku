@@ -9,8 +9,8 @@ import {
   errorAtom,
   infoAtom,
   passwordAtom,
-} from '../modules/store';
-import { authMutationAtom, refreshAtom } from '../modules/promiseStore';
+} from '@/renderer/src/modules/store';
+import { authMutationAtom, refreshAtom } from '@/renderer/src/modules/promiseStore';
 
 const darkTheme = createTheme({
   palette: {

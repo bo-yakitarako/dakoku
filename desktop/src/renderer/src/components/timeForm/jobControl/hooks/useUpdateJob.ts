@@ -1,11 +1,11 @@
 import { useSetAtom } from 'jotai';
-import { JobData } from '../../../../../../preload/dataType';
+import { JobData } from '@/preload/dataType';
 import {
   currentJobAtom,
   isWorksLoadingAtom,
   jobsAtom,
   workSetSelector,
-} from '../../../../modules/store';
+} from '@/renderer/src/modules/store';
 
 export const useUpdateJob = () => {
   const setIsLoading = useSetAtom(isWorksLoadingAtom);

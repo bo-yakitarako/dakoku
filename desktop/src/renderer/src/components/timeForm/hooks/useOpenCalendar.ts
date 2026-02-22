@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useAtom } from 'jotai';
-import { canOpenCalendarAtom } from '../../../modules/store';
+import { canOpenCalendarAtom } from '@/renderer/src/modules/store';
 
 export const useOpenCalendar = () => {
   const [canOpen, setCanOpen] = useAtom(canOpenCalendarAtom);

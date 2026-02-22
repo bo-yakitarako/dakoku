@@ -1,10 +1,10 @@
 import { BrowserWindow, ipcMain } from 'electron';
-import icon from '../../resources/icon.png?asset';
+import icon from '@resources/icon.png?asset';
 import { join } from 'path';
 import { is } from '@electron-toolkit/utils';
-import { getMonthWorkTime, getWindowBounds, setWindowBounds } from './store';
+import { getMonthWorkTime, getWindowBounds, setWindowBounds } from '@/main/store';
 import dayjs from 'dayjs';
-import { createDayDetailWindow } from './dayDetail';
+import { createDayDetailWindow } from '@/main/dayDetail';
 
 export const createCalendarWindow = (mainWindow: BrowserWindow) => {
   const windowBounds = getWindowBounds('calendar');

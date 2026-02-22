@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { electronAPI } from '@electron-toolkit/preload';
-import { TimeState } from './dataType';
+import { TimeState } from '@/preload/dataType';
 
 // Custom APIs for renderer
 const api = {

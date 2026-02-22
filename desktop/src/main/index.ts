@@ -1,7 +1,7 @@
 import { app, shell, BrowserWindow, ipcMain } from 'electron';
 import { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
-import icon from '../../resources/icon.png?asset';
+import icon from '@resources/icon.png?asset';
 import { config } from 'dotenv';
 import Store from 'electron-store';
 import {
@@ -17,16 +17,16 @@ import {
   getTodayWorks,
   setTimeState,
   getTimeState,
-} from './store';
-import { createCalendarWindow } from './calendar';
-import { toURLParams } from '../commonUtility/utils';
-import { TimeState } from '../preload/dataType';
+} from '@/main/store';
+import { createCalendarWindow } from '@/main/calendar';
+import { toURLParams } from '@/commonUtility/utils';
+import { TimeState } from '@/preload/dataType';
 import {
   getRefreshCookie as getHttpRefreshCookie,
   post,
   setAccessToken,
   setRefreshCookie,
-} from './http';
+} from '@/main/http';
 
 config();
 

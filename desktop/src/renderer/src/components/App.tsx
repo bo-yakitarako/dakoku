@@ -1,7 +1,7 @@
 import { CssBaseline } from '@mui/material';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { Provider as JotaiProvider } from 'jotai';
-import { TimeForm } from './timeForm/TimeForm';
+import { TimeForm } from '@/renderer/src/components/timeForm/TimeForm';
 
 const darkTheme = createTheme({
   palette: {

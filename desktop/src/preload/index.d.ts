@@ -1,6 +1,6 @@
 import { ElectronAPI } from '@electron-toolkit/preload';
 import { IpcRenderer } from 'electron';
-import { DateWorkTimes, DayDetailData, Holiday, Job, JobData, TimeState } from './dataType';
+import { DateWorkTimes, DayDetailData, Holiday, Job, JobData, TimeState } from '@/preload/dataType';
 
 declare global {
   interface Window {

@@ -3,8 +3,8 @@ import { useAtom, useAtomValue } from 'jotai';
 import * as yup from 'yup';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { canJobControlAtom, currentJobAtom } from '../../../../modules/store';
-import { useUpdateJob } from './useUpdateJob';
+import { canJobControlAtom, currentJobAtom } from '@/renderer/src/modules/store';
+import { useUpdateJob } from '@/renderer/src/components/timeForm/jobControl/hooks/useUpdateJob';
 
 export type NameInputs = { name: string };
 

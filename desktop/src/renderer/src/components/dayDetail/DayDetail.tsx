@@ -1,9 +1,9 @@
 import { Box, CircularProgress, Typography } from '@mui/material';
 import { blue, yellow } from '@mui/material/colors';
-import { DayDetailData } from '../../../../preload/dataType';
+import { DayDetailData } from '@/preload/dataType';
 import { useEffect, useState } from 'react';
-import { WorkTimeGraph } from './WorkTimeGraph';
-import { hexToRgb } from './GraphItem';
+import { WorkTimeGraph } from '@/renderer/src/components/dayDetail/WorkTimeGraph';
+import { hexToRgb } from '@/renderer/src/components/dayDetail/GraphItem';
 
 export const DayDetail: React.FC = () => {
   const [dayDetailData, setDayDetailData] = useState<DayDetailData | null>(null);

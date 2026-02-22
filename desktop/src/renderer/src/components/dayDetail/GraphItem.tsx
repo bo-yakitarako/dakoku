@@ -1,6 +1,6 @@
 import { Box, Tooltip, Typography, tooltipClasses } from '@mui/material';
 import { blue, yellow } from '@mui/material/colors';
-import { DayDetailGraphItem } from '../../../../preload/dataType';
+import { DayDetailGraphItem } from '@/preload/dataType';
 
 export const GraphItem: React.FC<DayDetailGraphItem> = (props) => {
   const { time, durationTime, first, last, jobName, isAll } = props;

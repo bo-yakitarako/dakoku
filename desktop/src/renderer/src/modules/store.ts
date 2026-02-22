@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 import { atom, getDefaultStore } from 'jotai';
-import { DateWorkTimes, Holiday, Job, TimeState, WorkStatus } from '../../../preload/dataType';
-import { getParams, parseWorkTime } from '../../../commonUtility/utils';
+import { DateWorkTimes, Holiday, Job, TimeState, WorkStatus } from '@/preload/dataType';
+import { getParams, parseWorkTime } from '@/commonUtility/utils';
 
 const { status, works } = getParams<Partial<TimeState>>(location.href);
 const store = getDefaultStore();

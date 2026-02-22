@@ -1,9 +1,14 @@
 import { useAtom, useAtomValue } from 'jotai';
-import { countAtom, isWorksLoadingAtom, worksAtom, workStatusAtom } from '../../../modules/store';
+import {
+  countAtom,
+  isWorksLoadingAtom,
+  worksAtom,
+  workStatusAtom,
+} from '@/renderer/src/modules/store';
 import { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
-import { useUpdateTimes } from './useUpdateTimes';
-import { parseWorkTime } from '../../../../../commonUtility/utils';
+import { useUpdateTimes } from '@/renderer/src/components/timeForm/hooks/useUpdateTimes';
+import { parseWorkTime } from '@/commonUtility/utils';
 
 export const useTime = () => {
   const workStatus = useAtomValue(workStatusAtom);

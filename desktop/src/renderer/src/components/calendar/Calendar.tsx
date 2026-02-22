@@ -11,8 +11,8 @@ import {
   Switch,
   Typography,
 } from '@mui/material';
-import { DateTooltip } from './DateTooltip';
-import { useCalendarMove } from './hooks/useCalendarMove';
+import { DateTooltip } from '@/renderer/src/components/calendar/DateTooltip';
+import { useCalendarMove } from '@/renderer/src/components/calendar/hooks/useCalendarMove';
 import {
   KeyboardArrowLeft,
   KeyboardArrowRight,
@@ -22,8 +22,8 @@ import {
 import { useEffect } from 'react';
 import { useAtomValue } from 'jotai';
 import dayjs from 'dayjs';
-import { currentJobAtom } from '../../modules/store';
-import { DayCellContent } from './DayCellContent';
+import { currentJobAtom } from '@/renderer/src/modules/store';
+import { DayCellContent } from '@/renderer/src/components/calendar/DayCellContent';
 
 export const Calendar: React.FC = () => {
   const {

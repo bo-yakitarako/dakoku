@@ -4,7 +4,11 @@ import { Box, Typography } from '@mui/material';
 import Tooltip from '@mui/material/Tooltip';
 import dayjs from 'dayjs';
 import { useAtomValue, useSetAtom } from 'jotai';
-import { calendarAllCheckAtom, calendarLoadingAtom, monthWorkTimesAtom } from '../../modules/store';
+import {
+  calendarAllCheckAtom,
+  calendarLoadingAtom,
+  monthWorkTimesAtom,
+} from '@/renderer/src/modules/store';
 
 export const DateTooltip: React.FC<EventContentArg> = (arg) => {
   const { start } = arg.event;

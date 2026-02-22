@@ -1,7 +1,7 @@
 import { CssBaseline } from '@mui/material';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { Provider as JotaiProvider } from 'jotai';
-import { Calendar } from './calendar/Calendar';
+import { Calendar } from '@/renderer/src/components/calendar/Calendar';
 
 export const darkTheme = createTheme({
   palette: {

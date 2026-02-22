@@ -8,8 +8,8 @@ import {
   IconButton,
 } from '@mui/material';
 import { LoadingButton } from '@mui/lab';
-import { useDeleteJob } from './hooks/useDeleteJob';
-import { canOpenCalendarAtom } from '../../../modules/store';
+import { useDeleteJob } from '@/renderer/src/components/timeForm/jobControl/hooks/useDeleteJob';
+import { canOpenCalendarAtom } from '@/renderer/src/modules/store';
 import { useAtomValue } from 'jotai';
 
 export const JobDeleteButtonWithDialog: React.FC = () => {

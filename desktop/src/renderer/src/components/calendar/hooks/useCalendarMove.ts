@@ -7,7 +7,7 @@ import {
   calendarLoadingAtom,
   holidaysAtom,
   monthWorkTimesAtom,
-} from '../../../modules/store';
+} from '@/renderer/src/modules/store';
 import dayjs from 'dayjs';
 import { EventSourceInput } from '@fullcalendar/core';
 

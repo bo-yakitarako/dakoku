@@ -1,8 +1,8 @@
 import { BrowserWindow } from 'electron';
 import { join } from 'path';
-import icon from '../../resources/icon.png?asset';
+import icon from '@resources/icon.png?asset';
 import { is } from '@electron-toolkit/utils';
-import { getDayDetailData } from './store';
+import { getDayDetailData } from '@/main/store';
 
 export const createDayDetailWindow = async (
   calendarWindow: BrowserWindow,

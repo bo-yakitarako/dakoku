@@ -8,7 +8,7 @@ import {
   IconButton,
   TextField,
 } from '@mui/material';
-import { useJobRegister } from './hooks/useJobRegister';
+import { useJobRegister } from '@/renderer/src/components/timeForm/jobControl/hooks/useJobRegister';
 import { LoadingButton } from '@mui/lab';
 
 export const JobRegisterButtonWithDialog: React.FC = () => {

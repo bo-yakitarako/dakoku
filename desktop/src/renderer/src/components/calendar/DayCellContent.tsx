@@ -1,6 +1,6 @@
 import { DayCellContentArg } from '@fullcalendar/core';
 import { useAtomValue } from 'jotai';
-import { holidaysAtom } from '../../modules/store';
+import { holidaysAtom } from '@/renderer/src/modules/store';
 import { Box, Typography } from '@mui/material';
 
 export const DayCellContent: React.FC<DayCellContentArg> = ({ date, dayNumberText }) => {

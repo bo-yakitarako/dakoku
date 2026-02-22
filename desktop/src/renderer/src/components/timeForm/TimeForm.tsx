@@ -1,13 +1,13 @@
 import React, { useEffect } from 'react';
-import { Time } from './Time';
+import { Time } from '@/renderer/src/components/timeForm/Time';
 import { Box, Button, IconButton } from '@mui/material';
 import { CalendarMonth, Computer, Devices, Home, LocalCafe } from '@mui/icons-material';
-import { useTime } from './hooks/useTime';
-import { useOpenCalendar } from './hooks/useOpenCalendar';
-import { JobSelectBox } from './JobSelectBox';
-import { JobControl } from './jobControl/JobControl';
+import { useTime } from '@/renderer/src/components/timeForm/hooks/useTime';
+import { useOpenCalendar } from '@/renderer/src/components/timeForm/hooks/useOpenCalendar';
+import { JobSelectBox } from '@/renderer/src/components/timeForm/JobSelectBox';
+import { JobControl } from '@/renderer/src/components/timeForm/jobControl/JobControl';
 import { useAtomValue } from 'jotai';
-import { currentJobAtom } from '../../modules/store';
+import { currentJobAtom } from '@/renderer/src/modules/store';
 
 export const TimeForm: React.FC = () => {
   const { workStatus, count, isLoading, start, pause, stop } = useTime();

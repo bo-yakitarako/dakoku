@@ -1,6 +1,6 @@
-import { GraphItem } from './GraphItem';
+import { GraphItem } from '@/renderer/src/components/dayDetail/GraphItem';
 import { Box, Typography } from '@mui/material';
-import { DayDetailGraph } from '../../../../preload/dataType';
+import { DayDetailGraph } from '@/preload/dataType';
 
 export const WorkTimeGraph: React.FC<DayDetailGraph> = ({ startHour, endHour, items }) => {
   return (

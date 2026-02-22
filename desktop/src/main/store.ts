@@ -9,10 +9,10 @@ import {
   TimeState,
   TimeStateDict,
   YearWorkTimes,
-} from '../preload/dataType';
+} from '@/preload/dataType';
 import dayjs from 'dayjs';
 import { BrowserWindow, Rectangle } from 'electron';
-import { parseWorkTime } from '../commonUtility/utils';
+import { parseWorkTime } from '@/commonUtility/utils';
 
 type Window = 'main' | 'calendar';
 

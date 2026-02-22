@@ -1,6 +1,6 @@
-import { createAccessToken, createRefreshToken, verifyRefreshToken } from './auth/tokens';
-import { loginWithSupabase, registerWithSupabase } from './auth/supabase';
-import * as http from './http';
+import { createAccessToken, createRefreshToken, verifyRefreshToken } from '@/auth/tokens';
+import { loginWithSupabase, registerWithSupabase } from '@/auth/supabase';
+import * as http from '@/http';
 
 http.get('/', (c) => c.text('ok'));
 
