@@ -2,11 +2,16 @@ import { createAccessToken, createRefreshToken, verifyRefreshToken } from '@/aut
 import { loginWithSupabase, registerWithSupabase } from '@/auth/supabase';
 import * as http from '@/http';
 
+type AuthBody = {
+  email: string;
+  password: string;
+};
+
 http.get('/', (c) => c.text('ok'));
 
-http.post('/auth/register', async (c) => {
+http.post('/auth/register', async (c, path) => {
   try {
-    const { email, password } = await http.parseAuthBody(c, '/auth/register');
+    const { email, password } = await http.parseBody<AuthBody>(c, path);
     if (!email || !password) {
       return c.json({ message: 'Email and password are required' }, 400);
     }
@@ -24,14 +29,14 @@ http.post('/auth/register', async (c) => {
 
     return c.json({ accessToken });
   } catch (error) {
-    http.logApiError('/auth/register', error);
+    http.logApiError(path, error);
     return c.json({ message: error instanceof Error ? error.message : 'Register failed' }, 400);
   }
 });
 
-http.post('/auth/login', async (c) => {
+http.post('/auth/login', async (c, path) => {
   try {
-    const { email, password } = await http.parseAuthBody(c, '/auth/login');
+    const { email, password } = await http.parseBody<AuthBody>(c, path);
     if (!email || !password) {
       return c.json({ message: 'Email and password are required' }, 400);
     }
@@ -49,16 +54,16 @@ http.post('/auth/login', async (c) => {
 
     return c.json({ accessToken });
   } catch (error) {
-    http.logApiError('/auth/login', error);
+    http.logApiError(path, error);
     return c.json({ message: error instanceof Error ? error.message : 'Login failed' }, 401);
   }
 });
 
-http.post('/auth/refresh', async (c) => {
+http.post('/auth/refresh', async (c, path) => {
   try {
     const refreshToken = http.getRefreshCookie(c);
     if (!refreshToken) {
-      http.logApiError('/auth/refresh', 'Refresh token is missing', {
+      http.logApiError(path, 'Refresh token is missing', {
         origin: c.req.header('origin') ?? null,
       });
       return c.json({ message: 'Refresh token is missing' }, 401);
@@ -77,7 +82,7 @@ http.post('/auth/refresh', async (c) => {
 
     return c.json({ accessToken: newAccessToken });
   } catch (error) {
-    http.logApiError('/auth/refresh', error);
+    http.logApiError(path, error);
     return c.json({ message: 'Unauthorized' }, 401);
   }
 });

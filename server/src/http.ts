@@ -35,7 +35,10 @@ export const logApiError = (route: string, error: unknown, extra?: Record<string
   console.error(`[server] ${route} failed: ${message}`, extra ?? {});
 };
 
-export const parseAuthBody = async (c: Context, route: string) => {
+export async function parseBody<TBody extends Record<string, unknown> = Record<string, unknown>>(
+  c: Context,
+  route: string,
+): Promise<Partial<TBody>> {
   const contentType = c.req.header('content-type') ?? '';
   const rawBody = await c.req.text();
   const preview = rawBody.length > 200 ? `${rawBody.slice(0, 200)}...` : rawBody;
@@ -44,12 +47,12 @@ export const parseAuthBody = async (c: Context, route: string) => {
     logApiError(route, 'Request body is empty', {
       contentType,
     });
-    return { email: undefined, password: undefined };
+    return {};
   }
 
   if (contentType.includes('application/json')) {
     try {
-      const parsed = JSON.parse(rawBody) as { email?: string; password?: string };
+      const parsed = JSON.parse(rawBody) as Partial<TBody>;
       return parsed;
     } catch (error) {
       logApiError(route, error, {
@@ -62,17 +65,14 @@ export const parseAuthBody = async (c: Context, route: string) => {
 
   if (contentType.includes('application/x-www-form-urlencoded')) {
     const params = new URLSearchParams(rawBody);
-    return {
-      email: params.get('email') ?? undefined,
-      password: params.get('password') ?? undefined,
-    };
+    return Object.fromEntries(params.entries()) as Partial<TBody>;
   }
 
   logApiError(route, `Unsupported Content-Type: ${contentType}`, {
     rawBody: preview,
   });
   throw new Error('Unsupported Content-Type');
-};
+}
 
 export const setRefreshCookie = (c: Context, token: string) => {
   setCookie(c, refreshCookieName, token, {
@@ -94,10 +94,12 @@ export const getRefreshCookie = (c: Context) => {
   return getCookie(c, refreshCookieName);
 };
 
-type AuthenticatedHandler = (
+type RouteHandler<TArgs extends unknown[] = []> = (
   c: Context,
-  user: Awaited<ReturnType<typeof findSupabaseUserById>>,
+  ...args: [...TArgs, string]
 ) => Response | Promise<Response>;
+
+type AuthenticatedHandler = RouteHandler<[Awaited<ReturnType<typeof findSupabaseUserById>>]>;
 
 const getBearerToken = (c: Context) => {
   const authHeader = c.req.header('authorization') ?? '';
@@ -116,7 +118,7 @@ export const authGet = (path: string, handler: AuthenticatedHandler) => {
     try {
       const payload = verifyServerTokenFromRequest(c);
       const user = await findSupabaseUserById(payload.sub);
-      return await handler(c, user);
+      return await handler(c, user, path);
     } catch {
       return c.json({ message: 'Unauthorized' }, 401);
     }
@@ -128,15 +130,24 @@ export const authPost = (path: string, handler: AuthenticatedHandler) => {
     try {
       const payload = verifyServerTokenFromRequest(c);
       const user = await findSupabaseUserById(payload.sub);
-      return await handler(c, user);
+      return await handler(c, user, path);
     } catch {
       return c.json({ message: 'Unauthorized' }, 401);
     }
   });
 };
 
-export const get = app.get.bind(app);
-export const post = app.post.bind(app);
+export const get = (path: string, handler: RouteHandler) => {
+  app.get(path, (c) => {
+    return handler(c, path);
+  });
+};
+
+export const post = (path: string, handler: RouteHandler) => {
+  app.post(path, (c) => {
+    return handler(c, path);
+  });
+};
 
 serve(
   {
