@@ -13,8 +13,6 @@ const api = {
   setTimeState: (timeState?: Partial<TimeState>) => ipcRenderer.invoke('setTimeState', timeState),
   registerWorks: (times: number) => ipcRenderer.invoke('registerWorks', times),
   getTodayWorks: () => ipcRenderer.invoke('getTodayWorks'),
-  setAuthToken: (token: string) => ipcRenderer.invoke('setAuthToken', token),
-  clearAuthToken: () => ipcRenderer.invoke('clearAuthToken'),
   authRegister: (email: string, password: string) =>
     ipcRenderer.invoke('authRegister', email, password),
   authLogin: (email: string, password: string) => ipcRenderer.invoke('authLogin', email, password),

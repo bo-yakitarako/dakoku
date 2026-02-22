@@ -1,21 +1,18 @@
 import { ElectronAPI } from '@electron-toolkit/preload';
 import { IpcRenderer } from 'electron';
 import { DateWorkTimes, DayDetailData, Holiday, Job, JobData, TimeState } from '@/preload/dataType';
+import type { HttpResponse, AccessTokenResponse } from '@/main/http';
+
+type Auth = HttpResponse<AccessTokenResponse>;
 
 declare global {
   interface Window {
     electron: ElectronAPI;
     api: {
-      authRegister: (
-        email: string,
-        password: string,
-      ) => Promise<{ ok: boolean; status: number; data: unknown }>;
-      authLogin: (
-        email: string,
-        password: string,
-      ) => Promise<{ ok: boolean; status: number; data: unknown }>;
-      authRefresh: () => Promise<{ ok: boolean; status: number; data: unknown }>;
-      authLogout: () => Promise<{ ok: boolean; status: number; data: unknown }>;
+      authRegister: (email: string, password: string) => Promise<Auth>;
+      authLogin: (email: string, password: string) => Promise<Auth>;
+      authRefresh: () => Promise<Auth>;
+      authLogout: () => Promise<HttpResponse>;
       initializeCurrentJob: () => Promise<Job | null>;
       getJobs: () => Promise<Job[]>;
       registerJob: (jobName: string) => Promise<JobData>;
@@ -25,9 +22,7 @@ declare global {
       setTimeState: (timeState?: Partial<TimeState>) => Promise<void>;
       registerWorks: (times: number[][]) => Promise<void>;
       getTodayWorks: () => Promise<number[][]>;
-      setAuthToken: (token: string) => Promise<void>;
-      clearAuthToken: () => Promise<void>;
-      apiPing: () => Promise<{ ok: boolean; status: number; data: unknown }>;
+      apiPing: () => Promise<HttpResponse<{ message: string }>>;
       openCalendar: () => Promise<void>;
       getMonthWorkTime: (
         year: number,

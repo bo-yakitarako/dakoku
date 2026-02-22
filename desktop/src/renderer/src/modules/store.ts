@@ -48,8 +48,6 @@ export const emailAtom = atom('');
 export const passwordAtom = atom('');
 export const errorAtom = atom<string | null>(null);
 export const infoAtom = atom<string | null>(null);
-export const accessTokenAtom = atom<string | null>(null);
-export const tokenReadyAtom = atom((get) => !!get(accessTokenAtom));
 
 void window.api.initializeCurrentJob().then((job) => {
   store.set(currentJobAtom, job);

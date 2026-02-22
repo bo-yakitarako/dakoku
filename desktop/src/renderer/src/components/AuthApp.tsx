@@ -1,9 +1,7 @@
-import { useEffect } from 'react';
 import { Alert, Box, Button, CssBaseline, Stack, TextField, Typography } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { useAtom } from 'jotai';
 import {
-  accessTokenAtom,
   authModeAtom,
   emailAtom,
   errorAtom,
@@ -18,13 +16,6 @@ const darkTheme = createTheme({
   },
 });
 
-const getAccessToken = (data: unknown): string | null => {
-  if (!data || typeof data !== 'object') return null;
-  if (!('accessToken' in data)) return null;
-  const token = (data as { accessToken?: string }).accessToken;
-  return token ?? null;
-};
-
 const getMessage = (data: unknown): string | undefined => {
   if (!data || typeof data !== 'object') return undefined;
   if (!('message' in data)) return undefined;
@@ -38,14 +29,8 @@ export const AuthApp = () => {
   const [password, setPassword] = useAtom(passwordAtom);
   const [error, setError] = useAtom(errorAtom);
   const [info, setInfo] = useAtom(infoAtom);
-  const [, setAccessToken] = useAtom(accessTokenAtom);
   const [refreshQuery] = useAtom(refreshAtom);
   const [authMutation] = useAtom(authMutationAtom);
-
-  useEffect(() => {
-    if (!refreshQuery.data) return;
-    setAccessToken(getAccessToken(refreshQuery.data.data));
-  }, [refreshQuery.data, setAccessToken]);
 
   const handleSubmit = async () => {
     setError(null);
@@ -55,7 +40,6 @@ export const AuthApp = () => {
       if (!result.ok) {
         throw new Error(getMessage(result.data) ?? '認証に失敗しました');
       }
-      setAccessToken(getAccessToken(result.data));
       setInfo(mode === 'login' ? 'ログインしました' : '登録しました');
     } catch (mutationError) {
       setError(mutationError instanceof Error ? mutationError.message : '認証に失敗しました');

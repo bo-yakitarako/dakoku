@@ -1,28 +1,30 @@
+import Store from 'electron-store';
+
 type RequestOptions = {
   form?: Record<string, string>;
   includeAccessToken?: boolean;
 };
 
-export type HttpResponse = {
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export type HttpResponse<TData = {}> = {
   ok: boolean;
   status: number;
-  data: unknown;
+  data: TData | null;
+};
+
+export type AuthState = {
+  accessToken: string | null;
+  refreshCookie: string | null;
 };
 
 const apiOrigin = process.env.VITE_API_ORIGIN ?? 'http://localhost:8080';
-let accessToken: string | null = null;
-let refreshCookie: string | null = null;
+const authStore = new Store<AuthState>({ name: 'auth' });
+let accessToken: string | null = authStore.get('accessToken') ?? null;
+let refreshCookie: string | null = authStore.get('refreshCookie') ?? null;
 
-export const setAccessToken = (token: string | null) => {
-  accessToken = token;
-};
-
-export const setRefreshCookie = (cookie: string | null) => {
-  refreshCookie = cookie;
-};
-
-export const getRefreshCookie = () => {
-  return refreshCookie;
+const persistAuthState = () => {
+  authStore.set('accessToken', accessToken);
+  authStore.set('refreshCookie', refreshCookie);
 };
 
 const parseCookiePair = (setCookieHeader: string) => {
@@ -31,11 +33,21 @@ const parseCookiePair = (setCookieHeader: string) => {
   return `${match[1]}=${match[2]}`;
 };
 
-const requestServer = async (
+export type AccessTokenResponse = {
+  accessToken?: string;
+};
+
+const parseAccessToken = (data: HttpResponse<AccessTokenResponse>['data']) => {
+  if (!data || typeof data !== 'object' || !('accessToken' in data)) return null;
+  const token = data.accessToken;
+  return typeof token === 'string' ? token : null;
+};
+
+const requestServer = async <TResponseData = null>(
   method: 'GET' | 'POST',
   path: string,
   options: RequestOptions = {},
-) => {
+): Promise<HttpResponse<TResponseData>> => {
   const headers: Record<string, string> = {};
   let body: string | undefined;
 
@@ -48,7 +60,7 @@ const requestServer = async (
     headers.Cookie = refreshCookie;
   }
 
-  if (options.includeAccessToken) {
+  if (options.includeAccessToken ?? true) {
     if (accessToken) {
       headers.Authorization = `Bearer ${accessToken}`;
     }
@@ -62,12 +74,12 @@ const requestServer = async (
 
   const setCookieHeader = response.headers.get('set-cookie');
   if (setCookieHeader) {
-    setRefreshCookie(parseCookiePair(setCookieHeader));
+    refreshCookie = parseCookiePair(setCookieHeader);
   }
 
-  let data: unknown = null;
+  let data: HttpResponse<TResponseData>['data'] = null;
   try {
-    data = await response.json();
+    data = (await response.json()) as TResponseData;
   } catch {
     data = null;
   }
@@ -76,13 +88,47 @@ const requestServer = async (
     ok: response.ok,
     status: response.status,
     data,
-  } as HttpResponse;
+  } as HttpResponse<TResponseData>;
 };
 
-export const get = (path: string, options: RequestOptions = {}) => {
-  return requestServer('GET', path, options);
+export const get = <TResponseData = null>(path: string, options: RequestOptions = {}) => {
+  return requestServer<TResponseData>('GET', path, options);
 };
 
-export const post = (path: string, options: RequestOptions = {}) => {
-  return requestServer('POST', path, options);
+export const post = <TResponseData = null>(path: string, options: RequestOptions = {}) => {
+  return requestServer<TResponseData>('POST', path, options);
+};
+
+export const authRegister = async (email: string, password: string) => {
+  const response = await post<AccessTokenResponse>('/auth/register', {
+    form: { email, password },
+    includeAccessToken: false,
+  });
+  accessToken = parseAccessToken(response.data);
+  persistAuthState();
+  return response;
+};
+
+export const authLogin = async (email: string, password: string) => {
+  const response = await post<AccessTokenResponse>('/auth/login', {
+    form: { email, password },
+    includeAccessToken: false,
+  });
+  accessToken = parseAccessToken(response.data);
+  persistAuthState();
+  return response;
+};
+
+export const authRefresh = async () => {
+  const response = await post<AccessTokenResponse>('/auth/refresh', { includeAccessToken: false });
+  accessToken = parseAccessToken(response.data);
+  persistAuthState();
+  return response;
+};
+
+export const authLogout = async () => {
+  const response = await post('/auth/logout', { includeAccessToken: false });
+  accessToken = refreshCookie = null;
+  persistAuthState();
+  return response;
 };
