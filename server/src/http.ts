@@ -4,7 +4,7 @@ import { cors } from 'hono/cors';
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
 import { Context, Hono } from 'hono';
 import { getRefreshCookieMaxAge, verifyAccessToken } from '@/auth/tokens';
-import { findSupabaseUserById } from '@/auth/supabase';
+import { findSupabaseUserById } from '@/auth/auth';
 
 config();
 

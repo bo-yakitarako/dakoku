@@ -13,7 +13,8 @@
     "supabase:stop": "pnpm -C server supabase:stop",
     "migrate": "pnpm -C server migrate",
     "new": "pnpm -C server new",
-    "dbreset": "pnpm -C server dbreset"
+    "dbreset": "pnpm -C server dbreset",
+    "dbtype": "pnpm -C server dbtype && pnpm eslint --fix server/src/db/database.types.ts"
   },
   "private": true,
   "devDependencies": {

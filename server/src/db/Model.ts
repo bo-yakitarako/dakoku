@@ -1,8 +1,6 @@
-import { config } from 'dotenv';
 import dayjs from 'dayjs';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
-
-config();
+import { SupabaseClient } from '@supabase/supabase-js';
+import { BaseDb } from './BaseDb';
 
 type Document = Record<string, unknown>;
 type BasePropsWithoutId = { createdAt: string; updatedAt: string };
@@ -12,26 +10,8 @@ type DbBaseProps = { id: string; created_at: string; updated_at: string };
 type ModelClass<C extends Model<T>, T extends Document = Document> = {
   new (data: BaseProps & T): C;
   tableName: string;
-};
-
-let supabaseClient: SupabaseClient | null = null;
-
-const getSupabaseClient = () => {
-  if (supabaseClient) return supabaseClient;
-
-  const supabaseUrl = process.env.SUPABASE_URL;
-  const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!supabaseUrl || !supabaseServiceRoleKey) {
-    throw new Error('SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is not set');
-  }
-
-  supabaseClient = createClient(supabaseUrl, supabaseServiceRoleKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  });
-  return supabaseClient;
+} & {
+  readonly db: SupabaseClient;
 };
 
 const toSnakeCase = (value: string) => {
@@ -72,11 +52,12 @@ function fromDbRow<T extends Document>(row: DbBaseProps & T): BaseProps & T {
   return mapKeysDeep(row, toCamelCase) as BaseProps & T;
 }
 
-export class Model<T extends Document = Document> {
+export class Model<T extends Document = Document> extends BaseDb {
   protected static _tableName = '';
   protected _data: BaseProps & T;
 
   constructor(data: BaseProps & T) {
+    super();
     this._data = data;
   }
 
@@ -100,9 +81,10 @@ export class Model<T extends Document = Document> {
     this: ModelClass<C, T>,
     data: T,
   ): Promise<C> {
+    const db = this.db;
     const now = dayjs().toISOString();
     const payload = toDbPayload({ ...data, createdAt: now, updatedAt: now });
-    const { data: inserted, error } = await getSupabaseClient()
+    const { data: inserted, error } = await db
       .from(this.tableName)
       .insert(payload)
       .select('*')
@@ -118,7 +100,8 @@ export class Model<T extends Document = Document> {
     this: ModelClass<C, T>,
     query: Partial<BaseProps & T> = {},
   ): Promise<C | null> {
-    let request = getSupabaseClient().from(this.tableName).select('*').limit(1);
+    const db = this.db;
+    let request = db.from(this.tableName).select('*').limit(1);
     for (const [key, value] of Object.entries(query)) {
       request = request.eq(toDbQueryKey(key), value as never);
     }
@@ -133,7 +116,8 @@ export class Model<T extends Document = Document> {
     this: ModelClass<C, T>,
     query: Partial<BaseProps & T> = {},
   ): Promise<C[]> {
-    let request = getSupabaseClient().from(this.tableName).select('*');
+    const db = this.db;
+    let request = db.from(this.tableName).select('*');
     for (const [key, value] of Object.entries(query)) {
       request = request.eq(toDbQueryKey(key), value as never);
     }
@@ -148,12 +132,13 @@ export class Model<T extends Document = Document> {
   }
 
   public async save() {
+    const db = this.db as SupabaseClient;
     const updatedAt = dayjs().toISOString();
     this._data.updatedAt = updatedAt;
     const { id, ...rest } = this._data;
     const payload = toDbPayload(rest);
 
-    const { error } = await getSupabaseClient()
+    const { error } = await db
       .from((this.constructor as typeof Model<T>).tableName)
       .update(payload)
       .eq('id', id);
@@ -166,7 +151,8 @@ export class Model<T extends Document = Document> {
   }
 
   public async delete() {
-    const { error } = await getSupabaseClient()
+    const db = this.db as SupabaseClient;
+    const { error } = await db
       .from((this.constructor as typeof Model<T>).tableName)
       .delete()
       .eq('id', this.id);

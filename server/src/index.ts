@@ -1,5 +1,5 @@
 import { createAccessToken, createRefreshToken, verifyRefreshToken } from '@/auth/tokens';
-import { loginWithSupabase, registerWithSupabase } from '@/auth/supabase';
+import { loginWithSupabase, registerWithSupabase } from '@/auth/auth';
 import * as http from '@/http';
 
 type AuthBody = {

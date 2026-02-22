@@ -15,6 +15,7 @@
     "migrate": "pnpm exec supabase migration up",
     "new": "pnpm exec supabase migration new",
     "dbreset": "pnpm exec supabase db reset",
+    "dbtype": "pnpm exec supabase gen types --lang=typescript --schema public --local > src/db/database.types.ts",
     "utility": "node copyUtility.js"
   },
   "dependencies": {
