@@ -15,6 +15,8 @@ import * as http from '@/main/http';
 config();
 
 const apiOrigin = process.env.VITE_API_ORIGIN ?? 'http://localhost:8080';
+let mainWindow: BrowserWindow | null = null;
+let authWindow: BrowserWindow | null = null;
 let jobs: Job[] = [];
 let currentJob: Job | null = null;
 let todayWorksMap: Record<string, number[][]> = {};
@@ -118,41 +120,53 @@ const buildAuthWindowCsp = () => {
   ].join('; ');
 };
 
-const createWindow = async () => {
-  const aho = true;
-  if (aho) {
-    const authWindow = new BrowserWindow({
-      width: 720,
-      height: 520,
-      show: false,
-      autoHideMenuBar: true,
-      webPreferences: {
-        preload: join(__dirname, '../preload/index.js'),
-        sandbox: false,
-      },
-    });
-
-    const authWindowCsp = buildAuthWindowCsp();
-    authWindow.webContents.session.webRequest.onHeadersReceived((details, callback) => {
-      callback({
-        responseHeaders: {
-          ...details.responseHeaders,
-          'Content-Security-Policy': [authWindowCsp],
-        },
-      });
-    });
-
-    authWindow.on('ready-to-show', () => authWindow.show());
-    const loadURL =
-      is.dev && process.env['ELECTRON_RENDERER_URL']
-        ? `${process.env['ELECTRON_RENDERER_URL']}/auth.html`
-        : `file://${join(__dirname, '../renderer/auth.html')}`;
-    authWindow.loadURL(loadURL);
+const createAuthWindow = () => {
+  if (authWindow) {
+    authWindow.focus();
     return;
   }
-  // Create the browser window.
+
+  authWindow = new BrowserWindow({
+    width: 720,
+    height: 520,
+    show: false,
+    autoHideMenuBar: true,
+    webPreferences: {
+      preload: join(__dirname, '../preload/index.js'),
+      sandbox: false,
+    },
+  });
+
+  const authWindowCsp = buildAuthWindowCsp();
+  authWindow.webContents.session.webRequest.onHeadersReceived((details, callback) => {
+    callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        'Content-Security-Policy': [authWindowCsp],
+      },
+    });
+  });
+
+  authWindow.on('ready-to-show', () => authWindow?.show());
+  authWindow.on('closed', () => {
+    authWindow = null;
+  });
+
+  const loadURL =
+    is.dev && process.env['ELECTRON_RENDERER_URL']
+      ? `${process.env['ELECTRON_RENDERER_URL']}/auth.html`
+      : `file://${join(__dirname, '../renderer/auth.html')}`;
+  authWindow.loadURL(loadURL);
+};
+
+const createMainWindow = async () => {
+  if (mainWindow) {
+    mainWindow.focus();
+    return;
+  }
+
   const windowBounds = getWindowBounds('main');
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     ...windowBounds,
     show: false,
     autoHideMenuBar: true,
@@ -167,19 +181,23 @@ const createWindow = async () => {
   });
 
   mainWindow.on('ready-to-show', () => {
-    mainWindow.show();
+    mainWindow?.show();
   });
 
   mainWindow.on('close', () => {
-    setWindowBounds(mainWindow, 'main');
+    if (mainWindow) {
+      setWindowBounds(mainWindow, 'main');
+    }
     ipcMain.removeHandler('openCalendar');
-    app.quit();
+  });
+  mainWindow.on('closed', () => {
+    mainWindow = null;
   });
 
   ipcMain.handle('openCalendar', () => {
     const now = dayjs();
     return createCalendarWindow(
-      mainWindow,
+      mainWindow!,
       async () => {
         const year = now.year();
         const month = now.month() + 1;
@@ -207,13 +225,20 @@ const createWindow = async () => {
     return { action: 'deny' };
   });
 
-  // HMR for renderer base on electron-vite cli.
-  // Load the remote URL for development or the local html file for production.
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
     mainWindow.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/index.html`);
   } else {
     mainWindow.loadURL(`file://${join(__dirname, '../renderer/index.html')}`);
   }
+};
+
+const openInitialWindow = async () => {
+  const refreshResult = await http.authRefresh();
+  if (refreshResult.ok) {
+    await createMainWindow();
+    return;
+  }
+  createAuthWindow();
 };
 
 // This method will be called when Electron has finished
@@ -233,12 +258,14 @@ app.whenReady().then(() => {
   // IPC test
   ipcMain.on('ping', () => console.log('pong'));
 
-  createWindow();
+  void openInitialWindow();
 
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    if (BrowserWindow.getAllWindows().length === 0) {
+      void openInitialWindow();
+    }
   });
 });
 
@@ -345,11 +372,21 @@ ipcMain.handle('getHolidays', async (_event, year: number, month: number) => {
 });
 
 ipcMain.handle('authRegister', async (_event, email: string, password: string) => {
-  return http.authRegister(email, password);
+  const response = await http.authRegister(email, password);
+  if (response.ok) {
+    authWindow?.close();
+    await createMainWindow();
+  }
+  return response;
 });
 
 ipcMain.handle('authLogin', async (_event, email: string, password: string) => {
-  return http.authLogin(email, password);
+  const response = await http.authLogin(email, password);
+  if (response.ok) {
+    authWindow?.close();
+    await createMainWindow();
+  }
+  return response;
 });
 
 ipcMain.handle('authRefresh', async () => {
@@ -357,5 +394,10 @@ ipcMain.handle('authRefresh', async () => {
 });
 
 ipcMain.handle('authLogout', async () => {
-  return http.authLogout();
+  const response = await http.authLogout();
+  if (response.ok) {
+    mainWindow?.close();
+    createAuthWindow();
+  }
+  return response;
 });
