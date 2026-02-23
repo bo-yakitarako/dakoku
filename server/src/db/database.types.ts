@@ -3,7 +3,112 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never;
+      current_jobs: {
+        Row: {
+          created_at: string;
+          id: string;
+          job_id: string | null;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at: string;
+          id?: string;
+          job_id?: string | null;
+          updated_at: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          job_id?: string | null;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'current_jobs_user_id_job_id_fkey';
+            columns: ['user_id', 'job_id'];
+            isOneToOne: false;
+            referencedRelation: 'jobs';
+            referencedColumns: ['user_id', 'id'];
+          },
+        ];
+      };
+      jobs: {
+        Row: {
+          created_at: string;
+          id: string;
+          name: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at: string;
+          id?: string;
+          name: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          name?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
+      work_times: {
+        Row: {
+          acted_at: string;
+          created_at: string;
+          date: number;
+          id: string;
+          index: number;
+          job_id: string;
+          month: number;
+          status: string;
+          updated_at: string;
+          user_id: string;
+          year: number;
+        };
+        Insert: {
+          acted_at: string;
+          created_at: string;
+          date: number;
+          id?: string;
+          index: number;
+          job_id: string;
+          month: number;
+          status: string;
+          updated_at: string;
+          user_id: string;
+          year: number;
+        };
+        Update: {
+          acted_at?: string;
+          created_at?: string;
+          date?: number;
+          id?: string;
+          index?: number;
+          job_id?: string;
+          month?: number;
+          status?: string;
+          updated_at?: string;
+          user_id?: string;
+          year?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'work_times_user_id_job_id_fkey';
+            columns: ['user_id', 'job_id'];
+            isOneToOne: false;
+            referencedRelation: 'jobs';
+            referencedColumns: ['user_id', 'id'];
+          },
+        ];
+      };
     };
     Views: {
       [_ in never]: never;
