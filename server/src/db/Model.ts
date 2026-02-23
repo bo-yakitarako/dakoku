@@ -10,8 +10,6 @@ type DbBaseProps = { id: string; created_at: string; updated_at: string };
 type ModelClass<C extends Model<T>, T extends Document = Document> = {
   new (data: BaseProps & T): C;
   tableName: string;
-} & {
-  readonly db: SupabaseClient;
 };
 
 const toSnakeCase = (value: string) => {
@@ -81,7 +79,7 @@ export class Model<T extends Document = Document> extends BaseDb {
     this: ModelClass<C, T>,
     data: T,
   ): Promise<C> {
-    const db = this.db;
+    const db = (this as unknown as typeof Model<T>).db as SupabaseClient;
     const now = dayjs().toISOString();
     const payload = toDbPayload({ ...data, createdAt: now, updatedAt: now });
     const { data: inserted, error } = await db
@@ -100,7 +98,7 @@ export class Model<T extends Document = Document> extends BaseDb {
     this: ModelClass<C, T>,
     query: Partial<BaseProps & T> = {},
   ): Promise<C | null> {
-    const db = this.db;
+    const db = (this as unknown as typeof Model<T>).db as SupabaseClient;
     let request = db.from(this.tableName).select('*').limit(1);
     for (const [key, value] of Object.entries(query)) {
       request = request.eq(toDbQueryKey(key), value as never);
@@ -116,7 +114,7 @@ export class Model<T extends Document = Document> extends BaseDb {
     this: ModelClass<C, T>,
     query: Partial<BaseProps & T> = {},
   ): Promise<C[]> {
-    const db = this.db;
+    const db = (this as unknown as typeof Model<T>).db as SupabaseClient;
     let request = db.from(this.tableName).select('*');
     for (const [key, value] of Object.entries(query)) {
       request = request.eq(toDbQueryKey(key), value as never);
