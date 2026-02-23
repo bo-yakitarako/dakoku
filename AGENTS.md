@@ -9,7 +9,7 @@
 - `server/src/db/Model.ts` 以外で `supabase` を直接 `import` しないこと。
 - モデルの外に返すデータ構造は常に `Data` 型（camelCase）に統一すること。
 - 生SQLやDB固有機能の直接利用は最小化し、可能な限りモデル層に閉じ込めること。
-- 変更を加えたファイルに対しては、作業後に必ず `eslint --fix` を実行すること。
+- 変更を加えたファイルのうち、`.ts`、`.tsx`、`.mjs`、`.js`、`.jsx` については作業後に必ず `eslint --fix` を実行すること。
 - 関数宣言は原則アロー関数を使用すること。ただし以下の場合は`function`を用いるようにする
   - オーバーロードを使用する場合
   - ジェネリクスを使用する場合
@@ -19,3 +19,6 @@
 - `jotai`を要する状態管理変数については`store.ts`または`promiseStore.ts`で管理する
 - `desktop/src/renderer/src/modules/store.ts` には通常の `atom` のみを定義すること。
 - `atomWithQuery` / `atomWithMutation` など Promise を扱う atom は `desktop/src/renderer/src/modules/promiseStore.ts` に定義すること。
+- APIサーバーへの GET は原則として、各ウィンドウの表示前に `main` プロセスで実行して初期データを取得すること。
+- 取得した初期データは `preload` で `window` オブジェクトへ公開し、レンダラーの初回描画時点で利用可能な状態にすること。
+- レンダラー側は `isLoading` を常態化させず、初期データを優先して描画し、必要な場合のみ再取得を行うこと。
