@@ -3,28 +3,96 @@ import { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import icon from '@resources/icon.png?asset';
 import { config } from 'dotenv';
-import {
-  deleteCurrentJob,
-  initializeCurrentJob,
-  getJobs,
-  registerJob,
-  registerWorks,
-  renameCurrentJob,
-  changeCurrentJob,
-  getWindowBounds,
-  setWindowBounds,
-  getTodayWorks,
-  setTimeState,
-  getTimeState,
-} from '@/main/store';
+import { getWindowBounds, setWindowBounds } from '@/main/store';
+import * as calendarApi from '@/main/api/calendarApi';
+import * as dayDetailApi from '@/main/api/dayDetailApi';
+import * as mainApi from '@/main/api/mainApi';
 import { createCalendarWindow } from '@/main/calendar';
 import { toURLParams } from '@/commonUtility/utils';
-import { TimeState } from '@/preload/dataType';
+import { Job, JobData, TimeState, WorkStatus } from '@/preload/dataType';
 import * as http from '@/main/http';
 
 config();
 
 const apiOrigin = process.env.VITE_API_ORIGIN ?? 'http://localhost:8080';
+let jobs: Job[] = [];
+let currentJob: Job | null = null;
+let todayWorksMap: Record<string, number[][]> = {};
+const timeStateMap: Record<string, TimeState> = {};
+
+const toRendererJobs = (data: { id: string; name: string }[]): Job[] => {
+  return data.map(({ id, name }) => ({ jobId: id, name }));
+};
+
+const resolveCurrentJob = async (nextJobs: Job[]) => {
+  const current = await mainApi.getCurrent();
+  if (current && current.jobId) {
+    const found = nextJobs.find((job) => job.jobId === current.jobId);
+    if (found) {
+      return found;
+    }
+  }
+  if (currentJob && nextJobs.some((job) => job.jobId === currentJob?.jobId)) {
+    return currentJob;
+  }
+  return nextJobs[0] ?? null;
+};
+
+const refreshJobs = async (): Promise<JobData> => {
+  const serverJobs = await mainApi.getJobs();
+  jobs = toRendererJobs(serverJobs);
+  currentJob = await resolveCurrentJob(jobs);
+  return { currentJob, jobs };
+};
+
+const getCurrentTimeState = (): TimeState => {
+  if (!currentJob) {
+    return { status: 'workOff', works: [] };
+  }
+  return timeStateMap[currentJob.jobId] ?? { status: 'workOff', works: [] };
+};
+
+const collectMissingTimeEvents = (base: number[][], next: number[][]) => {
+  const events: { index: number; actedAt: number }[] = [];
+  for (let index = 0; index < next.length; index += 1) {
+    const baseTimes = new Set((base[index] ?? []).map((time) => `${time}`));
+    const nextTimes = next[index] ?? [];
+    for (const actedAt of nextTimes) {
+      if (!baseTimes.has(`${actedAt}`)) {
+        events.push({ index, actedAt });
+      }
+    }
+  }
+  return events;
+};
+
+const syncWorksToServer = async (nextWorks: number[][], workStatus: WorkStatus) => {
+  if (!currentJob) {
+    return [];
+  }
+
+  const jobId = currentJob.jobId;
+  const currentWorks = todayWorksMap[jobId] ?? [];
+  const events = collectMissingTimeEvents(currentWorks, nextWorks);
+
+  if (events.length === 0) {
+    todayWorksMap[jobId] = nextWorks;
+    return nextWorks;
+  }
+
+  let latestMap = todayWorksMap;
+  for (const event of events) {
+    latestMap = await mainApi.postTime({
+      jobId,
+      index: event.index,
+      actedAt: event.actedAt,
+      workStatus,
+    });
+  }
+
+  todayWorksMap = latestMap;
+  return todayWorksMap[jobId] ?? nextWorks;
+};
 
 const buildAuthWindowCsp = () => {
   const scriptSrc = is.dev ? "script-src 'self' 'unsafe-inline'" : "script-src 'self'";
@@ -93,7 +161,12 @@ const createWindow = async () => {
   });
 
   ipcMain.handle('openCalendar', () => {
-    createCalendarWindow(mainWindow);
+    createCalendarWindow(mainWindow, async (year, month, day, isAll) => {
+      if (jobs.length === 0) {
+        await refreshJobs();
+      }
+      return dayDetailApi.getDayDetailWindowData(year, month, day, isAll, jobs, currentJob);
+    });
   });
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
@@ -101,7 +174,7 @@ const createWindow = async () => {
     return { action: 'deny' };
   });
 
-  const initialData = getTimeState();
+  const initialData = getCurrentTimeState();
   const paramString = toURLParams(initialData);
 
   // HMR for renderer base on electron-vite cli.
@@ -151,26 +224,95 @@ app.on('window-all-closed', () => {
 // In this file you can include the rest of your app"s specific main process
 // code. You can also put them in separate files and require them here.
 
-ipcMain.handle('initializeCurrentJob', () => initializeCurrentJob());
-ipcMain.handle('getJobs', () => getJobs());
-// @ts-ignore
-ipcMain.handle('registerJob', (e, jobName: string) => registerJob(jobName));
-// @ts-ignore
-ipcMain.handle('changeCurrentJob', (e, jobId: string) => changeCurrentJob(jobId));
-// @ts-ignore
-ipcMain.handle('renameCurrentJob', (e, jobName: string) => renameCurrentJob(jobName));
-ipcMain.handle('deleteCurrentJob', () => deleteCurrentJob());
+ipcMain.handle('initializeCurrentJob', async () => {
+  const data = await refreshJobs();
+  return data.currentJob;
+});
 
-// @ts-ignore
-ipcMain.handle('setTimeState', (e, timeState?: Partial<TimeState>) => setTimeState(timeState));
+ipcMain.handle('getJobs', async () => {
+  const data = await refreshJobs();
+  return data.jobs;
+});
 
-ipcMain.handle(
-  'registerWorks',
-  // @ts-ignore
-  (e, works: number[][]) => registerWorks(works),
-);
+ipcMain.handle('registerJob', async (_event, jobName: string) => {
+  jobs = toRendererJobs(await mainApi.registerJob(jobName));
+  currentJob = await resolveCurrentJob(jobs);
+  return { currentJob, jobs };
+});
 
-ipcMain.handle('getTodayWorks', () => getTodayWorks());
+ipcMain.handle('changeCurrentJob', async (_event, jobId: string) => {
+  if (jobs.length === 0) {
+    await refreshJobs();
+  }
+  currentJob = jobs.find((job) => job.jobId === jobId) ?? currentJob;
+  return currentJob;
+});
+
+ipcMain.handle('renameCurrentJob', async (_event, jobName: string) => {
+  if (!currentJob) {
+    return { currentJob, jobs };
+  }
+  jobs = toRendererJobs(await mainApi.editJob(currentJob.jobId, jobName));
+  currentJob = jobs.find((job) => job.jobId === currentJob?.jobId) ?? null;
+  return { currentJob, jobs };
+});
+
+ipcMain.handle('deleteCurrentJob', async () => {
+  if (!currentJob) {
+    return { currentJob, jobs };
+  }
+  jobs = toRendererJobs(await mainApi.deleteJob(currentJob.jobId));
+  currentJob = await resolveCurrentJob(jobs);
+  return { currentJob, jobs };
+});
+
+ipcMain.handle('setTimeState', async (_event, nextTimeState?: Partial<TimeState>) => {
+  if (!currentJob) {
+    return;
+  }
+  if (!nextTimeState) {
+    delete timeStateMap[currentJob.jobId];
+    return;
+  }
+  const current = timeStateMap[currentJob.jobId] ?? { status: 'workOff', works: [] };
+  const nextStatus = nextTimeState.status ?? current.status;
+  const nextWorks = nextTimeState.works ?? current.works;
+  const syncedWorks = await syncWorksToServer(nextWorks, nextStatus);
+  timeStateMap[currentJob.jobId] = {
+    status: nextStatus,
+    works: syncedWorks,
+  };
+});
+
+ipcMain.handle('registerWorks', async (_event, works: number[][]) => {
+  if (!currentJob) {
+    return;
+  }
+  const status = timeStateMap[currentJob.jobId]?.status ?? 'workOff';
+  const syncedWorks = await syncWorksToServer(works, status);
+  todayWorksMap[currentJob.jobId] = syncedWorks;
+  if (timeStateMap[currentJob.jobId]) {
+    timeStateMap[currentJob.jobId].works = syncedWorks;
+  }
+});
+
+ipcMain.handle('getTodayWorks', async () => {
+  if (!currentJob) {
+    return [];
+  }
+  if (!todayWorksMap[currentJob.jobId]) {
+    todayWorksMap = await mainApi.getWorkTimes();
+  }
+  return todayWorksMap[currentJob.jobId] ?? [];
+});
+
+ipcMain.handle('getMonthWorkTime', async (_event, year: number, month: number, isAll: boolean) => {
+  return calendarApi.getMonthWorkTime(year, month, isAll, currentJob?.jobId ?? null);
+});
+
+ipcMain.handle('getHolidays', async (_event, year: number, month: number) => {
+  return calendarApi.getHolidays(year, month);
+});
 
 ipcMain.handle('authRegister', async (_event, email: string, password: string) => {
   return http.authRegister(email, password);
@@ -186,8 +328,4 @@ ipcMain.handle('authRefresh', async () => {
 
 ipcMain.handle('authLogout', async () => {
   return http.authLogout();
-});
-
-ipcMain.handle('apiPing', async () => {
-  return http.post<{ message: string }>('/ping');
 });

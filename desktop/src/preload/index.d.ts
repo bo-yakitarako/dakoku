@@ -22,7 +22,6 @@ declare global {
       setTimeState: (timeState?: Partial<TimeState>) => Promise<void>;
       registerWorks: (times: number[][]) => Promise<void>;
       getTodayWorks: () => Promise<number[][]>;
-      apiPing: () => Promise<HttpResponse<{ message: string }>>;
       openCalendar: () => Promise<void>;
       getMonthWorkTime: (
         year: number,

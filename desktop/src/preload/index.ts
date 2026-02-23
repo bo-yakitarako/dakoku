@@ -11,14 +11,13 @@ const api = {
   renameCurrentJob: (jobName: string) => ipcRenderer.invoke('renameCurrentJob', jobName),
   deleteCurrentJob: () => ipcRenderer.invoke('deleteCurrentJob'),
   setTimeState: (timeState?: Partial<TimeState>) => ipcRenderer.invoke('setTimeState', timeState),
-  registerWorks: (times: number) => ipcRenderer.invoke('registerWorks', times),
+  registerWorks: (times: number[][]) => ipcRenderer.invoke('registerWorks', times),
   getTodayWorks: () => ipcRenderer.invoke('getTodayWorks'),
   authRegister: (email: string, password: string) =>
     ipcRenderer.invoke('authRegister', email, password),
   authLogin: (email: string, password: string) => ipcRenderer.invoke('authLogin', email, password),
   authRefresh: () => ipcRenderer.invoke('authRefresh'),
   authLogout: () => ipcRenderer.invoke('authLogout'),
-  apiPing: () => ipcRenderer.invoke('apiPing'),
   openCalendar: () => ipcRenderer.invoke('openCalendar'),
   getMonthWorkTime: (year: number, month: number, isAll: boolean) =>
     ipcRenderer.invoke('getMonthWorkTime', year, month, isAll),

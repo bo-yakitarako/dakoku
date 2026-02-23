@@ -2,16 +2,13 @@ import { BrowserWindow } from 'electron';
 import { join } from 'path';
 import icon from '@resources/icon.png?asset';
 import { is } from '@electron-toolkit/utils';
-import { getDayDetailData } from '@/main/store';
+import { DayDetailData } from '@/preload/dataType';
 
 export const createDayDetailWindow = async (
   calendarWindow: BrowserWindow,
-  year: number,
-  month: number,
-  day: number,
-  isAll: boolean,
+  payload: { data: DayDetailData; rectangle: { width: number; height: number } },
 ) => {
-  const { data, rectangle } = getDayDetailData(year, month, day, isAll);
+  const { data, rectangle } = payload;
   const calendarBounds = calendarWindow.getBounds();
   const { width, height } = rectangle;
   const x = calendarBounds.x + Math.floor((calendarBounds.width - width) / 2);
