@@ -12,14 +12,17 @@ import dayjs from 'dayjs';
 import { EventSourceInput } from '@fullcalendar/core';
 
 export const useCalendarMove = () => {
+  const bootstrap = window.api.calendarBootstrap;
   const ref = useRef<FullCalendar>(null);
   const [currentDate, setCurrentDate] = useAtom(calendarDateAtom);
   const setMonthWorkTimes = useSetAtom(monthWorkTimesAtom);
   const [holidays, setHolidays] = useAtom(holidaysAtom);
   const [loading, setLoading] = useAtom(calendarLoadingAtom);
   const [checked, setChecked] = useAtom(calendarAllCheckAtom);
-  const [calendarEvents, setCalendarEvents] = useState<EventSourceInput>([]);
-  const [workTimeSum, setWorkTimeSum] = useState('');
+  const [calendarEvents, setCalendarEvents] = useState<EventSourceInput>(
+    Object.values(bootstrap?.dates ?? {}).map(({ workTime }) => ({ date: new Date(workTime) })),
+  );
+  const [workTimeSum, setWorkTimeSum] = useState(bootstrap?.workTimeSum ?? '');
   const [holidayGrids, setHolidayGrids] = useState<{ row: number; column: number }[]>([]);
 
   const setMonthData = async (monthMove: number) => {
@@ -104,10 +107,18 @@ export const useCalendarMove = () => {
   };
 
   useEffect(() => {
-    setLoading(true);
-    setMonthData(0).then(() => {
-      setLoading(false);
-    });
+    if (bootstrap) {
+      setHolidayGrids(
+        bootstrap.holidays.map(({ day }) =>
+          convertToGrid(bootstrap.year, bootstrap.month - 1, day),
+        ),
+      );
+    } else {
+      setLoading(true);
+      setMonthData(0).then(() => {
+        setLoading(false);
+      });
+    }
     const openDetail = window.ipcRenderer.on('finishLoadDetail', () => setLoading(false));
     return () => {
       openDetail.removeAllListeners('finishLoadDetail');

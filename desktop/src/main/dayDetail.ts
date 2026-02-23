@@ -26,12 +26,12 @@ export const createDayDetailWindow = async (
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false,
+      additionalArguments: [`--dayDetailBootstrap=${encodeURIComponent(JSON.stringify(data))}`],
     },
   });
   dayDetailWindow.on('ready-to-show', () => {
     dayDetailWindow?.show();
     calendarWindow.webContents.send('finishLoadDetail');
-    dayDetailWindow?.webContents.send('data', data);
   });
 
   dayDetailWindow.on('closed', () => {

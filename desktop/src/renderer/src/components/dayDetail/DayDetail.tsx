@@ -6,17 +6,16 @@ import { WorkTimeGraph } from '@/renderer/src/components/dayDetail/WorkTimeGraph
 import { hexToRgb } from '@/renderer/src/components/dayDetail/GraphItem';
 
 export const DayDetail: React.FC = () => {
-  const [dayDetailData, setDayDetailData] = useState<DayDetailData | null>(null);
+  const [dayDetailData] = useState<DayDetailData | null>(window.api.dayDetailBootstrap);
 
   useEffect(() => {
-    // @ts-ignore
-    window.ipcRenderer.on('data', (_, data: DayDetailData) => {
-      setDayDetailData(data);
-      const { year, month, day } = data.date;
-      const dateString = `${year}年${month}月${day}日`;
-      document.title = `dakoku - 時間詳細: ${dateString} ${data.name}`;
-    });
-  }, []);
+    if (!dayDetailData) {
+      return;
+    }
+    const { year, month, day } = dayDetailData.date;
+    const dateString = `${year}年${month}月${day}日`;
+    document.title = `dakoku - 時間詳細: ${dateString} ${dayDetailData.name}`;
+  }, [dayDetailData]);
 
   if (dayDetailData === null) {
     return (

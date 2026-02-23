@@ -3,12 +3,12 @@ import { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import icon from '@resources/icon.png?asset';
 import { config } from 'dotenv';
+import dayjs from 'dayjs';
 import { getWindowBounds, setWindowBounds } from '@/main/store';
 import * as calendarApi from '@/main/api/calendarApi';
 import * as dayDetailApi from '@/main/api/dayDetailApi';
 import * as mainApi from '@/main/api/mainApi';
 import { createCalendarWindow } from '@/main/calendar';
-import { toURLParams } from '@/commonUtility/utils';
 import { Job, JobData, TimeState, WorkStatus } from '@/preload/dataType';
 import * as http from '@/main/http';
 
@@ -50,6 +50,19 @@ const getCurrentTimeState = (): TimeState => {
     return { status: 'workOff', works: [] };
   }
   return timeStateMap[currentJob.jobId] ?? { status: 'workOff', works: [] };
+};
+
+const prepareMainBootstrap = async () => {
+  const { currentJob: current, jobs: nextJobs } = await refreshJobs();
+  todayWorksMap = await mainApi.getWorkTimes();
+  const works = current ? (todayWorksMap[current.jobId] ?? []) : [];
+  const timeState = getCurrentTimeState();
+  return {
+    currentJob: current,
+    jobs: nextJobs,
+    status: timeState.status,
+    works,
+  };
 };
 
 const collectMissingTimeEvents = (base: number[][], next: number[][]) => {
@@ -147,6 +160,9 @@ const createWindow = async () => {
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false,
+      additionalArguments: [
+        `--mainBootstrap=${encodeURIComponent(JSON.stringify(await prepareMainBootstrap()))}`,
+      ],
     },
   });
 
@@ -161,12 +177,29 @@ const createWindow = async () => {
   });
 
   ipcMain.handle('openCalendar', () => {
-    createCalendarWindow(mainWindow, async (year, month, day, isAll) => {
-      if (jobs.length === 0) {
-        await refreshJobs();
-      }
-      return dayDetailApi.getDayDetailWindowData(year, month, day, isAll, jobs, currentJob);
-    });
+    const now = dayjs();
+    return createCalendarWindow(
+      mainWindow,
+      async () => {
+        const year = now.year();
+        const month = now.month() + 1;
+        const checked = false;
+        const { workTimeSum, dates } = await calendarApi.getMonthWorkTime(
+          year,
+          month,
+          checked,
+          currentJob?.jobId ?? null,
+        );
+        const holidays = await calendarApi.getHolidays(year, month);
+        return { year, month, checked, workTimeSum, dates, holidays };
+      },
+      async (year, month, day, isAll) => {
+        if (jobs.length === 0) {
+          await refreshJobs();
+        }
+        return dayDetailApi.getDayDetailWindowData(year, month, day, isAll, jobs, currentJob);
+      },
+    );
   });
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
@@ -174,15 +207,12 @@ const createWindow = async () => {
     return { action: 'deny' };
   });
 
-  const initialData = getCurrentTimeState();
-  const paramString = toURLParams(initialData);
-
   // HMR for renderer base on electron-vite cli.
   // Load the remote URL for development or the local html file for production.
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    mainWindow.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/index.html?${paramString}`);
+    mainWindow.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/index.html`);
   } else {
-    mainWindow.loadURL(`file://${join(__dirname, '../renderer/index.html')}?${paramString}`);
+    mainWindow.loadURL(`file://${join(__dirname, '../renderer/index.html')}`);
   }
 };
 

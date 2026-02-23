@@ -1,6 +1,15 @@
 import { ElectronAPI } from '@electron-toolkit/preload';
 import { IpcRenderer } from 'electron';
-import { DateWorkTimes, DayDetailData, Holiday, Job, JobData, TimeState } from '@/preload/dataType';
+import {
+  CalendarBootstrap,
+  DateTimeDatas,
+  DayDetailData,
+  Holiday,
+  Job,
+  JobData,
+  MainBootstrap,
+  TimeState,
+} from '@/preload/dataType';
 import type { HttpResponse, AccessTokenResponse } from '@/main/http';
 
 type Auth = HttpResponse<AccessTokenResponse>;
@@ -27,7 +36,7 @@ declare global {
         year: number,
         month: number,
         isAll: boolean,
-      ) => Promise<{ workTimeSum: string; dates: DateWorkTimes }>;
+      ) => Promise<{ workTimeSum: string; dates: DateTimeDatas }>;
       getHolidays: (year: number, month: number) => Promise<Holiday[]>;
       openDayDetail: (
         year: number,
@@ -35,6 +44,9 @@ declare global {
         day: number,
         isAll: boolean,
       ) => Promise<DayDetailData>;
+      bootstrap: MainBootstrap | null;
+      calendarBootstrap: CalendarBootstrap | null;
+      dayDetailBootstrap: DayDetailData | null;
     };
     ipcRenderer: IpcRenderer;
   }

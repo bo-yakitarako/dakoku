@@ -60,3 +60,19 @@ export type DayDetailData = {
   restTimeSum: string;
   graph: DayDetailGraph;
 };
+
+export type MainBootstrap = {
+  currentJob: Job | null;
+  jobs: Job[];
+  status: WorkStatus;
+  works: number[][];
+};
+
+export type CalendarBootstrap = {
+  year: number;
+  month: number;
+  workTimeSum: string;
+  dates: DateTimeDatas;
+  holidays: Holiday[];
+  checked: boolean;
+};

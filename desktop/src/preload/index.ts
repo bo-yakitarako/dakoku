@@ -1,6 +1,23 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { electronAPI } from '@electron-toolkit/preload';
-import { TimeState } from '@/preload/dataType';
+import { CalendarBootstrap, DayDetailData, MainBootstrap, TimeState } from '@/preload/dataType';
+
+const parseBootstrapArg = <T>(name: string): T | null => {
+  const arg = process.argv.find((item) => item.startsWith(`--${name}=`));
+  if (!arg) {
+    return null;
+  }
+  try {
+    const raw = arg.replace(`--${name}=`, '');
+    return JSON.parse(decodeURIComponent(raw)) as T;
+  } catch {
+    return null;
+  }
+};
+
+const bootstrap = parseBootstrapArg<MainBootstrap>('mainBootstrap');
+const calendarBootstrap = parseBootstrapArg<CalendarBootstrap>('calendarBootstrap');
+const dayDetailBootstrap = parseBootstrapArg<DayDetailData>('dayDetailBootstrap');
 
 // Custom APIs for renderer
 const api = {
@@ -24,6 +41,9 @@ const api = {
   getHolidays: (year: number, month: number) => ipcRenderer.invoke('getHolidays', year, month),
   openDayDetail: (year: number, month: number, day: number, isAll: boolean) =>
     ipcRenderer.invoke('openDayDetail', year, month, day, isAll),
+  bootstrap,
+  calendarBootstrap,
+  dayDetailBootstrap,
 };
 
 // Use `contextBridge` APIs to expose Electron APIs to
