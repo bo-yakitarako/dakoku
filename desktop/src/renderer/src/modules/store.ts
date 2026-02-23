@@ -10,7 +10,6 @@ const status = bootstrap?.status;
 const works = bootstrap?.works;
 const store = getDefaultStore();
 type CountTime = { workTime: number; restTime: number };
-export type AuthMode = 'login' | 'register';
 
 export const workStatusAtom = atom<WorkStatus>(status ?? 'workOff');
 
@@ -50,12 +49,6 @@ export const calendarLoadingAtom = atom<boolean>(!calendarBootstrap);
 export const calendarAllCheckAtom = atom<boolean>(false);
 
 export const holidaysAtom = atom<Holiday[]>(calendarBootstrap?.holidays ?? []);
-
-export const authModeAtom = atom<AuthMode>('login');
-export const emailAtom = atom('');
-export const passwordAtom = atom('');
-export const errorAtom = atom<string | null>(null);
-export const infoAtom = atom<string | null>(null);
 
 if (!bootstrap && !isAuthWindow) {
   void window.api.initializeCurrentJob().then((job) => {

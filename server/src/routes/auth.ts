@@ -1,4 +1,8 @@
-import { loginWithSupabase, registerWithSupabase } from '@/auth/auth';
+import {
+  loginWithSupabase,
+  registerWithSupabase,
+  requestPasswordResetWithSupabase,
+} from '@/auth/auth';
 import { createAccessToken, createRefreshToken, verifyRefreshToken } from '@/auth/tokens';
 import * as http from '@/http';
 
@@ -15,18 +19,8 @@ export const registerAuthRoutes = () => {
         return c.json({ message: 'Email and password are required' }, 400);
       }
 
-      const user = await registerWithSupabase(email, password);
-      const accessToken = createAccessToken({
-        sub: user.id,
-        email: user.email ?? email,
-      });
-      const refreshToken = createRefreshToken({
-        sub: user.id,
-        email: user.email ?? email,
-      });
-      http.setRefreshCookie(c, refreshToken);
-
-      return c.json({ accessToken });
+      await registerWithSupabase(email, password);
+      return c.json(null);
     } catch (error) {
       http.logApiError(path, error);
       return c.json({ message: error instanceof Error ? error.message : 'Register failed' }, 400);
@@ -89,5 +83,23 @@ export const registerAuthRoutes = () => {
   http.post('/auth/logout', (c) => {
     http.clearRefreshCookie(c);
     return c.json({ ok: true });
+  });
+
+  http.post('/auth/resetPassword', async (c, path) => {
+    try {
+      const { email } = await http.parseBody<Pick<AuthBody, 'email'>>(c, path);
+      if (!email) {
+        return c.json({ message: 'Email is required' }, 400);
+      }
+
+      await requestPasswordResetWithSupabase(email);
+      return c.json({ ok: true });
+    } catch (error) {
+      http.logApiError(path, error);
+      return c.json(
+        { message: error instanceof Error ? error.message : 'Password reset failed' },
+        400,
+      );
+    }
   });
 };

@@ -1,12 +1,6 @@
-import { atomWithMutation, atomWithQuery } from 'jotai-tanstack-query';
-import { AuthMode } from '@/renderer/src/modules/store';
+import { atomWithMutation } from 'jotai-tanstack-query';
 
-export const refreshAtom = atomWithQuery(() => ({
-  queryKey: ['auth', 'refresh'],
-  queryFn: () => window.api.authRefresh(),
-  retry: false,
-  refetchOnWindowFocus: false,
-}));
+export type AuthMode = 'login' | 'register';
 
 export const authMutationAtom = atomWithMutation(() => ({
   mutationKey: ['auth', 'submit'],
@@ -14,4 +8,9 @@ export const authMutationAtom = atomWithMutation(() => ({
     variables.mode === 'login'
       ? window.api.authLogin(variables.email, variables.password)
       : window.api.authRegister(variables.email, variables.password),
+}));
+
+export const resetPasswordMutationAtom = atomWithMutation(() => ({
+  mutationKey: ['auth', 'resetPassword'],
+  mutationFn: (variables: { email: string }) => window.api.authResetPassword(variables.email),
 }));

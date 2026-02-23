@@ -132,3 +132,10 @@ export const authLogout = async () => {
   persistAuthState();
   return response;
 };
+
+export const authResetPassword = async (email: string) => {
+  return post('/auth/resetPassword', {
+    form: { email },
+    includeAccessToken: false,
+  });
+};

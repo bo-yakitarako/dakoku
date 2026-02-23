@@ -22,6 +22,7 @@ declare global {
       authLogin: (email: string, password: string) => Promise<Auth>;
       authRefresh: () => Promise<Auth>;
       authLogout: () => Promise<HttpResponse>;
+      authResetPassword: (email: string) => Promise<HttpResponse>;
       initializeCurrentJob: () => Promise<Job | null>;
       getJobs: () => Promise<Job[]>;
       registerJob: (jobName: string) => Promise<JobData>;

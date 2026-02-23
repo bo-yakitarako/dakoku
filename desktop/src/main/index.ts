@@ -130,8 +130,8 @@ const createAuthWindow = () => {
   }
 
   authWindow = new BrowserWindow({
-    width: 720,
-    height: 520,
+    width: 480,
+    height: 420,
     show: false,
     autoHideMenuBar: true,
     webPreferences: {
@@ -238,8 +238,12 @@ const createMainWindow = async () => {
 const openInitialWindow = async () => {
   const refreshResult = await http.authRefresh();
   if (refreshResult.ok) {
-    await createMainWindow();
-    return;
+    try {
+      await createMainWindow();
+      return;
+    } catch (error) {
+      console.error('[main] failed to open main window after refresh', error);
+    }
   }
   createAuthWindow();
 };
@@ -375,19 +379,23 @@ ipcMain.handle('getHolidays', async (_event, year: number, month: number) => {
 });
 
 ipcMain.handle('authRegister', async (_event, email: string, password: string) => {
-  const response = await http.authRegister(email, password);
-  if (response.ok) {
-    authWindow?.close();
-    await createMainWindow();
-  }
-  return response;
+  return http.authRegister(email, password);
 });
 
 ipcMain.handle('authLogin', async (_event, email: string, password: string) => {
   const response = await http.authLogin(email, password);
   if (response.ok) {
-    authWindow?.close();
-    await createMainWindow();
+    try {
+      await createMainWindow();
+      authWindow?.close();
+    } catch (error) {
+      console.error('[main] failed to open main window after login', error);
+      return {
+        ok: false,
+        status: 500,
+        data: { message: 'メインウィンドウの起動に失敗しました' },
+      };
+    }
   }
   return response;
 });
@@ -403,4 +411,8 @@ ipcMain.handle('authLogout', async () => {
     createAuthWindow();
   }
   return response;
+});
+
+ipcMain.handle('authResetPassword', async (_event, email: string) => {
+  return http.authResetPassword(email);
 });
