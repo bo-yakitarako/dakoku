@@ -14,7 +14,7 @@
     "supabase:stop": "pnpm exec supabase stop && docker rm -f supabase_vector_server",
     "migrate": "pnpm exec supabase migration up",
     "new": "pnpm exec supabase migration new",
-    "dbreset": "pnpm exec supabase db reset",
+    "dbreset": "pnpm exec supabase db reset --local",
     "dbtype": "pnpm exec supabase gen types --lang=typescript --schema public --local > src/db/database.types.ts"
   },
   "dependencies": {
