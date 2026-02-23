@@ -5,6 +5,7 @@ import { parseWorkTime } from '@/commonUtility/utils';
 
 const bootstrap = window.api.bootstrap;
 const calendarBootstrap = window.api.calendarBootstrap;
+const isAuthWindow = window.location.pathname.endsWith('/auth.html');
 const status = bootstrap?.status;
 const works = bootstrap?.works;
 const store = getDefaultStore();
@@ -56,7 +57,7 @@ export const passwordAtom = atom('');
 export const errorAtom = atom<string | null>(null);
 export const infoAtom = atom<string | null>(null);
 
-if (!bootstrap) {
+if (!bootstrap && !isAuthWindow) {
   void window.api.initializeCurrentJob().then((job) => {
     store.set(currentJobAtom, job);
   });

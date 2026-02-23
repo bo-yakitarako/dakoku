@@ -22,8 +22,11 @@ let currentJob: Job | null = null;
 let todayWorksMap: Record<string, number[][]> = {};
 const timeStateMap: Record<string, TimeState> = {};
 
-const toRendererJobs = (data: { id: string; name: string }[]): Job[] => {
-  return data.map(({ id, name }) => ({ jobId: id, name }));
+const toRendererJobs = (data: unknown): Job[] => {
+  if (!Array.isArray(data)) {
+    return [];
+  }
+  return data.map(({ id, name }) => ({ jobId: `${id}`, name: `${name}` }));
 };
 
 const resolveCurrentJob = async (nextJobs: Job[]) => {
