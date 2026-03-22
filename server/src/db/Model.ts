@@ -1,61 +1,51 @@
 import dayjs from 'dayjs';
-import { SupabaseClient } from '@supabase/supabase-js';
-import { BaseDb } from './BaseDb';
+import { and, eq, getTableColumns } from 'drizzle-orm';
+import { db } from './client';
+import { schema } from './schema';
 
 type Document = Record<string, unknown>;
 type BasePropsWithoutId = { createdAt: string; updatedAt: string };
 export type BaseProps = { id: string } & BasePropsWithoutId;
-type DbBaseProps = { id: string; created_at: string; updated_at: string };
+type SchemaKey = keyof typeof schema;
 
-type ModelClass<C extends Model<T>, T extends Document = Document> = {
-  new (data: BaseProps & T): C;
-  tableName: string;
+type ModelClass<C extends Model<Document>> = {
+  new (data: never): C;
+  tableName: SchemaKey;
+  table: (typeof schema)[SchemaKey];
 };
 
-const toSnakeCase = (value: string) => {
-  return value.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLowerCase();
-};
-
-const toCamelCase = (value: string) => {
-  return value.replace(/_([a-z])/g, (_, char: string) => char.toUpperCase());
-};
-
-const isRecord = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-};
-
-const mapKeysDeep = (value: unknown, transform: (key: string) => string): unknown => {
-  if (Array.isArray(value)) {
-    return value.map((item) => mapKeysDeep(item, transform));
+type QueryClient = Record<
+  SchemaKey,
+  {
+    findFirst: (config?: unknown) => Promise<unknown>;
+    findMany: (config?: unknown) => Promise<unknown[]>;
   }
+>;
 
-  if (!isRecord(value)) {
-    return value;
+const isNullish = (value: unknown) => {
+  return value === undefined || value === null;
+};
+
+const buildWhereClause = (table: (typeof schema)[SchemaKey], query: Record<string, unknown>) => {
+  const columns = getTableColumns(table);
+  const conditions = Object.entries(query)
+    .filter((entry) => !isNullish(entry[1]))
+    .map(([key, value]) => eq(columns[key as keyof typeof columns] as never, value as never));
+
+  if (conditions.length === 0) {
+    return undefined;
   }
-
-  return Object.fromEntries(
-    Object.entries(value).map(([key, item]) => [transform(key), mapKeysDeep(item, transform)]),
-  );
+  if (conditions.length === 1) {
+    return conditions[0];
+  }
+  return and(...conditions);
 };
 
-const toDbQueryKey = (key: string) => {
-  return toSnakeCase(key);
-};
-
-function toDbPayload<T extends Document>(data: T & BasePropsWithoutId) {
-  return mapKeysDeep(data, toSnakeCase) as Record<string, unknown>;
-}
-
-function fromDbRow<T extends Document>(row: DbBaseProps & T): BaseProps & T {
-  return mapKeysDeep(row, toCamelCase) as BaseProps & T;
-}
-
-export class Model<T extends Document = Document> extends BaseDb {
-  protected static _tableName = '';
+export class Model<T extends Document = Document> {
+  protected static _tableName: SchemaKey = 'users';
   protected _data: BaseProps & T;
 
   constructor(data: BaseProps & T) {
-    super();
     this._data = data;
   }
 
@@ -71,58 +61,61 @@ export class Model<T extends Document = Document> extends BaseDb {
     return dayjs(this._data.updatedAt);
   }
 
-  public static get tableName() {
+  public static get tableName(): SchemaKey {
     return this._tableName;
   }
 
-  public static async create<C extends Model<T>, T extends Document = Document>(
-    this: ModelClass<C, T>,
+  public static get table() {
+    return schema[this.tableName];
+  }
+
+  public static async create<C extends Model<Document>, T extends Document = Document>(
+    this: ModelClass<C>,
     data: T,
   ): Promise<C> {
-    const db = (this as unknown as typeof Model<T>).db as SupabaseClient;
     const now = dayjs().toISOString();
-    const payload = toDbPayload({ ...data, createdAt: now, updatedAt: now });
-    const { data: inserted, error } = await db
-      .from(this.tableName)
-      .insert(payload)
-      .select('*')
-      .single();
+    const [inserted] = await db
+      .insert(this.table)
+      .values({ ...data, createdAt: now, updatedAt: now } as never)
+      .returning();
 
-    if (error || !inserted) {
-      throw error ?? new Error('Failed to insert record');
+    if (!inserted) {
+      throw new Error('Failed to insert record');
     }
-    return new this(fromDbRow(inserted as DbBaseProps & T));
+    return new this(inserted as unknown as never);
   }
 
-  public static async find<T extends Document, C extends Model<T>>(
-    this: ModelClass<C, T>,
+  public static async find<C extends Model<Document>, T extends Document = Document>(
+    this: ModelClass<C>,
     query: Partial<BaseProps & T> = {},
   ): Promise<C | null> {
-    const db = (this as unknown as typeof Model<T>).db as SupabaseClient;
-    let request = db.from(this.tableName).select('*').limit(1);
-    for (const [key, value] of Object.entries(query)) {
-      request = request.eq(toDbQueryKey(key), value as never);
+    const where = buildWhereClause(this.table, query as Record<string, unknown>);
+    const data = await (db.query as QueryClient)[this.tableName].findFirst(
+      where
+        ? {
+            where,
+          }
+        : undefined,
+    );
+    if (!data) {
+      return null;
     }
-
-    const { data, error } = await request.maybeSingle();
-    if (error) throw error;
-    if (!data) return null;
-    return new this(fromDbRow(data as DbBaseProps & T));
+    return new this(data as never);
   }
 
-  public static async findMany<T extends Document, C extends Model<T>>(
-    this: ModelClass<C, T>,
+  public static async findMany<C extends Model<Document>, T extends Document = Document>(
+    this: ModelClass<C>,
     query: Partial<BaseProps & T> = {},
   ): Promise<C[]> {
-    const db = (this as unknown as typeof Model<T>).db as SupabaseClient;
-    let request = db.from(this.tableName).select('*');
-    for (const [key, value] of Object.entries(query)) {
-      request = request.eq(toDbQueryKey(key), value as never);
-    }
-
-    const { data, error } = await request;
-    if (error) throw error;
-    return (data ?? []).map((row) => new this(fromDbRow(row as DbBaseProps & T)));
+    const where = buildWhereClause(this.table, query as Record<string, unknown>);
+    const rows = await (db.query as QueryClient)[this.tableName].findMany(
+      where
+        ? {
+            where,
+          }
+        : undefined,
+    );
+    return rows.map((row) => new this(row as never));
   }
 
   public set(data: Partial<T>) {
@@ -130,17 +123,14 @@ export class Model<T extends Document = Document> extends BaseDb {
   }
 
   public async save() {
-    const db = this.db as SupabaseClient;
     const updatedAt = dayjs().toISOString();
     this._data.updatedAt = updatedAt;
     const { id, ...rest } = this._data;
-    const payload = toDbPayload(rest);
 
-    const { error } = await db
-      .from((this.constructor as typeof Model<T>).tableName)
-      .update(payload)
-      .eq('id', id);
-    if (error) throw error;
+    await db
+      .update((this.constructor as typeof Model<T>).table)
+      .set(rest as never)
+      .where(eq(getTableColumns((this.constructor as typeof Model<T>).table).id as never, id));
   }
 
   public async update(data: Partial<T>) {
@@ -149,11 +139,8 @@ export class Model<T extends Document = Document> extends BaseDb {
   }
 
   public async delete() {
-    const db = this.db as SupabaseClient;
-    const { error } = await db
-      .from((this.constructor as typeof Model<T>).tableName)
-      .delete()
-      .eq('id', this.id);
-    if (error) throw error;
+    await db
+      .delete((this.constructor as typeof Model<T>).table)
+      .where(eq(getTableColumns((this.constructor as typeof Model<T>).table).id as never, this.id));
   }
 }

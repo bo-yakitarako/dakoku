@@ -1,7 +1,7 @@
 import { Model } from '@/db/Model';
 
 export class CurrentJob extends Model<CurrentJob.Data> {
-  protected static _tableName = 'current_jobs';
+  protected static _tableName = 'currentJobs' as const;
 
   public get userId() {
     return this._data.userId;

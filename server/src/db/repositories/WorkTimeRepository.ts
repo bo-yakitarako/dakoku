@@ -1,5 +1,7 @@
 import dayjs, { Dayjs } from 'dayjs';
-import { Repository } from '@/db/Repository';
+import { and, asc, eq } from 'drizzle-orm';
+import { db } from '@/db/client';
+import { workTimes } from '@/db/schema';
 
 type WorkTimeRow = {
   job_id: string;
@@ -25,7 +27,7 @@ export type WorkTimesByJobDate = Record<
   Record<number, Record<number, Record<number, number[][]>>>
 >;
 
-export class WorkTimeRepository extends Repository {
+export class WorkTimeRepository {
   public static findTodayByUserId = async (userId: string, now: Dayjs = dayjs()) => {
     return this.findByDate(userId, now.year(), now.month() + 1, now.date());
   };
@@ -52,28 +54,31 @@ export class WorkTimeRepository extends Repository {
     userId: string,
     filter?: { year?: number; month?: number; date?: number },
   ) => {
-    let query = this.db
-      .from('work_times')
-      .select('job_id,year,month,date,index,acted_at')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: true });
-
+    const conditions = [eq(workTimes.userId, userId)];
     if (filter?.year !== undefined) {
-      query = query.eq('year', filter.year);
+      conditions.push(eq(workTimes.year, filter.year));
     }
     if (filter?.month !== undefined) {
-      query = query.eq('month', filter.month);
+      conditions.push(eq(workTimes.month, filter.month));
     }
     if (filter?.date !== undefined) {
-      query = query.eq('date', filter.date);
+      conditions.push(eq(workTimes.date, filter.date));
     }
 
-    const { data, error } = await query;
-    if (error) {
-      throw error;
-    }
+    const rows = await db
+      .select({
+        job_id: workTimes.jobId,
+        year: workTimes.year,
+        month: workTimes.month,
+        date: workTimes.date,
+        index: workTimes.index,
+        acted_at: workTimes.actedAt,
+      })
+      .from(workTimes)
+      .where(and(...conditions))
+      .orderBy(asc(workTimes.createdAt));
 
-    return (data ?? []) as WorkTimeRow[];
+    return rows as WorkTimeRow[];
   };
 
   private static toWorkTimesByJob = (rows: WorkTimeRow[]): WorkTimesByJob => {

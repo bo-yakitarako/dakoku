@@ -1,1 +1,4 @@
 node_modules/
+.pnpm-store/*
+server/local.db
+server/local.db-*

@@ -1,10 +1,9 @@
 import { serve } from '@hono/node-server';
 import { config } from 'dotenv';
 import { cors } from 'hono/cors';
-import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
 import { Context, Hono } from 'hono';
-import { getRefreshCookieMaxAge, verifyAccessToken } from '@/auth/tokens';
-import { findSupabaseUserById } from '@/auth/auth';
+import { auth } from '@/auth/betterAuth';
+import { User } from '@/db/models/User';
 
 config();
 
@@ -12,9 +11,6 @@ const allowedOrigins = (process.env.ALLOWED_ORIGINS ?? 'http://localhost:5173,nu
   .split(',')
   .map((origin) => origin.trim())
   .filter(Boolean);
-const refreshCookieName = 'refresh_token';
-const isSecureCookie = process.env.NODE_ENV === 'production';
-
 const app = new Hono();
 
 app.use(
@@ -74,50 +70,92 @@ export async function parseBody<TBody extends Record<string, unknown> = Record<s
   throw new Error('Unsupported Content-Type');
 }
 
-export const setRefreshCookie = (c: Context, token: string) => {
-  setCookie(c, refreshCookieName, token, {
-    httpOnly: true,
-    secure: isSecureCookie,
-    sameSite: 'Lax',
-    path: '/auth',
-    maxAge: getRefreshCookieMaxAge(),
-  });
-};
-
-export const clearRefreshCookie = (c: Context) => {
-  deleteCookie(c, refreshCookieName, {
-    path: '/auth',
-  });
-};
-
-export const getRefreshCookie = (c: Context) => {
-  return getCookie(c, refreshCookieName);
-};
-
 type RouteHandler<TArgs extends unknown[] = []> = (
   c: Context,
   ...args: [...TArgs, string]
 ) => Response | Promise<Response>;
 
-type AuthenticatedHandler = RouteHandler<[Awaited<ReturnType<typeof findSupabaseUserById>>]>;
+type AuthenticatedHandler = RouteHandler<[User]>;
 
-const getBearerToken = (c: Context) => {
-  const authHeader = c.req.header('authorization') ?? '';
-  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
-  if (!token) throw new Error('Unauthorized');
-  return token;
+const copyAuthHeaders = (target: Headers, source: Headers) => {
+  const setCookie = source.get('set-cookie');
+  if (setCookie) {
+    target.append('set-cookie', setCookie);
+  }
 };
 
-const verifyServerTokenFromRequest = (c: Context) => {
-  const token = getBearerToken(c);
-  return verifyAccessToken(token);
+const buildAuthUrl = (path: string) => {
+  const requestUrl = new URL(process.env.API_ORIGIN ?? 'http://localhost:8080');
+  requestUrl.pathname = `/api/auth${path}`;
+  return requestUrl;
+};
+
+export const forwardAuthRequest = async (
+  path: string,
+  options: {
+    c: Context;
+    method?: 'GET' | 'POST';
+    body?: Record<string, unknown>;
+  },
+) => {
+  const headers = new Headers();
+  const cookie = options.c.req.header('cookie');
+  if (cookie) {
+    headers.set('cookie', cookie);
+  }
+  if (options.body) {
+    headers.set('content-type', 'application/json');
+  }
+
+  return auth.handler(
+    new Request(buildAuthUrl(path), {
+      method: options.method ?? 'POST',
+      headers,
+      body: options.body ? JSON.stringify(options.body) : undefined,
+    }),
+  );
+};
+
+export const relayAuthResponse = async (c: Context, response: Response) => {
+  copyAuthHeaders(c.res.headers, response.headers);
+  const text = await response.text();
+  if (!text) {
+    return new Response(null, {
+      status: response.status,
+      headers: c.res.headers,
+    });
+  }
+
+  try {
+    return new Response(JSON.stringify(JSON.parse(text)), {
+      status: response.status,
+      headers: c.res.headers,
+    });
+  } catch {
+    return new Response(text, {
+      status: response.status,
+      headers: c.res.headers,
+    });
+  }
+};
+
+const getAuthenticatedUser = async (c: Context) => {
+  const session = await auth.api.getSession({
+    headers: c.req.raw.headers,
+  });
+  if (!session) {
+    return null;
+  }
+  return User.find({ id: session.user.id });
 };
 
 export const authGet = (path: string, handler: AuthenticatedHandler) => {
   app.get(path, async (c) => {
     try {
-      const payload = verifyServerTokenFromRequest(c);
-      const user = await findSupabaseUserById(payload.sub);
+      const user = await getAuthenticatedUser(c);
+      if (!user) {
+        return c.json({ message: 'Unauthorized' }, 401);
+      }
       return await handler(c, user, path);
     } catch {
       return c.json({ message: 'Unauthorized' }, 401);
@@ -128,8 +166,10 @@ export const authGet = (path: string, handler: AuthenticatedHandler) => {
 export const authPost = (path: string, handler: AuthenticatedHandler) => {
   app.post(path, async (c) => {
     try {
-      const payload = verifyServerTokenFromRequest(c);
-      const user = await findSupabaseUserById(payload.sub);
+      const user = await getAuthenticatedUser(c);
+      if (!user) {
+        return c.json({ message: 'Unauthorized' }, 401);
+      }
       return await handler(c, user, path);
     } catch {
       return c.json({ message: 'Unauthorized' }, 401);
@@ -147,6 +187,10 @@ export const post = (path: string, handler: RouteHandler) => {
   app.post(path, (c) => {
     return handler(c, path);
   });
+};
+
+export const all = (path: string, handler: (c: Context) => Response | Promise<Response>) => {
+  app.all(path, handler);
 };
 
 serve(

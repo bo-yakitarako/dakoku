@@ -9,12 +9,9 @@
   "scripts": {
     "dev": "concurrently \"pnpm -C desktop dev\" \"pnpm -C server dev\"",
     "build": "pnpm -C server build && pnpm -C desktop build",
-    "supabase": "pnpm -C server supabase",
-    "supabase:stop": "pnpm -C server supabase:stop",
-    "migrate": "pnpm -C server migrate",
-    "new": "pnpm -C server new",
-    "dbreset": "pnpm -C server dbreset",
-    "dbtype": "pnpm -C server dbtype && pnpm eslint --fix server/src/db/database.types.ts"
+    "db:generate": "pnpm -C server db:generate",
+    "db:push": "pnpm -C server db:push",
+    "db:studio": "pnpm -C server db:studio"
   },
   "private": true,
   "devDependencies": {

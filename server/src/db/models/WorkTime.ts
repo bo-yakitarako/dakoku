@@ -2,7 +2,7 @@ import dayjs from 'dayjs';
 import { Model } from '@/db/Model';
 
 export class WorkTime extends Model<WorkTime.Data> {
-  protected static _tableName = 'work_times';
+  protected static _tableName = 'workTimes' as const;
 
   public get userId() {
     return this._data.userId;

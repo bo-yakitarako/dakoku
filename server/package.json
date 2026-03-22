@@ -10,31 +10,25 @@
     "build": "tsup src/index.ts --format cjs --platform node --minify --out-dir dist",
     "start": "pnpm build && node dist/index.js",
     "dev": "tsx watch src/index.ts",
-    "supabase": "pnpm exec supabase start",
-    "supabase:stop": "pnpm exec supabase stop && docker rm -f supabase_vector_server",
-    "migrate": "pnpm exec supabase migration up",
-    "new": "pnpm exec supabase migration new",
-    "dbreset": "pnpm exec supabase db reset --local",
-    "dbtype": "pnpm exec supabase gen types --lang=typescript --schema public --local > src/db/database.types.ts"
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
     "@hono/node-server": "^1.19.9",
-    "@supabase/supabase-js": "^2.95.3",
+    "@libsql/client": "^0.17.2",
+    "better-auth": "^1.5.5",
     "dayjs": "^1.11.19",
     "dotenv": "^17.2.4",
+    "drizzle-kit": "^0.31.10",
+    "drizzle-orm": "^0.45.1",
     "hono": "^4.11.9",
     "jsonwebtoken": "^9.0.3"
   },
   "devDependencies": {
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^25.2.2",
-    "supabase": "^2.76.8",
     "tsup": "^8.5.1",
     "tsx": "^4.20.5"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "supabase"
-    ]
   }
 }

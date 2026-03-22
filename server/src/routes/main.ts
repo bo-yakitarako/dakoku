@@ -91,7 +91,7 @@ export const registerMainRoutes = () => {
       const createdJob = await Job.create({ userId: user.id, name });
       const current = await CurrentJob.find({ userId: user.id });
       if (!current) {
-        await CurrentJob.create<CurrentJob, CurrentJob.Data>({
+        await CurrentJob.create({
           userId: user.id,
           jobId: createdJob.id,
         });
@@ -185,7 +185,7 @@ export const registerMainRoutes = () => {
 
       const current = await CurrentJob.find({ userId: user.id });
       if (!current) {
-        await CurrentJob.create<CurrentJob, CurrentJob.Data>({
+        await CurrentJob.create({
           userId: user.id,
           jobId,
         });
