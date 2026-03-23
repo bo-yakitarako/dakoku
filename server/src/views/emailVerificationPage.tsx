@@ -4,13 +4,15 @@ type EmailVerificationPageProps = {
 
 export const EmailVerificationPage = ({ error }: EmailVerificationPageProps) => {
   const isSuccess = error === null;
-  const title = isSuccess ? 'Email verified' : 'Email verification failed';
+  const title = isSuccess
+    ? 'メールアドレスの確認が完了しました'
+    : 'メールアドレスの確認に失敗しました';
   const description = isSuccess
-    ? 'Your email address has been verified. You can return to dakoku and sign in.'
-    : `We could not verify your email address. Error: ${error}`;
+    ? 'メールアドレスの確認が完了しました。dakokuアプリに戻ってログインして利用を開始できます。'
+    : 'メールアドレスの確認に失敗しました。';
 
   return (
-    <html lang="en">
+    <html lang="ja">
       <head>
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />

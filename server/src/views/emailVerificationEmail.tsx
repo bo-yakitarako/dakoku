@@ -4,11 +4,11 @@ type EmailVerificationEmailProps = {
 
 export const EmailVerificationEmail = ({ verificationUrl }: EmailVerificationEmailProps) => {
   return (
-    <html lang="en">
+    <html lang="ja">
       <head>
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>dakoku email verification</title>
+        <title>[dakoku] メールアドレスの確認</title>
       </head>
       <body
         style={{
@@ -20,8 +20,8 @@ export const EmailVerificationEmail = ({ verificationUrl }: EmailVerificationEma
         }}
       >
         <div>
-          <h1 style={{ fontSize: '20px', marginBottom: '16px' }}>dakoku email verification</h1>
-          <p>Please verify your email address to finish creating your account.</p>
+          <h1 style={{ fontSize: '20px', marginBottom: '16px' }}>メールアドレスの確認</h1>
+          <p>アカウント作成を完了するために、メールアドレスを確認してください。</p>
           <p style={{ margin: '24px 0' }}>
             <a
               href={verificationUrl}
@@ -34,14 +34,14 @@ export const EmailVerificationEmail = ({ verificationUrl }: EmailVerificationEma
                 borderRadius: '8px',
               }}
             >
-              Verify email
+              メールアドレスを確認
             </a>
           </p>
-          <p>If the button does not work, open the following URL in your browser.</p>
+          <p>ボタンが機能しない場合は、以下のURLをブラウザで開いてください。</p>
           <p>
             <a href={verificationUrl}>{verificationUrl}</a>
           </p>
-          <p>This link will expire in 24 hours.</p>
+          <p>このリンクは24時間で期限切れになります。</p>
         </div>
       </body>
     </html>
