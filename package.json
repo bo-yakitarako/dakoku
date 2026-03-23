@@ -10,6 +10,7 @@
     "dev": "concurrently \"pnpm -C desktop dev\" \"pnpm -C server dev\"",
     "build": "pnpm -C server build && pnpm -C desktop build",
     "db:generate": "pnpm -C server db:generate",
+    "db:migrate": "pnpm -C server db:migrate",
     "db:push": "pnpm -C server db:push",
     "db:studio": "pnpm -C server db:studio"
   },

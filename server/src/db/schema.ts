@@ -1,10 +1,6 @@
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 import { sql } from 'drizzle-orm';
 
-const generatedId = () => {
-  return sql`lower(hex(randomblob(16)))`;
-};
-
 const now = () => {
   return sql`CURRENT_TIMESTAMP`;
 };
@@ -68,7 +64,9 @@ export const verifications = sqliteTable('verifications', {
 });
 
 export const jobs = sqliteTable('jobs', {
-  id: text('id').primaryKey().default(generatedId()),
+  id: text('id')
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
   userId: text('user_id')
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),
@@ -78,7 +76,9 @@ export const jobs = sqliteTable('jobs', {
 });
 
 export const currentJobs = sqliteTable('current_jobs', {
-  id: text('id').primaryKey().default(generatedId()),
+  id: text('id')
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
   userId: text('user_id')
     .notNull()
     .unique()
@@ -89,7 +89,9 @@ export const currentJobs = sqliteTable('current_jobs', {
 });
 
 export const workTimes = sqliteTable('work_times', {
-  id: text('id').primaryKey().default(generatedId()),
+  id: text('id')
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
   userId: text('user_id')
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),
