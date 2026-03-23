@@ -24,7 +24,8 @@
     "drizzle-kit": "^0.31.10",
     "drizzle-orm": "^0.45.1",
     "hono": "^4.11.9",
-    "jsonwebtoken": "^9.0.3"
+    "jsonwebtoken": "^9.0.3",
+    "resend": "^6.9.4"
   },
   "devDependencies": {
     "@types/jsonwebtoken": "^9.0.10",

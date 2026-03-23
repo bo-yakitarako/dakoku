@@ -1,4 +1,5 @@
 import { auth } from '@/auth/betterAuth';
+import { emailVerificationCallbackURL } from '@/auth/emailVerification';
 import * as http from '@/http';
 
 type AuthBody = {
@@ -20,6 +21,7 @@ export const registerAuthRoutes = () => {
           email,
           password,
           name: email,
+          callbackURL: emailVerificationCallbackURL,
         },
       });
       if (!response.ok) {
@@ -45,6 +47,7 @@ export const registerAuthRoutes = () => {
           email,
           password,
           rememberMe: true,
+          callbackURL: emailVerificationCallbackURL,
         },
       });
       return await http.relayAuthResponse(c, response);
