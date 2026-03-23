@@ -1,5 +1,6 @@
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
+import '@/env';
 import { sendVerificationEmail } from '@/auth/emailVerification';
 import { db } from '@/db/client';
 import { schema } from '@/db/schema';

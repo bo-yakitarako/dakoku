@@ -1,4 +1,5 @@
 import Store from 'electron-store';
+import '@/main/env';
 
 type RequestOptions = {
   form?: Record<string, string>;

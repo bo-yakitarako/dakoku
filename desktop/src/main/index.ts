@@ -2,8 +2,8 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron';
 import { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import icon from '@resources/icon.png?asset';
-import { config } from 'dotenv';
 import dayjs from 'dayjs';
+import '@/main/env';
 import { getWindowBounds, setWindowBounds } from '@/main/store';
 import * as calendarApi from '@/main/api/calendarApi';
 import * as dayDetailApi from '@/main/api/dayDetailApi';
@@ -11,8 +11,6 @@ import * as mainApi from '@/main/api/mainApi';
 import { createCalendarWindow } from '@/main/calendar';
 import { Job, JobData, TimeState, WorkStatus } from '@/preload/dataType';
 import * as http from '@/main/http';
-
-config();
 
 const apiOrigin = process.env.VITE_API_ORIGIN ?? 'http://localhost:8080';
 let mainWindow: BrowserWindow | null = null;

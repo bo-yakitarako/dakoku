@@ -1,11 +1,9 @@
 import { serve } from '@hono/node-server';
-import { config } from 'dotenv';
 import { cors } from 'hono/cors';
 import { Context, Hono } from 'hono';
+import '@/env';
 import { auth } from '@/auth/betterAuth';
 import { User } from '@/db/models/User';
-
-config();
 
 const allowedOrigins = (process.env.ALLOWED_ORIGINS ?? 'http://localhost:5173,null')
   .split(',')

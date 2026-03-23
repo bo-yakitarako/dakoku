@@ -1,5 +1,6 @@
 import { renderToString } from 'hono/jsx/dom/server';
 import { Resend } from 'resend';
+import '@/env';
 import { EmailVerificationEmail } from '@/views/emailVerificationEmail';
 
 const apiOrigin = process.env.API_ORIGIN ?? 'http://localhost:8080';
