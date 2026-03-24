@@ -14,9 +14,10 @@ type AuthBody = {
 };
 
 const emailVerificationWindowMs = emailVerificationExpiresInSeconds * 1000;
+const normalizeEmail = (email: string) => email.trim().toLowerCase();
 
 const handleExistingUserRegistration = async (c: Context, email: string, password: string) => {
-  const normalizedEmail = email.trim().toLowerCase();
+  const normalizedEmail = normalizeEmail(email);
   const existingUser = await User.find({ email: normalizedEmail });
   if (!existingUser) {
     return null;
@@ -69,7 +70,7 @@ export const registerAuthRoutes = () => {
       if (!email || !password) {
         return c.json({ message: 'メールアドレスとパスワードは必須です' }, 400);
       }
-      const normalizedEmail = email.trim().toLowerCase();
+      const normalizedEmail = normalizeEmail(email);
 
       const existingUserResponse = await handleExistingUserRegistration(
         c,
@@ -105,17 +106,18 @@ export const registerAuthRoutes = () => {
       if (!email || !password) {
         return c.json({ message: 'メールアドレスとパスワードは必須です' }, 400);
       }
+      const normalizedEmail = normalizeEmail(email);
 
       const response = await http.forwardAuthRequest('/sign-in/email', {
         c,
         body: {
-          email,
+          email: normalizedEmail,
           password,
           rememberMe: true,
           callbackURL: emailVerificationCallbackURL,
         },
       });
-      return await http.relayAuthResponse(c, response, { email });
+      return await http.relayAuthResponse(c, response, { email: normalizedEmail });
     } catch (error) {
       http.logApiError(path, error);
       return c.json(toJapanese(error, 'ログインに失敗しました'), 401);
@@ -153,15 +155,16 @@ export const registerAuthRoutes = () => {
       if (!email) {
         return c.json({ message: 'メールアドレスは必須です' }, 400);
       }
+      const normalizedEmail = normalizeEmail(email);
 
       const response = await http.forwardAuthRequest('/request-password-reset', {
         c,
         body: {
-          email,
+          email: normalizedEmail,
           redirectTo: passwordResetPageURL,
         },
       });
-      return await http.relayAuthResponse(c, response, { email });
+      return await http.relayAuthResponse(c, response, { email: normalizedEmail });
     } catch (error) {
       http.logApiError(path, error);
       return c.json(toJapanese(error, 'パスワードリセットのリクエストに失敗しました'), 400);

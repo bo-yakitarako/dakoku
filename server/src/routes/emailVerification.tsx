@@ -8,6 +8,8 @@ type VerificationEmailBody = {
   email: string;
 };
 
+const normalizeEmail = (email: string) => email.trim().toLowerCase();
+
 export const registerEmailVerificationRoutes = () => {
   http.post('/auth/sendVerificationEmail', async (c, path) => {
     try {
@@ -15,11 +17,12 @@ export const registerEmailVerificationRoutes = () => {
       if (!email) {
         return c.json({ message: 'Email is required' }, 400);
       }
+      const normalizedEmail = normalizeEmail(email);
 
       const response = await http.forwardAuthRequest('/send-verification-email', {
         c,
         body: {
-          email,
+          email: normalizedEmail,
           callbackURL: emailVerificationCallbackURL,
         },
       });
