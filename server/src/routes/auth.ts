@@ -1,4 +1,4 @@
-import { auth } from '@/auth/betterAuth';
+import { auth, toJapanese } from '@/auth/betterAuth';
 import { emailVerificationCallbackURL } from '@/auth/emailVerification';
 import * as http from '@/http';
 
@@ -12,7 +12,7 @@ export const registerAuthRoutes = () => {
     try {
       const { email, password } = await http.parseBody<AuthBody>(c, path);
       if (!email || !password) {
-        return c.json({ message: 'Email and password are required' }, 400);
+        return c.json({ message: 'メールアドレスとパスワードは必須です' }, 400);
       }
 
       const response = await http.forwardAuthRequest('/sign-up/email', {
@@ -25,12 +25,12 @@ export const registerAuthRoutes = () => {
         },
       });
       if (!response.ok) {
-        return await http.relayAuthResponse(c, response);
+        return await http.relayAuthResponse(c, response, { email });
       }
       return c.json(null);
     } catch (error) {
       http.logApiError(path, error);
-      return c.json({ message: error instanceof Error ? error.message : 'Register failed' }, 400);
+      return c.json(toJapanese(error, '登録に失敗しました'), 400);
     }
   });
 
@@ -38,7 +38,7 @@ export const registerAuthRoutes = () => {
     try {
       const { email, password } = await http.parseBody<AuthBody>(c, path);
       if (!email || !password) {
-        return c.json({ message: 'Email and password are required' }, 400);
+        return c.json({ message: 'メールアドレスとパスワードは必須です' }, 400);
       }
 
       const response = await http.forwardAuthRequest('/sign-in/email', {
@@ -50,10 +50,10 @@ export const registerAuthRoutes = () => {
           callbackURL: emailVerificationCallbackURL,
         },
       });
-      return await http.relayAuthResponse(c, response);
+      return await http.relayAuthResponse(c, response, { email });
     } catch (error) {
       http.logApiError(path, error);
-      return c.json({ message: error instanceof Error ? error.message : 'Login failed' }, 401);
+      return c.json(toJapanese(error, 'ログインに失敗しました'), 401);
     }
   });
 
@@ -66,7 +66,7 @@ export const registerAuthRoutes = () => {
       return await http.relayAuthResponse(c, response);
     } catch (error) {
       http.logApiError(path, error);
-      return c.json({ message: 'Unauthorized' }, 401);
+      return c.json({ message: 'セッションの取得に失敗しました' }, 401);
     }
   });
 
@@ -78,7 +78,7 @@ export const registerAuthRoutes = () => {
       return await http.relayAuthResponse(c, response);
     } catch (error) {
       http.logApiError(path, error);
-      return c.json({ message: 'Logout failed' }, 400);
+      return c.json({ message: 'ログアウトに失敗しました' }, 400);
     }
   });
 
@@ -86,7 +86,7 @@ export const registerAuthRoutes = () => {
     try {
       const { email } = await http.parseBody<Pick<AuthBody, 'email'>>(c, path);
       if (!email) {
-        return c.json({ message: 'Email is required' }, 400);
+        return c.json({ message: 'メールアドレスは必須です' }, 400);
       }
 
       const response = await http.forwardAuthRequest('/request-password-reset', {
@@ -95,13 +95,10 @@ export const registerAuthRoutes = () => {
           email,
         },
       });
-      return await http.relayAuthResponse(c, response);
+      return await http.relayAuthResponse(c, response, { email });
     } catch (error) {
       http.logApiError(path, error);
-      return c.json(
-        { message: error instanceof Error ? error.message : 'Password reset failed' },
-        400,
-      );
+      return c.json(toJapanese(error, 'パスワードリセットのリクエストに失敗しました'), 400);
     }
   });
 

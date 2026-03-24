@@ -30,7 +30,7 @@ export const auth = betterAuth({
     },
   },
   emailVerification: {
-    sendOnSignIn: true,
+    sendOnSignIn: false,
     sendOnSignUp: true,
     autoSignInAfterVerification: false,
     expiresIn: 60 * 60 * 24,
@@ -42,3 +42,17 @@ export const auth = betterAuth({
     },
   },
 });
+
+const japaneseErrorMessages: Record<string, string> = {
+  EMAIL_NOT_VERIFIED: 'メールアドレスが確認できていません',
+  INVALID_EMAIL_OR_PASSWORD: 'メールアドレスまたはパスワードが正しくありません',
+};
+
+export const toJapanese = (error: unknown, defaultMessage = '予期せぬエラーが発生しました') => {
+  const body = error as never as { code?: string };
+  if ('code' in body) {
+    const message = japaneseErrorMessages[body.code as string] || defaultMessage;
+    return { message };
+  }
+  return error;
+};

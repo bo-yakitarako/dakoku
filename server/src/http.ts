@@ -1,9 +1,10 @@
 import { serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
+import dayjs from 'dayjs';
 import { cors } from 'hono/cors';
 import { Context, Hono } from 'hono';
 import '@/env';
-import { auth } from '@/auth/betterAuth';
+import { auth, toJapanese } from '@/auth/betterAuth';
 import { User } from '@/db/models/User';
 
 const allowedOrigins = (process.env.ALLOWED_ORIGINS ?? 'http://localhost:5173,null')
@@ -29,8 +30,9 @@ app.use(
 );
 
 export const logApiError = (route: string, error: unknown, extra?: Record<string, unknown>) => {
+  const timestamp = dayjs().format('YYYY-MM-DD HH:mm:ss');
   const message = error instanceof Error ? error.message : String(error);
-  console.error(`[server] ${route} failed: ${message}`, extra ?? {});
+  console.error(`[${timestamp}] [server] ${route} failed: ${message}`, extra ?? {});
 };
 
 export async function parseBody<TBody extends Record<string, unknown> = Record<string, unknown>>(
@@ -118,9 +120,23 @@ export const forwardAuthRequest = async (
   );
 };
 
-export const relayAuthResponse = async (c: Context, response: Response) => {
+export const relayAuthResponse = async (
+  c: Context,
+  response: Response,
+  extra?: Record<string, unknown>,
+) => {
   copyAuthHeaders(c.res.headers, response.headers);
   const text = await response.text();
+  if (response.status >= 400) {
+    logApiError(
+      `/${c.req.url.split('/').slice(3).join('/')}`,
+      `Auth request failed with status ${response.status}`,
+      {
+        ...(text ? { responseText: text } : {}),
+        ...(extra ?? {}),
+      },
+    );
+  }
   if (!text) {
     return new Response(null, {
       status: response.status,
@@ -129,7 +145,7 @@ export const relayAuthResponse = async (c: Context, response: Response) => {
   }
 
   try {
-    return new Response(JSON.stringify(JSON.parse(text)), {
+    return new Response(JSON.stringify(toJapanese(JSON.parse(text))), {
       status: response.status,
       headers: c.res.headers,
     });
