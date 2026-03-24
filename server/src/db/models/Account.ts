@@ -29,14 +29,14 @@ export class Account extends Model<Account.Data> {
   }
 
   public get accessTokenExpiresAt() {
-    if (this._data.accessTokenExpiresAt === null) {
+    if (!this._data.accessTokenExpiresAt) {
       return null;
     }
     return dayjs(this._data.accessTokenExpiresAt);
   }
 
   public get refreshTokenExpiresAt() {
-    if (this._data.refreshTokenExpiresAt === null) {
+    if (!this._data.refreshTokenExpiresAt) {
       return null;
     }
     return dayjs(this._data.refreshTokenExpiresAt);
