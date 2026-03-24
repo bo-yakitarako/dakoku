@@ -47,7 +47,7 @@ export namespace WorkTime {
     month: number;
     date: number;
     index: number;
-    actedAt: string;
+    actedAt: Date;
     status: Status;
   };
 }

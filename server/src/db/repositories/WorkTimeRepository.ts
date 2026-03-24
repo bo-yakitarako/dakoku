@@ -9,7 +9,7 @@ type WorkTimeRow = {
   month: number;
   date: number;
   index: number;
-  acted_at: string;
+  acted_at: Date;
 };
 
 type WorkGroup = {

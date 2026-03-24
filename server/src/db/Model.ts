@@ -4,7 +4,7 @@ import { db } from './client';
 import { schema } from './schema';
 
 type Document = Record<string, unknown>;
-type BasePropsWithoutId = { createdAt: string; updatedAt: string };
+type BasePropsWithoutId = { createdAt: Date; updatedAt: Date };
 export type BaseProps = { id: string } & BasePropsWithoutId;
 type SchemaKey = keyof typeof schema;
 
@@ -73,7 +73,7 @@ export class Model<T extends Document = Document> {
     this: ModelClass<C>,
     data: T,
   ): Promise<C> {
-    const now = dayjs().toISOString();
+    const now = new Date();
     const [inserted] = await db
       .insert(this.table)
       .values({ ...data, createdAt: now, updatedAt: now } as never)
@@ -123,8 +123,7 @@ export class Model<T extends Document = Document> {
   }
 
   public async save() {
-    const updatedAt = dayjs().toISOString();
-    this._data.updatedAt = updatedAt;
+    this._data.updatedAt = new Date();
     const { id, ...rest } = this._data;
 
     await db

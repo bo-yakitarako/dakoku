@@ -179,7 +179,7 @@ export const registerMainRoutes = () => {
         month: actedAtDayjs.month() + 1,
         date: actedAtDayjs.date(),
         index: parsedIndex,
-        actedAt: actedAtDayjs.toISOString(),
+        actedAt: actedAtDayjs.toDate(),
         status,
       });
 

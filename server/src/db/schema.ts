@@ -2,7 +2,7 @@ import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 import { sql } from 'drizzle-orm';
 
 const now = () => {
-  return sql`(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))`;
+  return sql`(CAST((julianday('now') - 2440587.5) * 86400000 AS integer))`;
 };
 
 export const users = sqliteTable('users', {
@@ -13,8 +13,8 @@ export const users = sqliteTable('users', {
   email: text('email').notNull().unique(),
   emailVerified: integer('email_verified', { mode: 'boolean' }).notNull().default(false),
   image: text('image'),
-  createdAt: text('created_at').notNull().default(now()),
-  updatedAt: text('updated_at').notNull().default(now()),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(now()),
+  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull().default(now()),
 });
 
 export const sessions = sqliteTable('sessions', {
@@ -23,8 +23,8 @@ export const sessions = sqliteTable('sessions', {
     .$defaultFn(() => crypto.randomUUID()),
   expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
   token: text('token').notNull().unique(),
-  createdAt: text('created_at').notNull().default(now()),
-  updatedAt: text('updated_at').notNull().default(now()),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(now()),
+  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull().default(now()),
   ipAddress: text('ip_address'),
   userAgent: text('user_agent'),
   userId: text('user_id')
@@ -48,8 +48,8 @@ export const accounts = sqliteTable('accounts', {
   refreshTokenExpiresAt: integer('refresh_token_expires_at', { mode: 'timestamp_ms' }),
   scope: text('scope'),
   password: text('password'),
-  createdAt: text('created_at').notNull().default(now()),
-  updatedAt: text('updated_at').notNull().default(now()),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(now()),
+  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull().default(now()),
 });
 
 export const verifications = sqliteTable('verifications', {
@@ -59,8 +59,8 @@ export const verifications = sqliteTable('verifications', {
   identifier: text('identifier').notNull(),
   value: text('value').notNull(),
   expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
-  createdAt: text('created_at').default(now()),
-  updatedAt: text('updated_at').default(now()),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }).default(now()),
+  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).default(now()),
 });
 
 export const jobs = sqliteTable('jobs', {
@@ -71,8 +71,8 @@ export const jobs = sqliteTable('jobs', {
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),
   name: text('name').notNull(),
-  createdAt: text('created_at').notNull().default(now()),
-  updatedAt: text('updated_at').notNull().default(now()),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(now()),
+  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull().default(now()),
 });
 
 export const currentJobs = sqliteTable('current_jobs', {
@@ -84,8 +84,8 @@ export const currentJobs = sqliteTable('current_jobs', {
     .unique()
     .references(() => users.id, { onDelete: 'cascade' }),
   jobId: text('job_id').references(() => jobs.id, { onDelete: 'set null' }),
-  createdAt: text('created_at').notNull().default(now()),
-  updatedAt: text('updated_at').notNull().default(now()),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(now()),
+  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull().default(now()),
 });
 
 export const workTimes = sqliteTable('work_times', {
@@ -102,10 +102,10 @@ export const workTimes = sqliteTable('work_times', {
   month: integer('month').notNull(),
   date: integer('date').notNull(),
   index: integer('index').notNull(),
-  actedAt: text('acted_at').notNull(),
+  actedAt: integer('acted_at', { mode: 'timestamp_ms' }).notNull(),
   status: text('status', { enum: ['working', 'resting', 'workOff'] }).notNull(),
-  createdAt: text('created_at').notNull().default(now()),
-  updatedAt: text('updated_at').notNull().default(now()),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(now()),
+  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull().default(now()),
 });
 
 export const schema = {
