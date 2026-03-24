@@ -2,6 +2,7 @@ import { renderToString } from 'hono/jsx/dom/server';
 import { emailVerificationCallbackURL } from '@/auth/emailVerification';
 import * as http from '@/http';
 import { EmailVerificationPage } from '@/views/emailVerificationPage';
+import { EmailVerificationEmail } from '@/views/emailVerificationEmail';
 
 type VerificationEmailBody = {
   email: string;
@@ -36,4 +37,16 @@ export const registerEmailVerificationRoutes = () => {
     const error = c.req.query('error') ?? null;
     return c.html(`<!doctype html>${renderToString(<EmailVerificationPage error={error} />)}`);
   });
+
+  if (process.env.NODE_ENV !== 'production') {
+    const url = new URL(
+      '/auth/email-verified',
+      process.env.API_ORIGIN ?? 'http://localhost:8080',
+    ).toString();
+    http.get('/auth/verification-email-preview', (c) => {
+      return c.html(
+        `<!doctype html>${renderToString(<EmailVerificationEmail verificationUrl={url} />)}`,
+      );
+    });
+  }
 };

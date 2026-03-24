@@ -1,4 +1,5 @@
 import { serve } from '@hono/node-server';
+import { serveStatic } from '@hono/node-server/serve-static';
 import { cors } from 'hono/cors';
 import { Context, Hono } from 'hono';
 import '@/env';
@@ -10,6 +11,9 @@ const allowedOrigins = (process.env.ALLOWED_ORIGINS ?? 'http://localhost:5173,nu
   .map((origin) => origin.trim())
   .filter(Boolean);
 const app = new Hono();
+
+app.use('/assets/*', serveStatic({ root: './public' }));
+app.use('/favicon.ico', serveStatic({ root: './public' }));
 
 app.use(
   '*',

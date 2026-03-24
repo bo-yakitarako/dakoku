@@ -3,6 +3,8 @@ type EmailVerificationEmailProps = {
 };
 
 export const EmailVerificationEmail = ({ verificationUrl }: EmailVerificationEmailProps) => {
+  const apiOrigin = process.env.API_ORIGIN ?? 'http://localhost:8080';
+  const logoLink = `${apiOrigin}/assets/logo.png`;
   return (
     <html lang="ja">
       <head>
@@ -13,36 +15,107 @@ export const EmailVerificationEmail = ({ verificationUrl }: EmailVerificationEma
       <body
         style={{
           margin: '0',
-          padding: '24px',
+          padding: '0',
           fontFamily: 'sans-serif',
           lineHeight: '1.6',
-          color: '#111827',
+          color: '#e5eefb',
+          backgroundColor: '#0b1120',
         }}
       >
-        <div>
-          <h1 style={{ fontSize: '20px', marginBottom: '16px' }}>メールアドレスの確認</h1>
-          <p>アカウント作成を完了するために、メールアドレスを確認してください。</p>
-          <p style={{ margin: '24px 0' }}>
-            <a
-              href={verificationUrl}
-              style={{
-                display: 'inline-block',
-                background: '#111827',
-                color: '#ffffff',
-                textDecoration: 'none',
-                padding: '12px 20px',
-                borderRadius: '8px',
-              }}
-            >
-              メールアドレスを確認
-            </a>
-          </p>
-          <p>ボタンが機能しない場合は、以下のURLをブラウザで開いてください。</p>
-          <p>
-            <a href={verificationUrl}>{verificationUrl}</a>
-          </p>
-          <p>このリンクは24時間で期限切れになります。</p>
-        </div>
+        <table
+          role="presentation"
+          width="100%"
+          cellPadding="0"
+          cellSpacing="0"
+          style={{
+            width: '100%',
+            backgroundColor: '#0b1120',
+          }}
+        >
+          <tbody>
+            <tr>
+              <td align="center" style={{ padding: '24px' }}>
+                <table
+                  role="presentation"
+                  width="100%"
+                  cellPadding="0"
+                  cellSpacing="0"
+                  style={{
+                    maxWidth: '560px',
+                    width: '100%',
+                    borderRadius: '24px',
+                    border: '1px solid #334155',
+                    backgroundColor: '#111827',
+                  }}
+                >
+                  <tbody>
+                    <tr>
+                      <td style={{ textAlign: 'center', paddingTop: '24px' }}>
+                        <img
+                          src={logoLink}
+                          alt="dakoku logo"
+                          width="60"
+                          height="60"
+                          style={{
+                            width: '60px',
+                            height: '60px',
+                            borderRadius: '12px',
+                          }}
+                        />
+                      </td>
+                    </tr>
+                    <tr>
+                      <td
+                        style={{ padding: '20px 32px 16px', color: '#e5eefb', textAlign: 'center' }}
+                      >
+                        <h1 style={{ fontSize: '28px', lineHeight: '1.2', margin: '0' }}>
+                          メールアドレスの確認
+                        </h1>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style={{ padding: '0 32px', color: '#9fb0c9', fontSize: '15px' }}>
+                        アカウント作成を完了するために、メールアドレスを確認してください。
+                      </td>
+                    </tr>
+                    <tr style={{ textAlign: 'center' }}>
+                      <td style={{ padding: '24px 0' }}>
+                        <a
+                          href={verificationUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            display: 'inline-block',
+                            color: '#e8e9f0',
+                            backgroundColor: '#069edf',
+                            textDecoration: 'none',
+                            padding: '12px 20px',
+                            fontWeight: '700',
+                            borderRadius: '9999px',
+                          }}
+                        >
+                          メールアドレスを確認
+                        </a>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td
+                        style={{
+                          padding: '0 32px 32px',
+                          color: '#94a3b8',
+                          fontSize: '13px',
+                          textAlign: 'center',
+                        }}
+                      >
+                        このリンクは24時間で期限切れになります。
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </body>
     </html>
   );
