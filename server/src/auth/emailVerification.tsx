@@ -12,13 +12,13 @@ export const emailVerificationCallbackURL = new URL('/auth/email-verified', apiO
 
 const buildVerificationEmailText = (verificationUrl: string) => {
   return [
-    'dakoku email verification',
+    '[dakoku] メールアドレスの確認',
     '',
-    'Please verify your email address to finish creating your account.',
+    'アカウント作成を完了するために、メールアドレスを確認してください。',
     '',
     verificationUrl,
     '',
-    'This link will expire in 24 hours.',
+    'このリンクは24時間で期限切れになります。',
   ].join('\n');
 };
 
@@ -32,7 +32,7 @@ export const sendVerificationEmail = async ({ email, url }: { email: string; url
   const result = await resend.emails.send({
     from: resendFromEmail,
     to: email,
-    subject: 'Verify your dakoku account',
+    subject: '[dakoku] メールアドレスの確認',
     html: `<!doctype html>${renderToString(<EmailVerificationEmail verificationUrl={url} />)}`,
     text: buildVerificationEmailText(url),
   });
