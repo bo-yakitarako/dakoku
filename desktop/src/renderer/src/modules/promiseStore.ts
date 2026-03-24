@@ -1,13 +1,22 @@
 import { atomWithMutation } from 'jotai-tanstack-query';
 
 export type AuthMode = 'login' | 'register';
+type AuthSubmitResponse =
+  | Awaited<ReturnType<Window['api']['authLogin']>>
+  | Awaited<ReturnType<Window['api']['authRegister']>>;
 
 export const authMutationAtom = atomWithMutation(() => ({
   mutationKey: ['auth', 'submit'],
-  mutationFn: (variables: { mode: AuthMode; email: string; password: string }) =>
-    variables.mode === 'login'
-      ? window.api.authLogin(variables.email, variables.password)
-      : window.api.authRegister(variables.email, variables.password),
+  mutationFn: async (variables: {
+    mode: AuthMode;
+    email: string;
+    password: string;
+  }): Promise<AuthSubmitResponse> => {
+    if (variables.mode === 'login') {
+      return window.api.authLogin(variables.email, variables.password);
+    }
+    return window.api.authRegister(variables.email, variables.password);
+  },
 }));
 
 export const resetPasswordMutationAtom = atomWithMutation(() => ({
