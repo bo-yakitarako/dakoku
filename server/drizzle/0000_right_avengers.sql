@@ -15,6 +15,7 @@ CREATE TABLE `accounts` (
 	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
+CREATE INDEX `accounts_user_id_provider_id_idx` ON `accounts` (`user_id`,`provider_id`);--> statement-breakpoint
 CREATE TABLE `current_jobs` (
 	`id` text PRIMARY KEY NOT NULL,
 	`user_id` text NOT NULL,
@@ -35,6 +36,7 @@ CREATE TABLE `jobs` (
 	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
+CREATE INDEX `jobs_user_id_created_at_idx` ON `jobs` (`user_id`,`created_at`);--> statement-breakpoint
 CREATE TABLE `sessions` (
 	`id` text PRIMARY KEY NOT NULL,
 	`expires_at` integer NOT NULL,
@@ -83,3 +85,6 @@ CREATE TABLE `work_times` (
 	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE cascade,
 	FOREIGN KEY (`job_id`) REFERENCES `jobs`(`id`) ON UPDATE no action ON DELETE cascade
 );
+--> statement-breakpoint
+CREATE INDEX `work_times_user_id_year_month_created_at_idx` ON `work_times` (`user_id`,`year`,`month`,`created_at`);--> statement-breakpoint
+CREATE INDEX `work_times_user_id_year_month_date_created_at_idx` ON `work_times` (`user_id`,`year`,`month`,`date`,`created_at`);

@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "00911120-36b1-4c08-b3c7-104a9ba24761",
+  "id": "cb2fbb29-4ce7-455a-b04e-63fd9eee37f1",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "accounts": {
@@ -101,7 +101,16 @@
           "default": "(CAST((julianday('now') - 2440587.5) * 86400000 AS integer))"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "accounts_user_id_provider_id_idx": {
+          "name": "accounts_user_id_provider_id_idx",
+          "columns": [
+            "user_id",
+            "provider_id"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {
         "accounts_user_id_users_id_fk": {
           "name": "accounts_user_id_users_id_fk",
@@ -244,7 +253,16 @@
           "default": "(CAST((julianday('now') - 2440587.5) * 86400000 AS integer))"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "jobs_user_id_created_at_idx": {
+          "name": "jobs_user_id_created_at_idx",
+          "columns": [
+            "user_id",
+            "created_at"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {
         "jobs_user_id_users_id_fk": {
           "name": "jobs_user_id_users_id_fk",
@@ -561,7 +579,29 @@
           "default": "(CAST((julianday('now') - 2440587.5) * 86400000 AS integer))"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "work_times_user_id_year_month_created_at_idx": {
+          "name": "work_times_user_id_year_month_created_at_idx",
+          "columns": [
+            "user_id",
+            "year",
+            "month",
+            "created_at"
+          ],
+          "isUnique": false
+        },
+        "work_times_user_id_year_month_date_created_at_idx": {
+          "name": "work_times_user_id_year_month_date_created_at_idx",
+          "columns": [
+            "user_id",
+            "year",
+            "month",
+            "date",
+            "created_at"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {
         "work_times_user_id_users_id_fk": {
           "name": "work_times_user_id_users_id_fk",

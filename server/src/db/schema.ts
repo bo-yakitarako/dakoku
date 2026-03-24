@@ -1,4 +1,4 @@
-import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import { index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 import { sql } from 'drizzle-orm';
 
 const now = () => {
@@ -32,25 +32,29 @@ export const sessions = sqliteTable('sessions', {
     .references(() => users.id, { onDelete: 'cascade' }),
 });
 
-export const accounts = sqliteTable('accounts', {
-  id: text('id')
-    .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
-  accountId: text('account_id').notNull(),
-  providerId: text('provider_id').notNull(),
-  userId: text('user_id')
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
-  accessToken: text('access_token'),
-  refreshToken: text('refresh_token'),
-  idToken: text('id_token'),
-  accessTokenExpiresAt: integer('access_token_expires_at', { mode: 'timestamp_ms' }),
-  refreshTokenExpiresAt: integer('refresh_token_expires_at', { mode: 'timestamp_ms' }),
-  scope: text('scope'),
-  password: text('password'),
-  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(now()),
-  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull().default(now()),
-});
+export const accounts = sqliteTable(
+  'accounts',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    accountId: text('account_id').notNull(),
+    providerId: text('provider_id').notNull(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    accessToken: text('access_token'),
+    refreshToken: text('refresh_token'),
+    idToken: text('id_token'),
+    accessTokenExpiresAt: integer('access_token_expires_at', { mode: 'timestamp_ms' }),
+    refreshTokenExpiresAt: integer('refresh_token_expires_at', { mode: 'timestamp_ms' }),
+    scope: text('scope'),
+    password: text('password'),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(now()),
+    updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull().default(now()),
+  },
+  (table) => [index('accounts_user_id_provider_id_idx').on(table.userId, table.providerId)],
+);
 
 export const verifications = sqliteTable('verifications', {
   id: text('id')
@@ -63,17 +67,21 @@ export const verifications = sqliteTable('verifications', {
   updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).default(now()),
 });
 
-export const jobs = sqliteTable('jobs', {
-  id: text('id')
-    .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
-  userId: text('user_id')
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
-  name: text('name').notNull(),
-  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(now()),
-  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull().default(now()),
-});
+export const jobs = sqliteTable(
+  'jobs',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(now()),
+    updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull().default(now()),
+  },
+  (table) => [index('jobs_user_id_created_at_idx').on(table.userId, table.createdAt)],
+);
 
 export const currentJobs = sqliteTable('current_jobs', {
   id: text('id')
@@ -88,25 +96,43 @@ export const currentJobs = sqliteTable('current_jobs', {
   updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull().default(now()),
 });
 
-export const workTimes = sqliteTable('work_times', {
-  id: text('id')
-    .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
-  userId: text('user_id')
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
-  jobId: text('job_id')
-    .notNull()
-    .references(() => jobs.id, { onDelete: 'cascade' }),
-  year: integer('year').notNull(),
-  month: integer('month').notNull(),
-  date: integer('date').notNull(),
-  index: integer('index').notNull(),
-  actedAt: integer('acted_at', { mode: 'timestamp_ms' }).notNull(),
-  status: text('status', { enum: ['working', 'resting', 'workOff'] }).notNull(),
-  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(now()),
-  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull().default(now()),
-});
+export const workTimes = sqliteTable(
+  'work_times',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    jobId: text('job_id')
+      .notNull()
+      .references(() => jobs.id, { onDelete: 'cascade' }),
+    year: integer('year').notNull(),
+    month: integer('month').notNull(),
+    date: integer('date').notNull(),
+    index: integer('index').notNull(),
+    actedAt: integer('acted_at', { mode: 'timestamp_ms' }).notNull(),
+    status: text('status', { enum: ['working', 'resting', 'workOff'] }).notNull(),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(now()),
+    updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull().default(now()),
+  },
+  (table) => [
+    index('work_times_user_id_year_month_created_at_idx').on(
+      table.userId,
+      table.year,
+      table.month,
+      table.createdAt,
+    ),
+    index('work_times_user_id_year_month_date_created_at_idx').on(
+      table.userId,
+      table.year,
+      table.month,
+      table.date,
+      table.createdAt,
+    ),
+  ],
+);
 
 export const schema = {
   users,
