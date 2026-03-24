@@ -55,6 +55,7 @@ CREATE TABLE `users` (
 	`name` text NOT NULL,
 	`email` text NOT NULL,
 	`email_verified` integer DEFAULT false NOT NULL,
+	`last_auth_email_sent_at` integer,
 	`image` text,
 	`created_at` integer DEFAULT (CAST((julianday('now') - 2440587.5) * 86400000 AS integer)) NOT NULL,
 	`updated_at` integer DEFAULT (CAST((julianday('now') - 2440587.5) * 86400000 AS integer)) NOT NULL

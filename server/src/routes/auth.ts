@@ -1,6 +1,13 @@
 import { hashPassword } from 'better-auth/crypto';
 import dayjs from 'dayjs';
 import { Context } from 'hono';
+import {
+  authEmailCooldownMessage,
+  createAuthEmailCooldownPayload,
+  getAuthEmailCooldown,
+  markAuthEmailSent,
+  normalizeEmail,
+} from '@/auth/authEmailCooldown';
 import { emailVerificationExpiresInSeconds, auth, toJapanese } from '@/auth/betterAuth';
 import { Account } from '@/db/models/Account';
 import { User } from '@/db/models/User';
@@ -14,7 +21,6 @@ type AuthBody = {
 };
 
 const emailVerificationWindowMs = emailVerificationExpiresInSeconds * 1000;
-const normalizeEmail = (email: string) => email.trim().toLowerCase();
 
 const handleExistingUserRegistration = async (c: Context, email: string, password: string) => {
   const normalizedEmail = normalizeEmail(email);
@@ -26,7 +32,8 @@ const handleExistingUserRegistration = async (c: Context, email: string, passwor
     return c.json({ message: 'このメールアドレスは既に登録されています' }, 400);
   }
 
-  const lastRegistrationAt = existingUser.updatedAt.valueOf();
+  const lastRegistrationAt =
+    existingUser.lastAuthEmailSentAt?.valueOf() ?? existingUser.updatedAt.valueOf();
   if (dayjs().valueOf() - lastRegistrationAt < emailVerificationWindowMs) {
     return c.json(
       {
@@ -59,8 +66,8 @@ const handleExistingUserRegistration = async (c: Context, email: string, passwor
     return await http.relayAuthResponse(c, response, { email: normalizedEmail });
   }
 
-  await existingUser.save();
-  return c.json(null);
+  const cooldownUntil = await markAuthEmailSent(existingUser);
+  return c.json(createAuthEmailCooldownPayload(cooldownUntil));
 };
 
 export const registerAuthRoutes = () => {
@@ -93,7 +100,13 @@ export const registerAuthRoutes = () => {
       if (!response.ok) {
         return await http.relayAuthResponse(c, response, { email: normalizedEmail });
       }
-      return c.json(null);
+
+      const createdUser = await User.find({ email: normalizedEmail });
+      if (!createdUser) {
+        throw new Error('Registered user not found');
+      }
+      const cooldownUntil = await markAuthEmailSent(createdUser);
+      return c.json(createAuthEmailCooldownPayload(cooldownUntil));
     } catch (error) {
       http.logApiError(path, error);
       return c.json(toJapanese(error, '登録に失敗しました'), 400);
@@ -156,6 +169,16 @@ export const registerAuthRoutes = () => {
         return c.json({ message: 'メールアドレスは必須です' }, 400);
       }
       const normalizedEmail = normalizeEmail(email);
+      const user = await User.find({ email: normalizedEmail });
+      if (user) {
+        const cooldown = getAuthEmailCooldown(user.lastAuthEmailSentAt?.toDate() ?? null);
+        if (!cooldown.canSend) {
+          return c.json(
+            createAuthEmailCooldownPayload(cooldown.cooldownUntil, authEmailCooldownMessage),
+            429,
+          );
+        }
+      }
 
       const response = await http.forwardAuthRequest('/request-password-reset', {
         c,
@@ -164,7 +187,12 @@ export const registerAuthRoutes = () => {
           redirectTo: passwordResetPageURL,
         },
       });
-      return await http.relayAuthResponse(c, response, { email: normalizedEmail });
+      if (!response.ok) {
+        return await http.relayAuthResponse(c, response, { email: normalizedEmail });
+      }
+
+      const cooldownUntil = user ? await markAuthEmailSent(user) : null;
+      return c.json(cooldownUntil ? createAuthEmailCooldownPayload(cooldownUntil) : null, 200);
     } catch (error) {
       http.logApiError(path, error);
       return c.json(toJapanese(error, 'パスワードリセットのリクエストに失敗しました'), 400);

@@ -1,4 +1,5 @@
 import { Model } from '@/db/Model';
+import dayjs from 'dayjs';
 
 export class User extends Model<User.Data> {
   protected static _tableName = 'users' as const;
@@ -18,6 +19,13 @@ export class User extends Model<User.Data> {
   public get image() {
     return this._data.image;
   }
+
+  public get lastAuthEmailSentAt() {
+    if (!this._data.lastAuthEmailSentAt) {
+      return null;
+    }
+    return dayjs(this._data.lastAuthEmailSentAt);
+  }
 }
 
 export namespace User {
@@ -25,6 +33,7 @@ export namespace User {
     name: string;
     email: string;
     emailVerified: boolean;
+    lastAuthEmailSentAt?: Date | null;
     image?: string | null;
   };
 }

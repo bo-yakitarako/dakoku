@@ -1,5 +1,13 @@
 import { renderToString } from 'hono/jsx/dom/server';
+import {
+  authEmailCooldownMessage,
+  createAuthEmailCooldownPayload,
+  getAuthEmailCooldown,
+  markAuthEmailSent,
+  normalizeEmail,
+} from '@/auth/authEmailCooldown';
 import { emailVerificationCallbackURL } from '@/auth/emailVerification';
+import { User } from '@/db/models/User';
 import * as http from '@/http';
 import { EmailVerificationPage } from '@/views/emailVerificationPage';
 import { EmailVerificationEmail } from '@/views/emailVerificationEmail';
@@ -7,8 +15,6 @@ import { EmailVerificationEmail } from '@/views/emailVerificationEmail';
 type VerificationEmailBody = {
   email: string;
 };
-
-const normalizeEmail = (email: string) => email.trim().toLowerCase();
 
 export const registerEmailVerificationRoutes = () => {
   http.post('/auth/sendVerificationEmail', async (c, path) => {
@@ -18,6 +24,18 @@ export const registerEmailVerificationRoutes = () => {
         return c.json({ message: 'Email is required' }, 400);
       }
       const normalizedEmail = normalizeEmail(email);
+      const user = await User.find({ email: normalizedEmail });
+      if (!user) {
+        return c.json({ message: 'ユーザーが見つかりません' }, 404);
+      }
+
+      const cooldown = getAuthEmailCooldown(user.lastAuthEmailSentAt?.toDate() ?? null);
+      if (!cooldown.canSend) {
+        return c.json(
+          createAuthEmailCooldownPayload(cooldown.cooldownUntil, authEmailCooldownMessage),
+          429,
+        );
+      }
 
       const response = await http.forwardAuthRequest('/send-verification-email', {
         c,
@@ -26,7 +44,12 @@ export const registerEmailVerificationRoutes = () => {
           callbackURL: emailVerificationCallbackURL,
         },
       });
-      return await http.relayAuthResponse(c, response);
+      if (!response.ok) {
+        return await http.relayAuthResponse(c, response, { email: normalizedEmail });
+      }
+
+      const cooldownUntil = await markAuthEmailSent(user);
+      return c.json(createAuthEmailCooldownPayload(cooldownUntil), 200);
     } catch (error) {
       http.logApiError(path, error);
       return c.json(

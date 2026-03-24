@@ -36,6 +36,8 @@ const api = {
   authRefresh: () => ipcRenderer.invoke('authRefresh'),
   authLogout: () => ipcRenderer.invoke('authLogout'),
   authResetPassword: (email: string) => ipcRenderer.invoke('authResetPassword', email),
+  authSendVerificationEmail: (email: string) =>
+    ipcRenderer.invoke('authSendVerificationEmail', email),
   openCalendar: () => ipcRenderer.invoke('openCalendar'),
   getMonthWorkTime: (year: number, month: number, isAll: boolean) =>
     ipcRenderer.invoke('getMonthWorkTime', year, month, isAll),

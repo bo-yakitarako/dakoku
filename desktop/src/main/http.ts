@@ -21,6 +21,11 @@ export type SessionResponse = {
   user?: unknown | null;
 } | null;
 
+export type AuthEmailResponse = {
+  message?: string;
+  cooldownUntil?: number;
+} | null;
+
 const apiOrigin = process.env.VITE_API_ORIGIN ?? 'http://localhost:8080';
 const authStore = new Store<AuthState>({ name: 'auth' });
 let sessionCookie: string | null = authStore.get('sessionCookie') ?? null;
@@ -91,7 +96,7 @@ export const post = <TResponseData = null>(path: string, options: RequestOptions
 };
 
 export const authRegister = async (email: string, password: string) => {
-  return post('/auth/register', {
+  return post<AuthEmailResponse>('/auth/register', {
     form: { email, password },
   });
 };
@@ -118,7 +123,13 @@ export const authLogout = async () => {
 };
 
 export const authResetPassword = async (email: string) => {
-  return post('/auth/resetPassword', {
+  return post<AuthEmailResponse>('/auth/resetPassword', {
+    form: { email },
+  });
+};
+
+export const authSendVerificationEmail = async (email: string) => {
+  return post<AuthEmailResponse>('/auth/sendVerificationEmail', {
     form: { email },
   });
 };

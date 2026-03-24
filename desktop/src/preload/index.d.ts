@@ -10,19 +10,21 @@ import {
   MainBootstrap,
   TimeState,
 } from '@/preload/dataType';
-import type { HttpResponse, SessionResponse } from '@/main/http';
+import type { AuthEmailResponse, HttpResponse, SessionResponse } from '@/main/http';
 
 type Auth = HttpResponse<SessionResponse>;
+type AuthEmail = HttpResponse<AuthEmailResponse>;
 
 declare global {
   interface Window {
     electron: ElectronAPI;
     api: {
-      authRegister: (email: string, password: string) => Promise<Auth>;
+      authRegister: (email: string, password: string) => Promise<AuthEmail>;
       authLogin: (email: string, password: string) => Promise<Auth>;
       authRefresh: () => Promise<Auth>;
       authLogout: () => Promise<HttpResponse>;
-      authResetPassword: (email: string) => Promise<HttpResponse>;
+      authResetPassword: (email: string) => Promise<AuthEmail>;
+      authSendVerificationEmail: (email: string) => Promise<AuthEmail>;
       initializeCurrentJob: () => Promise<Job | null>;
       getJobs: () => Promise<Job[]>;
       registerJob: (jobName: string) => Promise<JobData>;

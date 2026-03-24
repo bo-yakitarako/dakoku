@@ -14,3 +14,9 @@ export const resetPasswordMutationAtom = atomWithMutation(() => ({
   mutationKey: ['auth', 'resetPassword'],
   mutationFn: (variables: { email: string }) => window.api.authResetPassword(variables.email),
 }));
+
+export const resendVerificationMutationAtom = atomWithMutation(() => ({
+  mutationKey: ['auth', 'sendVerificationEmail'],
+  mutationFn: (variables: { email: string }) =>
+    window.api.authSendVerificationEmail(variables.email),
+}));

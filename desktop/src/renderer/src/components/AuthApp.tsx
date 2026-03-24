@@ -6,17 +6,20 @@ import {
   Snackbar,
   Stack,
   TextField,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { useAtom } from 'jotai';
-import { useMemo, useState } from 'react';
+import dayjs from 'dayjs';
+import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   authMutationAtom,
   AuthMode,
+  resendVerificationMutationAtom,
   resetPasswordMutationAtom,
 } from '@/renderer/src/modules/promiseStore';
 
@@ -34,11 +37,28 @@ type AuthForm = {
   confirmPassword: string;
 };
 
+const authEmailCooldownMessage = '送信後1分以内はメールの再送はできません';
+
 const getMessage = (data: unknown): string | undefined => {
   if (!data || typeof data !== 'object') return undefined;
   if (!('message' in data)) return undefined;
   const message = (data as { message?: string }).message;
   return message;
+};
+
+const getCooldownUntil = (data: unknown): number | null => {
+  if (!data || typeof data !== 'object') return null;
+  if (!('cooldownUntil' in data)) return null;
+  const cooldownUntil = (data as { cooldownUntil?: unknown }).cooldownUntil;
+  return typeof cooldownUntil === 'number' ? cooldownUntil : null;
+};
+
+const getRemainingSeconds = (cooldownUntil: number | null, now: number) => {
+  if (!cooldownUntil) {
+    return 0;
+  }
+  const remainingMs = cooldownUntil - now;
+  return remainingMs > 0 ? Math.ceil(remainingMs / 1000) : 0;
 };
 
 const createAuthSchema = (mode: AuthViewMode) => {
@@ -91,8 +111,13 @@ export const AuthApp = () => {
   const [mode, setMode] = useState<AuthViewMode>('login');
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
+  const [registeredEmail, setRegisteredEmail] = useState('');
+  const [registerCooldownUntil, setRegisterCooldownUntil] = useState<number | null>(null);
+  const [resetPasswordCooldownUntil, setResetPasswordCooldownUntil] = useState<number | null>(null);
+  const [now, setNow] = useState(() => dayjs().valueOf());
   const [authMutation] = useAtom(authMutationAtom);
   const [resetPasswordMutation] = useAtom(resetPasswordMutationAtom);
+  const [resendVerificationMutation] = useAtom(resendVerificationMutationAtom);
   const schema = useMemo(() => createAuthSchema(mode), [mode]);
   const {
     register,
@@ -120,7 +145,29 @@ export const AuthApp = () => {
         : isResetPasswordSentMode
           ? ''
           : 'ログイン';
-  const isPending = authMutation.isPending || resetPasswordMutation.isPending;
+  const isPending =
+    authMutation.isPending ||
+    resetPasswordMutation.isPending ||
+    resendVerificationMutation.isPending;
+  const registerRemainingSeconds = getRemainingSeconds(registerCooldownUntil, now);
+  const resetPasswordRemainingSeconds = getRemainingSeconds(resetPasswordCooldownUntil, now);
+  const isRegisterCooldownActive = registerRemainingSeconds > 0;
+  const isResetPasswordCooldownActive = resetPasswordRemainingSeconds > 0;
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      const nextNow = dayjs().valueOf();
+      setNow(nextNow);
+      if (registerCooldownUntil && registerCooldownUntil <= nextNow) {
+        setRegisterCooldownUntil(null);
+      }
+      if (resetPasswordCooldownUntil && resetPasswordCooldownUntil <= nextNow) {
+        setResetPasswordCooldownUntil(null);
+      }
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, [registerCooldownUntil, resetPasswordCooldownUntil]);
 
   const onSubmit = handleSubmit(async (form) => {
     setError(null);
@@ -131,6 +178,8 @@ export const AuthApp = () => {
         const response = await resetPasswordMutation.mutateAsync({
           email: form.email.trim(),
         });
+        const nextCooldownUntil = getCooldownUntil(response.data);
+        setResetPasswordCooldownUntil(nextCooldownUntil);
         if (!response.ok) {
           throw new Error(getMessage(response.data) ?? 'パスワードリセットに失敗しました');
         }
@@ -147,6 +196,8 @@ export const AuthApp = () => {
         throw new Error(getMessage(response.data) ?? '認証に失敗しました');
       }
       if (isRegisterMode) {
+        setRegisteredEmail(form.email.trim());
+        setRegisterCooldownUntil(getCooldownUntil(response.data));
         switchMode('registerCompleted');
         return;
       }
@@ -160,12 +211,46 @@ export const AuthApp = () => {
     setMode(nextMode);
     setError(null);
     setInfo(null);
+    if (nextMode !== 'registerCompleted') {
+      setRegisteredEmail('');
+      setRegisterCooldownUntil(null);
+    }
     reset({
       email: '',
       password: '',
       confirmPassword: '',
     });
   };
+
+  const handleResendVerificationEmail = async () => {
+    if (!registeredEmail) {
+      return;
+    }
+
+    setError(null);
+    setInfo(null);
+
+    try {
+      const response = await resendVerificationMutation.mutateAsync({
+        email: registeredEmail,
+      });
+      const nextCooldownUntil = getCooldownUntil(response.data);
+      setRegisterCooldownUntil(nextCooldownUntil);
+      if (!response.ok) {
+        throw new Error(getMessage(response.data) ?? authEmailCooldownMessage);
+      }
+      setInfo('確認メールを再送しました');
+    } catch (mutationError) {
+      setError(
+        mutationError instanceof Error ? mutationError.message : '確認メールの再送に失敗しました',
+      );
+    }
+  };
+
+  const registerCooldownTooltip = isRegisterCooldownActive ? authEmailCooldownMessage : '';
+  const resetPasswordCooldownTooltip = isResetPasswordCooldownActive
+    ? authEmailCooldownMessage
+    : '';
 
   return (
     <ThemeProvider theme={darkTheme}>
@@ -218,9 +303,22 @@ export const AuthApp = () => {
             )}
 
             {!isRegisterCompletedMode && !isResetPasswordSentMode && (
-              <Button variant="contained" type="submit" disabled={isPending}>
-                {isResetPasswordMode ? '送信する' : title}
-              </Button>
+              <Tooltip title={isResetPasswordMode ? resetPasswordCooldownTooltip : ''}>
+                <span>
+                  <Button
+                    variant="contained"
+                    type="submit"
+                    disabled={isPending || (isResetPasswordMode && isResetPasswordCooldownActive)}
+                    fullWidth
+                  >
+                    {isResetPasswordMode
+                      ? isResetPasswordCooldownActive
+                        ? `送信する (${resetPasswordRemainingSeconds}s)`
+                        : '送信する'
+                      : title}
+                  </Button>
+                </span>
+              </Tooltip>
             )}
 
             {mode === 'login' && (
@@ -253,6 +351,24 @@ export const AuthApp = () => {
             {mode === 'registerCompleted' && (
               <Box textAlign="center">
                 <Typography>確認メールを送信しました</Typography>
+                <Typography variant="body2" color="text.secondary" mb="8px">
+                  {registeredEmail}
+                </Typography>
+                <Tooltip title={registerCooldownTooltip}>
+                  <span>
+                    <Button
+                      variant="contained"
+                      onClick={handleResendVerificationEmail}
+                      disabled={isPending || !registeredEmail || isRegisterCooldownActive}
+                      fullWidth
+                      sx={{ mb: 1 }}
+                    >
+                      {isRegisterCooldownActive
+                        ? `確認メールを再送 (${registerRemainingSeconds}s)`
+                        : '確認メールを再送'}
+                    </Button>
+                  </span>
+                </Tooltip>
                 <Button variant="text" onClick={() => switchMode('login')} disabled={isPending}>
                   ログインはこちら
                 </Button>

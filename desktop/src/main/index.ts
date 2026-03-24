@@ -414,3 +414,7 @@ ipcMain.handle('authLogout', async () => {
 ipcMain.handle('authResetPassword', async (_event, email: string) => {
   return http.authResetPassword(email);
 });
+
+ipcMain.handle('authSendVerificationEmail', async (_event, email: string) => {
+  return http.authSendVerificationEmail(email);
+});
