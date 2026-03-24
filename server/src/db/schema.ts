@@ -2,7 +2,7 @@ import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 import { sql } from 'drizzle-orm';
 
 const now = () => {
-  return sql`CURRENT_TIMESTAMP`;
+  return sql`(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))`;
 };
 
 export const users = sqliteTable('users', {
