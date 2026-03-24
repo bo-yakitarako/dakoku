@@ -10,9 +10,9 @@ import {
   MainBootstrap,
   TimeState,
 } from '@/preload/dataType';
-import type { HttpResponse, AccessTokenResponse } from '@/main/http';
+import type { HttpResponse, SessionResponse } from '@/main/http';
 
-type Auth = HttpResponse<AccessTokenResponse>;
+type Auth = HttpResponse<SessionResponse>;
 
 declare global {
   interface Window {

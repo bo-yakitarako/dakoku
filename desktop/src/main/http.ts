@@ -16,12 +16,22 @@ export type AuthState = {
   sessionCookie: string | null;
 };
 
+export type SessionResponse = {
+  session?: unknown | null;
+  user?: unknown | null;
+} | null;
+
 const apiOrigin = process.env.VITE_API_ORIGIN ?? 'http://localhost:8080';
 const authStore = new Store<AuthState>({ name: 'auth' });
 let sessionCookie: string | null = authStore.get('sessionCookie') ?? null;
 
 const persistAuthState = () => {
   authStore.set('sessionCookie', sessionCookie);
+};
+
+export const clearAuthState = () => {
+  sessionCookie = null;
+  persistAuthState();
 };
 
 const parseCookiePair = (setCookieHeader: string) => {
@@ -94,13 +104,16 @@ export const authLogin = async (email: string, password: string) => {
 };
 
 export const authRefresh = async () => {
-  return post('/auth/session');
+  const response = await post<SessionResponse>('/auth/session');
+  if (!response.ok || !response.data) {
+    clearAuthState();
+  }
+  return response;
 };
 
 export const authLogout = async () => {
   const response = await post('/auth/logout');
-  sessionCookie = null;
-  persistAuthState();
+  clearAuthState();
   return response;
 };
 

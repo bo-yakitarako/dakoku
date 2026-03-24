@@ -235,7 +235,7 @@ const createMainWindow = async () => {
 
 const openInitialWindow = async () => {
   const refreshResult = await http.authRefresh();
-  if (refreshResult.ok) {
+  if (refreshResult.ok && refreshResult.data) {
     try {
       await createMainWindow();
       return;
