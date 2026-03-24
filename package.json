@@ -7,7 +7,7 @@
   "author": "bo-yakitarako",
   "license": "MIT",
   "scripts": {
-    "dev": "concurrently \"pnpm -C desktop dev\" \"pnpm -C server dev\"",
+    "dev": "node scripts/dev.mjs",
     "build": "pnpm -C server build && pnpm -C desktop build",
     "db:generate": "pnpm -C server db:generate",
     "db:migrate": "pnpm -C server db:migrate",
@@ -17,7 +17,6 @@
   },
   "private": true,
   "devDependencies": {
-    "concurrently": "^9.1.2",
     "@eslint/compat": "^1.4.1",
     "@eslint/eslintrc": "^3.3.3",
     "@eslint/js": "^9.39.2",
