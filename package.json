@@ -11,6 +11,7 @@
     "build": "pnpm -C server build && pnpm -C desktop build",
     "db:generate": "pnpm -C server db:generate",
     "db:migrate": "pnpm -C server db:migrate",
+    "db:reset": "pnpm -C server db:reset",
     "db:push": "pnpm -C server db:push",
     "db:studio": "pnpm -C server db:studio"
   },
