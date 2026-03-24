@@ -7,6 +7,7 @@ import { db } from '@/db/client';
 import { schema } from '@/db/schema';
 
 const apiOrigin = process.env.API_ORIGIN ?? 'http://localhost:8080';
+export const emailVerificationExpiresInSeconds = 60 * 60 * 24;
 const allowedOrigins = Array.from(
   new Set(
     [apiOrigin, ...(process.env.ALLOWED_ORIGINS ?? 'http://localhost:5173,null').split(',')]
@@ -37,7 +38,7 @@ export const auth = betterAuth({
     sendOnSignIn: false,
     sendOnSignUp: true,
     autoSignInAfterVerification: false,
-    expiresIn: 60 * 60 * 24,
+    expiresIn: emailVerificationExpiresInSeconds,
     sendVerificationEmail: async ({ user, url }) => {
       await sendVerificationEmail({
         email: user.email,
