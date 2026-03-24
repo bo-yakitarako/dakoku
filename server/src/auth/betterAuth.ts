@@ -2,6 +2,7 @@ import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import '@/env';
 import { sendVerificationEmail } from '@/auth/emailVerification';
+import { sendPasswordResetEmail } from '@/auth/passwordReset';
 import { db } from '@/db/client';
 import { schema } from '@/db/schema';
 
@@ -26,7 +27,10 @@ export const auth = betterAuth({
     autoSignIn: true,
     requireEmailVerification: true,
     sendResetPassword: async ({ user, url }) => {
-      console.info(`[auth] reset password requested for ${user.email}: ${url}`);
+      await sendPasswordResetEmail({
+        email: user.email,
+        url,
+      });
     },
   },
   emailVerification: {

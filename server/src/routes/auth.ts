@@ -1,5 +1,6 @@
 import { auth, toJapanese } from '@/auth/betterAuth';
 import { emailVerificationCallbackURL } from '@/auth/emailVerification';
+import { passwordResetPageURL } from '@/auth/passwordReset';
 import * as http from '@/http';
 
 type AuthBody = {
@@ -93,6 +94,7 @@ export const registerAuthRoutes = () => {
         c,
         body: {
           email,
+          redirectTo: passwordResetPageURL,
         },
       });
       return await http.relayAuthResponse(c, response, { email });
