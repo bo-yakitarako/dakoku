@@ -7,9 +7,10 @@ type Document = Record<string, unknown>;
 type BasePropsWithoutId = { createdAt: Date; updatedAt: Date };
 export type BaseProps = { id: string } & BasePropsWithoutId;
 type SchemaKey = keyof typeof schema;
+type ModelData<C extends Model<Document>> = C extends Model<infer T> ? T : never;
 
 type ModelClass<C extends Model<Document>> = {
-  new (data: never): C;
+  new (data: BaseProps & ModelData<C>): C;
   tableName: SchemaKey;
   table: (typeof schema)[SchemaKey];
 };
@@ -69,9 +70,9 @@ export class Model<T extends Document = Document> {
     return schema[this.tableName];
   }
 
-  public static async create<C extends Model<Document>, T extends Document = Document>(
+  public static async create<C extends Model<Document>>(
     this: ModelClass<C>,
-    data: T,
+    data: ModelData<C>,
   ): Promise<C> {
     const now = new Date();
     const [inserted] = await db
@@ -85,9 +86,9 @@ export class Model<T extends Document = Document> {
     return new this(inserted as unknown as never);
   }
 
-  public static async find<C extends Model<Document>, T extends Document = Document>(
+  public static async find<C extends Model<Document>>(
     this: ModelClass<C>,
-    query: Partial<BaseProps & T> = {},
+    query: Partial<BaseProps & ModelData<C>> = {},
   ): Promise<C | null> {
     const where = buildWhereClause(this.table, query as Record<string, unknown>);
     const data = await (db.query as QueryClient)[this.tableName].findFirst(
@@ -103,9 +104,9 @@ export class Model<T extends Document = Document> {
     return new this(data as never);
   }
 
-  public static async findMany<C extends Model<Document>, T extends Document = Document>(
+  public static async findMany<C extends Model<Document>>(
     this: ModelClass<C>,
-    query: Partial<BaseProps & T> = {},
+    query: Partial<BaseProps & ModelData<C>> = {},
   ): Promise<C[]> {
     const where = buildWhereClause(this.table, query as Record<string, unknown>);
     const rows = await (db.query as QueryClient)[this.tableName].findMany(
@@ -116,6 +117,22 @@ export class Model<T extends Document = Document> {
         : undefined,
     );
     return rows.map((row) => new this(row as never));
+  }
+
+  public static async updateAll<C extends Model<Document>>(
+    this: ModelClass<C>,
+    condition: Partial<BaseProps & ModelData<C>>,
+    data: Partial<ModelData<C>>,
+  ) {
+    const where = buildWhereClause(this.table, condition as Record<string, unknown>);
+    if (!where) {
+      throw new Error('updateAll requires at least one condition');
+    }
+
+    await db
+      .update(this.table)
+      .set({ ...data, updatedAt: new Date() } as never)
+      .where(where);
   }
 
   public set(data: Partial<T>) {

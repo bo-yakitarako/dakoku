@@ -40,6 +40,27 @@ const listJobs = async (userId: string) => {
     .map(({ id, name }) => ({ id, name }));
 };
 
+const getCurrentWork = async (userId: string, jobId: string) => {
+  const now = dayjs();
+  const worksByJob = await WorkTimeRepository.findTodayByUserId(userId, now);
+  const workTimes = await WorkTime.findMany({
+    userId,
+    jobId,
+    year: now.year(),
+    month: now.month() + 1,
+    date: now.date(),
+  });
+  const latestWorkTime = workTimes
+    .sort((a, b) => a.createdAt.valueOf() - b.createdAt.valueOf())
+    .at(-1);
+
+  return {
+    jobId,
+    status: latestWorkTime?.status ?? 'workOff',
+    works: worksByJob[jobId] ?? [],
+  };
+};
+
 export const registerMainRoutes = () => {
   http.authPost('/main/jobs', async (c, user, path) => {
     try {
@@ -66,12 +87,7 @@ export const registerMainRoutes = () => {
       if (!currentJob || currentJob.jobId === null) {
         return c.json(null);
       }
-
-      const workTimesByJob = await WorkTimeRepository.findTodayByUserId(user.id);
-      return c.json({
-        jobId: currentJob.jobId,
-        works: workTimesByJob[currentJob.jobId] ?? [],
-      });
+      return c.json(await getCurrentWork(user.id, currentJob.jobId));
     } catch (error) {
       http.logApiError(path, error, { userId: user.id });
       return c.json({ message: 'Failed to fetch current work' }, 500);
@@ -155,6 +171,7 @@ export const registerMainRoutes = () => {
     }
   });
 
+  // eslint-disable-next-line complexity
   http.authPost('/main/postTime', async (c, user, path) => {
     try {
       const { jobId, index, actedAt, workStatus } = await http.parseBody<PostTimeBody>(c, path);
@@ -172,16 +189,45 @@ export const registerMainRoutes = () => {
       }
 
       const actedAtDayjs = dayjs(parsedActedAt);
-      await WorkTime.create({
+      const year = actedAtDayjs.year();
+      const month = actedAtDayjs.month() + 1;
+      const date = actedAtDayjs.date();
+      const targetWorkTimes = await WorkTime.findMany({
         userId: user.id,
         jobId,
-        year: actedAtDayjs.year(),
-        month: actedAtDayjs.month() + 1,
-        date: actedAtDayjs.date(),
+        year,
+        month,
+        date,
         index: parsedIndex,
-        actedAt: actedAtDayjs.toDate(),
-        status,
       });
+      const latestTargetWorkTime = targetWorkTimes
+        .sort((a, b) => a.createdAt.valueOf() - b.createdAt.valueOf())
+        .at(-1);
+      const shouldInsert = !(status === 'workOff' && latestTargetWorkTime?.status === 'resting');
+
+      if (shouldInsert) {
+        await WorkTime.create({
+          userId: user.id,
+          jobId,
+          year,
+          month,
+          date,
+          index: parsedIndex,
+          actedAt: actedAtDayjs.toDate(),
+          status,
+        });
+      }
+      await WorkTime.updateAll(
+        {
+          userId: user.id,
+          jobId,
+          year,
+          month,
+          date,
+          index: parsedIndex,
+        },
+        { status },
+      );
 
       const current = await CurrentJob.find({ userId: user.id });
       if (!current) {

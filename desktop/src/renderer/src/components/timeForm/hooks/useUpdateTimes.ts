@@ -16,21 +16,33 @@ export const useUpdateTimes = () => {
         setWorkStatus('workOff');
         return;
       }
+
       setIsLoading(true);
+
+      const actedAt = Date.now();
       if (workStatus === 'workOff') {
-        const nextWorks = [...works, [Date.now()]];
-        await window.api.setTimeState({ status: 'working', works: nextWorks });
-        setWorks(nextWorks);
+        const index = works.length;
+        const syncedWorks = await window.api.registerTime({
+          index,
+          actedAt,
+          workStatus: 'working',
+        });
+        setWorks(syncedWorks);
         setWorkStatus('working');
+        setIsLoading(false);
         return;
       }
-      const lastWork = [...works[works.length - 1], Date.now()];
-      const nextWorks = [...works.slice(0, works.length - 1), lastWork];
-      await window.api.setTimeState({ status: nextWorkStatus, works: nextWorks });
-      setWorks(nextWorks);
+
+      const index = works.length - 1;
+      const syncedWorks = await window.api.registerTime({
+        index,
+        actedAt,
+        workStatus: nextWorkStatus,
+      });
+      setWorks(syncedWorks);
       setWorkStatus(nextWorkStatus);
       setIsLoading(false);
     },
-    [workStatus, works],
+    [workStatus, works, setIsLoading, setWorkStatus],
   );
 };

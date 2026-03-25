@@ -1,3 +1,4 @@
+import { WorkStatus } from '@/preload/dataType';
 import * as http from '@/main/http';
 
 type Job = {
@@ -7,6 +8,7 @@ type Job = {
 
 type CurrentWork = {
   jobId: string;
+  status: WorkStatus;
   works: number[][];
 } | null;
 

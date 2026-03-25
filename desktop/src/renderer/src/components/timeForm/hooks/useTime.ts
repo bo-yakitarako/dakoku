@@ -23,13 +23,9 @@ export const useTime = () => {
 
   const stop = async () => {
     setIsLoading(true);
-    let stopTimes = [...works[works.length - 1]];
-    if (stopTimes.length % 2 === 1) {
-      stopTimes = [...stopTimes, Date.now()];
-    }
-    const registeredTimes = [...works];
-    registeredTimes[registeredTimes.length - 1] = stopTimes;
-    await window.api.registerWorks(registeredTimes);
+    const index = works.length - 1;
+    const actedAt = Date.now();
+    await window.api.registerTime({ index, actedAt, workStatus: 'workOff' });
     await updateTimes('workOff');
   };
 
@@ -40,20 +36,21 @@ export const useTime = () => {
       }
       const currentDate = dayjs();
       if (preDate.date() !== currentDate.date()) {
-        let stopTimes = [...works[works.length - 1]];
-        if (works.length % 2 === 1) {
-          const dayEndTime = preDate.endOf('day').valueOf();
-          stopTimes = [...stopTimes, dayEndTime];
-        }
-        const registeredTimes = [...works];
-        registeredTimes[registeredTimes.length - 1] = stopTimes;
-        await window.api.registerWorks(registeredTimes);
+        const dayEndTime = preDate.endOf('day').valueOf();
+        await window.api.registerTime({
+          index: works.length - 1,
+          actedAt: dayEndTime,
+          workStatus: 'workOff',
+        });
         if (workStatus === 'resting') {
           await updateTimes('workOff');
         } else {
-          const firstTimes = [[currentDate.valueOf()]];
-          await window.api.setTimeState({ works: firstTimes });
-          setWorks(firstTimes);
+          const syncedWorks = await window.api.registerTime({
+            index: 0,
+            actedAt: currentDate.valueOf(),
+            workStatus: 'working',
+          });
+          setWorks(syncedWorks);
         }
         setPreDate(currentDate);
         return;
@@ -87,24 +84,27 @@ export const useTime = () => {
     if (now.isSame(lastSavedTime, 'day')) {
       return;
     }
-    let stopTimes = [...works.slice(-1)[0]];
-    if (works.length % 2 === 1) {
-      const registeringDayEndTime = dayjs(lastSavedTime).endOf('day').valueOf();
-      stopTimes = [...stopTimes, registeringDayEndTime];
-    }
-    const registeringTimes = [...works];
-    registeringTimes[registeringTimes.length - 1] = stopTimes;
-    window.api.registerWorks(registeringTimes).then(async () => {
-      if (workStatus === 'resting') {
-        setIsLoading(true);
-        setCount({ workTime: 0, restTime: 0 });
-        await updateTimes('workOff');
-        return;
-      }
-      const dayStartTimes = [[now.startOf('day').valueOf()]];
-      await window.api.setTimeState({ works: dayStartTimes });
-      setWorks(dayStartTimes);
-    });
+    const registeringDayEndTime = dayjs(lastSavedTime).endOf('day').valueOf();
+    window.api
+      .registerTime({
+        index: works.length - 1,
+        actedAt: registeringDayEndTime,
+        workStatus: 'workOff',
+      })
+      .then(async () => {
+        if (workStatus === 'resting') {
+          setIsLoading(true);
+          setCount({ workTime: 0, restTime: 0 });
+          await updateTimes('workOff');
+          return;
+        }
+        const syncedWorks = await window.api.registerTime({
+          index: 0,
+          actedAt: now.startOf('day').valueOf(),
+          workStatus: 'working',
+        });
+        setWorks(syncedWorks);
+      });
   }, []);
 
   return {

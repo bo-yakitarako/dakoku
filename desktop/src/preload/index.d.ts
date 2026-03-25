@@ -9,6 +9,7 @@ import {
   JobData,
   MainBootstrap,
   TimeState,
+  WorkStatus,
 } from '@/preload/dataType';
 import type { AuthEmailResponse, HttpResponse, SessionResponse } from '@/main/http';
 
@@ -32,7 +33,11 @@ declare global {
       renameCurrentJob: (jobName: string) => Promise<JobData>;
       deleteCurrentJob: () => Promise<JobData>;
       setTimeState: (timeState?: Partial<TimeState>) => Promise<void>;
-      registerWorks: (times: number[][]) => Promise<void>;
+      registerTime: (payload: {
+        index: number;
+        actedAt: number;
+        workStatus: WorkStatus;
+      }) => Promise<number[][]>;
       getTodayWorks: () => Promise<number[][]>;
       openCalendar: () => Promise<void>;
       getMonthWorkTime: (

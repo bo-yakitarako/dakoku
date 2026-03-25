@@ -58,56 +58,54 @@ const getCurrentTimeState = (): TimeState => {
 const prepareMainBootstrap = async () => {
   const { currentJob: current, jobs: nextJobs } = await refreshJobs();
   todayWorksMap = await mainApi.getWorkTimes();
+  const currentWork = await mainApi.getCurrent();
   const works = current ? (todayWorksMap[current.jobId] ?? []) : [];
-  const timeState = getCurrentTimeState();
+  const timeState =
+    current && currentWork && currentWork.jobId === current.jobId
+      ? {
+          status: currentWork.status,
+          works: currentWork.works,
+        }
+      : getCurrentTimeState();
+
+  if (current) {
+    timeStateMap[current.jobId] = timeState;
+  }
+
   return {
     currentJob: current,
     jobs: nextJobs,
     status: timeState.status,
-    works,
+    works: timeState.works.length > 0 ? timeState.works : works,
   };
 };
 
-const collectMissingTimeEvents = (base: number[][], next: number[][]) => {
-  const events: { index: number; actedAt: number }[] = [];
-  for (let index = 0; index < next.length; index += 1) {
-    const baseTimes = new Set((base[index] ?? []).map((time) => `${time}`));
-    const nextTimes = next[index] ?? [];
-    for (const actedAt of nextTimes) {
-      if (!baseTimes.has(`${actedAt}`)) {
-        events.push({ index, actedAt });
-      }
-    }
-  }
-  return events;
-};
-
-const syncWorksToServer = async (nextWorks: number[][], workStatus: WorkStatus) => {
+const registerTimeToServer = async ({
+  index,
+  actedAt,
+  workStatus,
+}: {
+  index: number;
+  actedAt: number;
+  workStatus: WorkStatus;
+}) => {
   if (!currentJob) {
     return [];
   }
 
   const jobId = currentJob.jobId;
-  const currentWorks = todayWorksMap[jobId] ?? [];
-  const events = collectMissingTimeEvents(currentWorks, nextWorks);
-
-  if (events.length === 0) {
-    todayWorksMap[jobId] = nextWorks;
-    return nextWorks;
-  }
-
-  let latestMap = todayWorksMap;
-  for (const event of events) {
-    latestMap = await mainApi.postTime({
-      jobId,
-      index: event.index,
-      actedAt: event.actedAt,
-      workStatus,
-    });
-  }
-
-  todayWorksMap = latestMap;
-  return todayWorksMap[jobId] ?? nextWorks;
+  todayWorksMap = await mainApi.postTime({
+    jobId,
+    index,
+    actedAt,
+    workStatus,
+  });
+  const syncedWorks = todayWorksMap[jobId] ?? [];
+  timeStateMap[jobId] = {
+    status: workStatus,
+    works: syncedWorks,
+  };
+  return syncedWorks;
 };
 
 const buildAuthWindowCsp = () => {
@@ -339,24 +337,25 @@ ipcMain.handle('setTimeState', async (_event, nextTimeState?: Partial<TimeState>
   const current = timeStateMap[currentJob.jobId] ?? { status: 'workOff', works: [] };
   const nextStatus = nextTimeState.status ?? current.status;
   const nextWorks = nextTimeState.works ?? current.works;
-  const syncedWorks = await syncWorksToServer(nextWorks, nextStatus);
   timeStateMap[currentJob.jobId] = {
     status: nextStatus,
-    works: syncedWorks,
+    works: nextWorks,
   };
 });
 
-ipcMain.handle('registerWorks', async (_event, works: number[][]) => {
-  if (!currentJob) {
-    return;
-  }
-  const status = timeStateMap[currentJob.jobId]?.status ?? 'workOff';
-  const syncedWorks = await syncWorksToServer(works, status);
-  todayWorksMap[currentJob.jobId] = syncedWorks;
-  if (timeStateMap[currentJob.jobId]) {
-    timeStateMap[currentJob.jobId].works = syncedWorks;
-  }
-});
+ipcMain.handle(
+  'registerTime',
+  async (
+    _event,
+    payload: {
+      index: number;
+      actedAt: number;
+      workStatus: WorkStatus;
+    },
+  ) => {
+    return registerTimeToServer(payload);
+  },
+);
 
 ipcMain.handle('getTodayWorks', async () => {
   if (!currentJob) {

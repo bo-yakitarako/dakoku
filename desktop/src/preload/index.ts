@@ -1,6 +1,12 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { electronAPI } from '@electron-toolkit/preload';
-import { CalendarBootstrap, DayDetailData, MainBootstrap, TimeState } from '@/preload/dataType';
+import {
+  CalendarBootstrap,
+  DayDetailData,
+  MainBootstrap,
+  TimeState,
+  WorkStatus,
+} from '@/preload/dataType';
 
 const parseBootstrapArg = <T>(name: string): T | null => {
   const arg = process.argv.find((item) => item.startsWith(`--${name}=`));
@@ -28,7 +34,8 @@ const api = {
   renameCurrentJob: (jobName: string) => ipcRenderer.invoke('renameCurrentJob', jobName),
   deleteCurrentJob: () => ipcRenderer.invoke('deleteCurrentJob'),
   setTimeState: (timeState?: Partial<TimeState>) => ipcRenderer.invoke('setTimeState', timeState),
-  registerWorks: (times: number[][]) => ipcRenderer.invoke('registerWorks', times),
+  registerTime: (payload: { index: number; actedAt: number; workStatus: WorkStatus }) =>
+    ipcRenderer.invoke('registerTime', payload),
   getTodayWorks: () => ipcRenderer.invoke('getTodayWorks'),
   authRegister: (email: string, password: string) =>
     ipcRenderer.invoke('authRegister', email, password),
