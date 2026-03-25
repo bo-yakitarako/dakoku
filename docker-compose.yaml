@@ -1,0 +1,19 @@
+services:
+  dakoku-server:
+    container_name: dakoku-server
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${PORT:-8080}:8080"
+    environment:
+      PORT: 8080
+      API_ORIGIN: ${API_ORIGIN}
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
+      TURSO_DATABASE_URL: ${TURSO_DATABASE_URL}
+      TURSO_AUTH_TOKEN: ${TURSO_AUTH_TOKEN}
+      RESEND_API_KEY: ${RESEND_API_KEY}
+      RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL}
+      RUN_MIGRATIONS: ${RUN_MIGRATIONS:-true}

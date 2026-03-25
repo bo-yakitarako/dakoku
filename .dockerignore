@@ -1,0 +1,9 @@
+.git
+.gitignore
+.pnpm-store
+node_modules
+desktop
+server/node_modules
+server/dist
+server/.env
+server/.turso
