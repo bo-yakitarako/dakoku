@@ -1,6 +1,6 @@
 {
   "name": "dakoku-desktop",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "打刻するだけのアプリ",
   "main": "./out/main/index.js",
   "author": "bo-yakitarako",
