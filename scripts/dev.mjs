@@ -32,6 +32,43 @@ const delay = (ms) => {
   return new Promise((resolve) => setTimeout(resolve, ms));
 };
 
+const waitForExit = (child) => {
+  return new Promise((resolve) => {
+    if (child.exitCode !== null || child.signalCode !== null) {
+      resolve();
+      return;
+    }
+    child.once('exit', () => resolve());
+  });
+};
+
+const killWindowsProcessTree = (pid) => {
+  return new Promise((resolve) => {
+    const killer = spawn('taskkill', ['/pid', String(pid), '/T', '/F'], {
+      stdio: 'ignore',
+      shell: true,
+    });
+
+    killer.once('error', () => resolve());
+    killer.once('exit', () => resolve());
+  });
+};
+
+const terminateChild = async (child) => {
+  if (!child.pid || child.exitCode !== null || child.signalCode !== null) {
+    return;
+  }
+
+  if (process.platform === 'win32') {
+    await killWindowsProcessTree(child.pid);
+    await waitForExit(child);
+    return;
+  }
+
+  child.kill('SIGTERM');
+  await waitForExit(child);
+};
+
 const isServerReady = async () => {
   try {
     const response = await fetch(serverUrl);
@@ -57,26 +94,26 @@ const waitForServer = async () => {
 const children = new Set();
 let shuttingDown = false;
 
-const terminateChildren = () => {
+const terminateChildren = async () => {
   if (shuttingDown) {
     return;
   }
   shuttingDown = true;
 
-  for (const child of children) {
-    if (!child.killed) {
-      child.kill();
-    }
-  }
+  await Promise.allSettled([...children].map((child) => terminateChild(child)));
 };
 
-const handleSignal = (signal) => {
-  terminateChildren();
+const handleSignal = async (signal) => {
+  await terminateChildren();
   process.exitCode = signal === 'SIGINT' ? 130 : 143;
 };
 
-process.on('SIGINT', () => handleSignal('SIGINT'));
-process.on('SIGTERM', () => handleSignal('SIGTERM'));
+process.on('SIGINT', () => {
+  void handleSignal('SIGINT');
+});
+process.on('SIGTERM', () => {
+  void handleSignal('SIGTERM');
+});
 
 const main = async () => {
   const server = runCommand('server', 'pnpm', ['-C', 'server', 'dev']);
@@ -86,8 +123,9 @@ const main = async () => {
     children.delete(server);
     if (!shuttingDown && !children.size) {
       process.exit(code ?? 1);
+      return;
     }
-    terminateChildren();
+    void terminateChildren();
   });
 
   await waitForServer();
@@ -99,14 +137,16 @@ const main = async () => {
   desktop.once('exit', (code) => {
     children.delete(desktop);
     if (!shuttingDown) {
-      terminateChildren();
-      process.exit(code ?? 0);
+      void terminateChildren().finally(() => {
+        process.exit(code ?? 0);
+      });
     }
   });
 };
 
 void main().catch((error) => {
   console.error('[dev] failed to start', error);
-  terminateChildren();
-  process.exit(1);
+  void terminateChildren().finally(() => {
+    process.exit(1);
+  });
 });
