@@ -10,7 +10,11 @@ export default defineConfig({
         '@resources': resolve('resources'),
       },
     },
-    plugins: [externalizeDepsPlugin()],
+    plugins: [
+      externalizeDepsPlugin({
+        exclude: ['electron-store'],
+      }),
+    ],
   },
   preload: {
     resolve: {

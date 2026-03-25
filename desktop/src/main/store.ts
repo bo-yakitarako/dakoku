@@ -1,5 +1,5 @@
 import Store from 'electron-store';
-import { BrowserWindow, Rectangle } from 'electron';
+import { BrowserWindow, Rectangle, screen } from 'electron';
 
 type Window = 'main' | 'calendar';
 
@@ -10,8 +10,28 @@ const defaultWindowBounds = {
 
 const windowBoundsStore = new Store<Record<Window, Rectangle>>({ name: 'windowBounds' });
 
+const isVisibleBounds = (bounds: Rectangle) => {
+  if (typeof bounds.x !== 'number' || typeof bounds.y !== 'number') {
+    return true;
+  }
+
+  return screen.getAllDisplays().some((display) => {
+    const area = display.workArea;
+    const horizontal = bounds.x < area.x + area.width && bounds.x + bounds.width > area.x;
+    const vertical = bounds.y < area.y + area.height && bounds.y + bounds.height > area.y;
+    return horizontal && vertical;
+  });
+};
+
 export const getWindowBounds = (window: Window) => {
-  return windowBoundsStore.get(window) ?? defaultWindowBounds[window];
+  const savedBounds = windowBoundsStore.get(window);
+  if (!savedBounds) {
+    return defaultWindowBounds[window];
+  }
+  if (!isVisibleBounds(savedBounds)) {
+    return defaultWindowBounds[window];
+  }
+  return savedBounds;
 };
 
 export const setWindowBounds = (

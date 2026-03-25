@@ -13,6 +13,7 @@ import { Job, JobData, TimeState, WorkStatus } from '@/preload/dataType';
 import * as http from '@/main/http';
 
 const apiOrigin = process.env.VITE_API_ORIGIN ?? 'http://localhost:8080';
+const initialAuthRefreshTimeoutMs = Number(process.env.MAIN_AUTH_REFRESH_TIMEOUT_MS ?? 5000);
 let mainWindow: BrowserWindow | null = null;
 let authWindow: BrowserWindow | null = null;
 let jobs: Job[] = [];
@@ -234,7 +235,19 @@ const createMainWindow = async () => {
 };
 
 const openInitialWindow = async () => {
-  const refreshResult = await http.authRefresh();
+  const refreshResult = await Promise.race([
+    http.authRefresh().catch((error) => {
+      console.warn('[main] auth refresh failed on startup', error);
+      return { ok: false, status: 0, data: null };
+    }),
+    new Promise<{ ok: false; status: 408; data: null }>((resolve) => {
+      setTimeout(
+        () => resolve({ ok: false, status: 408, data: null }),
+        initialAuthRefreshTimeoutMs,
+      );
+    }),
+  ]);
+
   if (refreshResult.ok && refreshResult.data) {
     try {
       await createMainWindow();
