@@ -13,8 +13,12 @@ WORKDIR /app
 
 COPY . ./
 
-RUN pnpm install --frozen-lockfile
+ENV NODE_ENV=development
+
+RUN pnpm install --frozen-lockfile --prod=false
 RUN pnpm build
+
+ENV NODE_ENV=production
 
 RUN cat <<'EOF' > /usr/local/bin/docker-entrypoint.sh
 #!/bin/sh
