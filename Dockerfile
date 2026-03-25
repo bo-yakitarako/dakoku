@@ -2,12 +2,13 @@ FROM node:22-alpine AS base
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-ENV TZ=Asia/Tokyo
 
-RUN apk add --no-cache tzdata && \
-  cp /usr/share/zoneinfo/$TZ /etc/localtime && \
-  echo $TZ > /etc/timezone && \
-  corepack enable
+RUN apk add --no-cache tzdata fontconfig ttf-dejavu ttf-liberation && \
+  cp /usr/share/zoneinfo/Asia/Tokyo /etc/localtime && \
+  echo "Asia/Tokyo" > /etc/timezone && \
+  fc-cache -fv
+
+RUN corepack enable && corepack prepare pnpm@latest --activate
 
 WORKDIR /app
 
