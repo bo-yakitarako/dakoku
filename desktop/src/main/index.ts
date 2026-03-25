@@ -125,7 +125,9 @@ const createAuthWindow = () => {
     return;
   }
 
+  const windowBounds = getWindowBounds('main');
   authWindow = new BrowserWindow({
+    ...windowBounds,
     width: 480,
     height: 420,
     show: false,
@@ -383,6 +385,9 @@ ipcMain.handle('authLogin', async (_event, email: string, password: string) => {
   const response = await http.authLogin(email, password);
   if (response.ok) {
     try {
+      if (authWindow) {
+        setWindowBounds(authWindow, 'main', true);
+      }
       await createMainWindow();
       authWindow?.close();
     } catch (error) {

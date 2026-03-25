@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Time } from '@/renderer/src/components/timeForm/Time';
 import { Box, Button, IconButton } from '@mui/material';
-import { CalendarMonth, Computer, Devices, Home, LocalCafe } from '@mui/icons-material';
+import { CalendarMonth, Computer, Devices, Home, LocalCafe, Logout } from '@mui/icons-material';
 import { useTime } from '@/renderer/src/components/timeForm/hooks/useTime';
 import { useOpenCalendar } from '@/renderer/src/components/timeForm/hooks/useOpenCalendar';
 import { JobSelectBox } from '@/renderer/src/components/timeForm/JobSelectBox';
@@ -13,6 +13,9 @@ export const TimeForm: React.FC = () => {
   const { workStatus, count, isLoading, start, pause, stop } = useTime();
   const { canOpen, openCalendar } = useOpenCalendar();
   const currentJob = useAtomValue(currentJobAtom);
+  const logout = async () => {
+    await window.api.authLogout();
+  };
 
   useEffect(() => {
     if (currentJob != null) {
@@ -41,6 +44,23 @@ export const TimeForm: React.FC = () => {
       >
         <CalendarMonth />
       </IconButton>
+      {workStatus === 'workOff' && (
+        <IconButton
+          color="inherit"
+          onClick={logout}
+          disabled={isLoading}
+          sx={{
+            position: 'absolute',
+            bottom: '8px',
+            left: '8px',
+            gap: '4px',
+            borderRadius: '8px',
+            px: '8px',
+          }}
+        >
+          <Logout fontSize="small" />
+        </IconButton>
+      )}
       {workStatus === 'workOff' ? (
         <>
           <JobSelectBox />

@@ -7,6 +7,7 @@ import '@/env';
 import { auth, toJapanese } from '@/auth/betterAuth';
 import { User } from '@/db/models/User';
 
+const apiOrigin = process.env.API_ORIGIN ?? 'http://localhost:8080';
 const allowedOrigins = (process.env.ALLOWED_ORIGINS ?? 'http://localhost:5173,null')
   .split(',')
   .map((origin) => origin.trim())
@@ -89,7 +90,7 @@ const copyAuthHeaders = (target: Headers, source: Headers) => {
 };
 
 const buildAuthUrl = (path: string) => {
-  const requestUrl = new URL(process.env.API_ORIGIN ?? 'http://localhost:8080');
+  const requestUrl = new URL(apiOrigin);
   requestUrl.pathname = `/api/auth${path}`;
   return requestUrl;
 };
@@ -104,9 +105,11 @@ export const forwardAuthRequest = async (
 ) => {
   const headers = new Headers();
   const cookie = options.c.req.header('cookie');
+  const origin = options.c.req.header('origin') ?? apiOrigin;
   if (cookie) {
     headers.set('cookie', cookie);
   }
+  headers.set('origin', origin);
   if (options.body) {
     headers.set('content-type', 'application/json');
   }

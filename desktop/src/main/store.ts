@@ -14,6 +14,23 @@ export const getWindowBounds = (window: Window) => {
   return windowBoundsStore.get(window) ?? defaultWindowBounds[window];
 };
 
-export const setWindowBounds = (browserWindow: BrowserWindow, window: Window) => {
-  windowBoundsStore.set(window, browserWindow.getBounds());
+export const setWindowBounds = (
+  browserWindow: BrowserWindow,
+  window: Window,
+  onlyPosition = false,
+) => {
+  if (!onlyPosition) {
+    windowBoundsStore.set(window, browserWindow.getBounds());
+    return;
+  }
+
+  const savedBounds = windowBoundsStore.get(window);
+  const currentBounds = savedBounds ?? defaultWindowBounds[window];
+  const nextBounds = browserWindow.getBounds();
+  windowBoundsStore.set(window, {
+    width: currentBounds.width,
+    height: currentBounds.height,
+    x: nextBounds.x,
+    y: nextBounds.y,
+  });
 };
